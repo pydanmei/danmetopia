@@ -3,7 +3,7 @@
 
 <head>
 <meta charset="utf-8">
-<title>DANMETOPIA HOME</title>
+<title>HOME</title>
 
 <style>
 body{
@@ -13,188 +13,104 @@ body{
   font-family:Arial;
 }
 
-/* TOP */
 .topbar{
   background:#00dc64;
   color:black;
   padding:15px;
   display:flex;
   justify-content:space-between;
-  align-items:center;
 }
 
-/* LOGIN PANEL */
-#loginPanel{
+.card{
   background:#1c1c1c;
   padding:15px;
   margin:10px;
   border-radius:10px;
 }
 
-/* LIST */
-.container{
-  padding:15px;
-}
-
-.card{
-  background:#1c1c1c;
-  padding:15px;
-  margin-top:10px;
-  border-radius:10px;
-  cursor:pointer;
-}
-
-/* COMMENT */
-.commentBox{
-  margin-top:20px;
-  background:#1c1c1c;
-  padding:10px;
-  border-radius:10px;
-}
-
-input{
-  width:100%;
-  padding:10px;
-  margin-top:5px;
-  border:none;
-  border-radius:8px;
-  background:#2a2a2a;
-  color:white;
-}
-
 button{
-  width:100%;
-  padding:10px;
-  margin-top:10px;
+  padding:8px;
   border:none;
   border-radius:8px;
   cursor:pointer;
 }
 
 .green{background:#00dc64;color:black;}
-.gray{background:#333;color:white;}
 </style>
-
 </head>
 
 <body>
 
-<!-- TOP -->
 <div class="topbar">
-  <div>🏠 DANMETOPIA</div>
-  <div id="userInfo">Ẩn danh</div>
+  <div>📚 DANMETOPIA</div>
+  <div id="user"></div>
 </div>
 
-<!-- LOGIN AREA -->
-<div id="loginPanel">
+<div id="list"></div>
 
-  <h3>🔐 Đăng nhập (tùy chọn)</h3>
+<script type="module">
 
-  <input id="email" placeholder="Email">
-  <input id="role" placeholder="role: admin / group / user">
+import {
+  getFirestore,
+  collection,
+  getDocs,
+  addDoc,
+  updateDoc,
+  doc,
+  increment
+} from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
 
-  <button class="green" onclick="login()">Đăng nhập</button>
+const db = window.db;
 
-  <button class="gray" onclick="logout()">Đăng xuất</button>
+const user = JSON.parse(localStorage.getItem("user") || "{}");
 
-</div>
+document.getElementById("user").innerText =
+user.email ? `${user.email} (${user.role})` : "Ẩn danh";
 
-<!-- LIST -->
-<div class="container">
+/* ================= LOAD STORIES ================= */
+async function load(){
 
-  <h3>📚 Danh sách truyện</h3>
+  const snap = await getDocs(collection(db,"stories"));
 
-  <div class="card">📖 Truyện 1</div>
-  <div class="card">📖 Truyện 2</div>
+  document.getElementById("list").innerHTML =
+  snap.docs.map(d=>{
 
-  <!-- COMMENT -->
-  <div class="commentBox">
+    const s = d.data();
 
-    <h4>💬 Bình luận</h4>
+    return `
+      <div class="card">
+        <h3>${s.title}</h3>
+        <p>👥 ${s.group || "system"}</p>
 
-    <input id="commentInput" placeholder="Viết bình luận...">
+        <button class="green" onclick="like('${d.id}')">
+          ❤️ Like (${s.like || 0})
+        </button>
 
-    <button class="green" onclick="comment()">Gửi</button>
+        <button onclick="read('${d.id}')">
+          📖 Đọc
+        </button>
+      </div>
+    `;
+  }).join("");
+}
 
-    <div id="comments"></div>
+/* ================= LIKE ================= */
+window.like = async (id)=>{
 
-  </div>
+  const ref = doc(db,"stories",id);
+  await updateDoc(ref,{
+    like: increment(1)
+  });
 
-</div>
-
-<script>
-
-/* ================= USER STATE ================= */
-let user = {
-  email: null,
-  role: "guest",
-  group: null
+  load();
 };
 
-/* ================= LOGIN ================= */
-function login(){
+/* ================= READ ================= */
+window.read = (id)=>{
+  window.location.href = "read.html?id="+id;
+};
 
-  const email = document.getElementById("email").value;
-  const role = document.getElementById("role").value || "user";
-
-  user.email = email;
-  user.role = role;
-
-  localStorage.setItem("user", JSON.stringify(user));
-
-  updateUI();
-}
-
-/* ================= LOGOUT ================= */
-function logout(){
-  localStorage.removeItem("user");
-  user = {email:null, role:"guest"};
-  updateUI();
-}
-
-/* ================= LOAD ================= */
-function loadUser(){
-  const data = localStorage.getItem("user");
-  if(data){
-    user = JSON.parse(data);
-  }
-}
-
-/* ================= UI ================= */
-function updateUI(){
-
-  if(user.email){
-    document.getElementById("userInfo").innerText =
-      user.email + " (" + user.role + ")";
-  }else{
-    document.getElementById("userInfo").innerText = "Ẩn danh";
-  }
-}
-
-/* ================= COMMENT ================= */
-function comment(){
-
-  const text = document.getElementById("commentInput").value;
-
-  if(!text) return;
-
-  let name = "Ẩn danh";
-
-  if(user.email){
-    name = user.email + " (" + user.role + ")";
-  }
-
-  const div = document.createElement("div");
-  div.innerText = name + ": " + text;
-
-  document.getElementById("comments").appendChild(div);
-
-  document.getElementById("commentInput").value = "";
-}
-
-/* INIT */
-loadUser();
-updateUI();
+load();
 
 </script>
 
