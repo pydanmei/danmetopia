@@ -9,32 +9,34 @@
 
 <h2>HOME</h2>
 
-<div id="list">Loading...</div>
+<div id="list"></div>
 
 <script>
 
-// check login
-const role = localStorage.getItem("role");
-if(!role){
-  window.location.href = "index.html";
-}
-
-// fake data (KHÔNG FETCH để tránh lỗi trắng)
-const data = [
-  {id:1,title:"Neko Mata",genre:"shounen ai"},
-  {id:2,title:"Chó Mực",genre:"yaoi"}
+const stories = [
+  {
+    id: 1,
+    title: "Neko Mata",
+    genre: "Yaoi / Drama"
+  },
+  {
+    id: 2,
+    title: "Chó Mực",
+    genre: "Romance"
+  }
 ];
 
 document.getElementById("list").innerHTML =
-  data.map(s=>`
-    <div onclick="openStory(${s.id})"
+  stories.map(s => `
+    <div onclick="openRead(${s.id})"
       style="padding:10px;margin:10px;background:#222;cursor:pointer">
-      ${s.title} - ${s.genre}
+      <b>${s.title}</b><br>
+      <small>${s.genre}</small>
     </div>
   `).join("");
 
-function openStory(id){
-  window.location.href = "story.html?id="+id;
+function openRead(id){
+  window.location.href = "read.html?id=" + id;
 }
 
 </script>
