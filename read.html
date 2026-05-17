@@ -7,7 +7,7 @@
   <style>
     body{
       margin:0;
-      background:black;
+      background:#0b0b0b;
       color:white;
       font-family:Arial;
     }
@@ -18,14 +18,16 @@
       top:0;
       left:0;
       right:0;
+      height:50px;
       background:#00dc64;
       color:black;
       display:flex;
       justify-content:space-between;
       align-items:center;
-      padding:10px;
+      padding:0 10px;
       font-weight:bold;
       z-index:999;
+      box-shadow:0 2px 10px rgba(0,0,0,0.5);
     }
 
     .btn{
@@ -33,28 +35,34 @@
       color:white;
       padding:6px 10px;
       border-radius:8px;
-      cursor:pointer;
       font-size:13px;
+      cursor:pointer;
       text-decoration:none;
     }
 
-    /* INFO */
+    /* STORY INFO CARD */
     .info{
       margin-top:60px;
-      background:#111;
-      padding:15px;
-      border-bottom:1px solid #333;
+      background:#121212;
+      padding:16px;
+      border-bottom:1px solid #222;
     }
 
-    .info h2{
-      margin:0;
+    .title{
+      font-size:20px;
+      font-weight:bold;
       color:#00dc64;
+      margin-bottom:6px;
     }
 
     .meta{
       font-size:12px;
-      color:#bbb;
-      line-height:1.5;
+      color:#aaa;
+      line-height:1.6;
+    }
+
+    .tags{
+      margin-top:8px;
     }
 
     .tags span{
@@ -62,7 +70,7 @@
       background:#00dc64;
       color:black;
       padding:3px 8px;
-      border-radius:10px;
+      border-radius:12px;
       font-size:11px;
       margin:3px;
     }
@@ -70,14 +78,18 @@
     /* CHAPTER TITLE */
     .chapterTitle{
       text-align:center;
-      padding:10px;
-      color:#aaa;
+      padding:12px;
+      font-size:14px;
+      color:#ccc;
+      border-top:1px solid #222;
+      border-bottom:1px solid #222;
     }
 
-    /* IMAGES */
+    /* READER */
     .pages img{
       width:100%;
       display:block;
+      border-bottom:1px solid #111;
     }
 
     /* BOTTOM NAV */
@@ -91,13 +103,16 @@
       justify-content:space-between;
       padding:10px;
       z-index:999;
+      border-top:1px solid #222;
     }
 
     .nav button{
+      flex:1;
+      margin:0 5px;
       background:#00dc64;
       border:none;
       padding:10px;
-      border-radius:8px;
+      border-radius:10px;
       font-weight:bold;
       cursor:pointer;
     }
@@ -115,6 +130,7 @@
       font-weight:bold;
       cursor:pointer;
       z-index:999;
+      box-shadow:0 3px 10px rgba(0,0,0,0.4);
     }
 
   </style>
@@ -125,19 +141,19 @@
 
 <!-- TOP -->
 <div class="topbar">
-  <a class="btn" href="home.html">🏠 HOME</a>
+  <a class="btn" href="home.html">🏠 Home</a>
   <div id="title">Loading...</div>
-  <div class="btn">MENU</div>
+  <div class="btn">☰</div>
 </div>
 
 <!-- INFO -->
 <div class="info">
 
-  <h2>Neko Mata</h2>
+  <div class="title">Neko Mata</div>
 
   <div class="meta">
     <b>Tác giả:</b> Unknown<br>
-    <b>Thể loại:</b> Romance, Drama<br>
+    <b>Thể loại:</b> Romance · Drama<br>
     <b>Trạng thái:</b> Đang tiến hành<br>
     <b>Nhóm dịch:</b> DANMETOPIA
   </div>
@@ -169,6 +185,7 @@
 
 let id = Number(new URLSearchParams(location.search).get("id") || 1);
 
+/* CHAPTER DATA */
 const chapters = {
   1: "Chapter 1",
   2: "Chapter 2",
@@ -178,11 +195,12 @@ const chapters = {
 document.getElementById("title").innerText = chapters[id];
 document.getElementById("chapterTitle").innerText = chapters[id];
 
-/* SCROLL IMAGE */
+/* LOAD PAGES */
 let html = "";
 for(let i = 1; i <= 6; i++){
   html += `
-    <img src="https://picsum.photos/800/1200?random=${id}${i}">
+    <img loading="lazy"
+      src="https://picsum.photos/800/1200?random=${id}${i}">
   `;
 }
 
@@ -201,7 +219,7 @@ function prev(){
   }
 }
 
-/* BACK TO TOP */
+/* TOP */
 function goTop(){
   window.scrollTo({top:0, behavior:"smooth"});
 }
