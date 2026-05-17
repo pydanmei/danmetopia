@@ -1,26 +1,58 @@
 <!DOCTYPE html>
 <html>
 
-<body style="background:#111;color:white;font-family:Arial;text-align:center">
+<body style="background:#111;color:white;font-family:Arial">
 
-<h2>UPLOAD</h2>
+<div style="max-width:400px;margin:40px auto;background:#1c1c1c;padding:15px;border-radius:10px">
 
-<div id="msg">Checking...</div>
+<h2>UPLOAD STORY</h2>
+
+<input id="title" placeholder="Tên truyện"><br><br>
+<input id="alt" placeholder="Tên khác"><br><br>
+<input id="author" placeholder="Tác giả"><br><br>
+<input id="genre" placeholder="Thể loại"><br><br>
+<input id="chapters" placeholder="Số chương"><br><br>
+<input id="tags" placeholder="Tags"><br><br>
+
+<button onclick="upload()" style="width:100%;padding:10px;background:#00dc64;border:none">
+UPLOAD
+</button>
+
+<p id="msg"></p>
+
+</div>
 
 <script>
 
 const role = localStorage.getItem("role");
+const group = localStorage.getItem("group") || "groupA";
 
-if(!role){
-  window.location.href = "index.html";
+/* only admin/group */
+if(role !== "admin" && role !== "group"){
+  document.body.innerHTML="<h2 style='color:white;text-align:center'>NO PERMISSION</h2>";
 }
 
-if(role !== "admin"){
-  alert("No permission");
-  window.location.href = "home.html";
-}
+function upload(){
 
-document.getElementById("msg").innerText = "WELCOME ADMIN ✔";
+  let stories = JSON.parse(localStorage.getItem("stories") || "[]");
+
+  const newStory = {
+    id: Date.now(),
+    title: title.value,
+    alt: alt.value,
+    author: author.value,
+    genre: genre.value,
+    chapters: Number(chapters.value),
+    tags: tags.value.split(","),
+    owner: group   // 🔥 AUTO GROUP OWNER
+  };
+
+  stories.push(newStory);
+
+  localStorage.setItem("stories", JSON.stringify(stories));
+
+  document.getElementById("msg").innerText="UPLOAD DONE";
+}
 
 </script>
 
