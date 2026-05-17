@@ -1,7 +1,3 @@
-const today = new Date().toDateString();
-
-if(localStorage.getItem("lastLogin
-
 <!DOCTYPE html>
 <html>
 
@@ -70,17 +66,14 @@ if(localStorage.getItem("lastLogin
 
 <body>
 
-<!-- ⚠️ WARNING SCREEN -->
+<!-- WARNING -->
 <div class="box" id="warning">
 
   <h2>⚠️ CẢNH BÁO NỘI DUNG NGƯỜI LỚN</h2>
 
   <p style="font-size:14px;line-height:1.5">
-
-    Trang web này có thể chứa nội dung dành cho người trưởng thành (18+).<br><br>
-
-    Bằng việc tiếp tục, bạn xác nhận rằng bạn đủ 18 tuổi trở lên và việc xem nội dung này hợp pháp tại khu vực của bạn.
-
+    Trang web này có nội dung 18+.<br><br>
+    Bạn xác nhận đủ 18 tuổi để tiếp tục.
   </p>
 
   <button class="agree" onclick="enter()">Tôi đồng ý</button>
@@ -88,12 +81,10 @@ if(localStorage.getItem("lastLogin
 
 </div>
 
-<!-- 🔐 LOGIN SCREEN -->
+<!-- LOGIN -->
 <div class="box login" id="loginBox">
 
   <h2>DANMETOPIA</h2>
-
-  <p>Nhập mật khẩu</p>
 
   <input type="password" id="pass" placeholder="Password">
 
@@ -105,25 +96,60 @@ if(localStorage.getItem("lastLogin
 
 <script>
 
+const today = new Date().toDateString();
+
+/* =========================
+   1. CHECK 1 LẦN / NGÀY
+========================= */
+if(localStorage.getItem("lastVisit") === today){
+
+  // bỏ qua warning luôn
+  document.getElementById("warning")?.remove();
+  document.getElementById("loginBox").style.display = "block";
+
+}
+
+/* =========================
+   WARNING ENTER
+========================= */
 function enter(){
   document.getElementById("warning").style.display = "none";
   document.getElementById("loginBox").style.display = "block";
+
+  localStorage.setItem("lastVisit", today);
 }
 
 function leave(){
   document.body.innerHTML = "<h2 style='color:white;text-align:center;margin-top:100px'>Bạn đã rời khỏi trang</h2>";
 }
 
+/* =========================
+   LOGIN SYSTEM
+========================= */
 function login(){
 
   const pass = document.getElementById("pass").value;
-  const correctPassword = "1234";
+  const correctPassword = "pydanmetopia";
 
   if(pass === correctPassword){
+
+    // lưu login
+    localStorage.setItem("loggedIn", "true");
+
     window.location.href = "home.html";
+
   } else {
     document.getElementById("error").innerText = "Sai mật khẩu!";
   }
+}
+
+/* =========================
+   AUTO LOGIN
+========================= */
+if(localStorage.getItem("loggedIn") === "true"){
+
+  document.getElementById("warning").style.display = "none";
+  document.getElementById("loginBox").style.display = "block";
 
 }
 
