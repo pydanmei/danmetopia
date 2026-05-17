@@ -1,159 +1,30 @@
-<!DOCTYPE html>
-<html>
-
-<head>
-  <title>DANMETOPIA WARNING</title>
-
-  <style>
-    body{
-      margin:0;
-      background:#0f0f0f;
-      font-family:Arial;
-      color:white;
-      display:flex;
-      justify-content:center;
-      align-items:center;
-      height:100vh;
-    }
-
-    .box{
-      background:#1c1c1c;
-      padding:25px;
-      border-radius:12px;
-      width:350px;
-      text-align:center;
-    }
-
-    button{
-      padding:10px;
-      width:100%;
-      margin-top:10px;
-      border:none;
-      border-radius:8px;
-      cursor:pointer;
-      font-weight:bold;
-    }
-
-    .agree{
-      background:#00dc64;
-      color:black;
-    }
-
-    .deny{
-      background:#444;
-      color:white;
-    }
-
-    .login{
-      display:none;
-    }
-
-    input{
-      width:100%;
-      padding:10px;
-      margin-top:10px;
-      border:none;
-      border-radius:8px;
-    }
-
-    .error{
-      color:red;
-      margin-top:10px;
-    }
-
-  </style>
-</head>
-
-<body>
-
-<!-- WARNING -->
-<div class="box" id="warning">
-
-  <h2>⚠️ CẢNH BÁO NỘI DUNG NGƯỜI LỚN</h2>
-
-  <p style="font-size:14px;line-height:1.5">
-    Trang web này có nội dung 18+.<br><br>
-    Bạn xác nhận đủ 18 tuổi để tiếp tục.
-  </p>
-
-  <button class="agree" onclick="enter()">Tôi đồng ý</button>
-  <button class="deny" onclick="leave()">Rời khỏi</button>
-
-</div>
-
-<!-- LOGIN -->
-<div class="box login" id="loginBox">
-
-  <h2>DANMETOPIA</h2>
-
-  <input type="password" id="pass" placeholder="Password">
-
-  <button class="agree" onclick="login()">ENTER</button>
-
-  <div class="error" id="error"></div>
-
-</div>
-
 <script>
 
-const today = new Date().toDateString();
-
-/* =========================
-   1. CHECK 1 LẦN / NGÀY
-========================= */
-if(localStorage.getItem("lastVisit") === today){
-
-  // bỏ qua warning luôn
-  document.getElementById("warning")?.remove();
-  document.getElementById("loginBox").style.display = "block";
-
-}
-
-/* =========================
-   WARNING ENTER
-========================= */
-function enter(){
-  document.getElementById("warning").style.display = "none";
-  document.getElementById("loginBox").style.display = "block";
-
-  localStorage.setItem("lastVisit", today);
-}
-
-function leave(){
-  document.body.innerHTML = "<h2 style='color:white;text-align:center;margin-top:100px'>Bạn đã rời khỏi trang</h2>";
-}
-
-/* =========================
-   LOGIN SYSTEM
-========================= */
 function login(){
 
   const pass = document.getElementById("pass").value;
-  const correctPassword = "pydanmetopia";
 
-  if(pass === correctPassword){
+  fetch("https://danmetopia-backend.onrender.com/api/login", {
+    method: "POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify({ password: pass })
+  })
+  .then(res => res.json())
+  .then(data => {
 
-    // lưu login
-    localStorage.setItem("loggedIn", "true");
+    if(data.error){
+      document.getElementById("error").innerText = "Sai mật khẩu!";
+      return;
+    }
 
+    // lưu session
+    localStorage.setItem("role", data.role);
+
+    // chuyển trang
     window.location.href = "home.html";
 
-  } else {
-    document.getElementById("error").innerText = "Sai mật khẩu!";
-  }
-}
-
-/* =========================
-   AUTO LOGIN
-========================= */
-if(localStorage.getItem("loggedIn") === "true"){
-
-  document.getElementById("warning").style.display = "none";
-  document.getElementById("loginBox").style.display = "block";
+  });
 
 }
 
 </script>
-
-</body>
-</html>
