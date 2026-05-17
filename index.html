@@ -93,7 +93,7 @@
   <div class="box">
     <h2>⚠️ CẢNH BÁO 18+</h2>
     <p style="font-size:14px;line-height:1.5">
-      Đây là trang truyện có nội dung 18+.<br><br>
+      Đây là trang truyện có nội dung 18+.<br>
       Bạn xác nhận đủ 18 tuổi khi tiếp tục.
     </p>
 
@@ -108,7 +108,7 @@
   <div class="box">
 
     <div class="title">DANMETOPIA</div>
-    <div class="sub">Nền tảng đọc truyện nhóm dịch</div>
+    <div class="sub">Nền tảng đọc truyện namxnam</div>
 
     <input id="email" placeholder="Email (không bắt buộc)">
     <input id="pass" type="password" placeholder="Mật khẩu (danmei)">
@@ -136,19 +136,27 @@
 import { loginApp } from "./auth.js";
 
 /* ================= WARNING ================= */
-window.enter = ()=>{
-  document.getElementById("warning").style.display="none";
+<script>
+document.addEventListener("DOMContentLoaded", ()=>{
 
+  const warning = document.getElementById("warning");
   const login = document.getElementById("login");
-  login.style.display="flex";
-  login.style.flexDirection="column";
-  login.style.alignItems="center";
-  login.style.justifyContent="center";
+
+  // mặc định: chỉ hiện warning
+  warning.style.display = "flex";
+  login.style.display = "none";
+
+});
+
+function enter(){
+  document.getElementById("warning").style.display = "none";
+  document.getElementById("login").style.display = "flex";
 }
 
-window.leave = ()=>{
-  document.body.innerHTML="<h2 style='color:white;text-align:center;margin-top:100px'>Bạn đã thoát trang</h2>";
+function leave(){
+  document.body.innerHTML = "<h2 style='color:white;text-align:center;margin-top:100px'>Đã thoát</h2>";
 }
+</script>
 
 /* ================= LOGIN ================= */
 window.login = async ()=>{
