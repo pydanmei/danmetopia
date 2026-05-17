@@ -5,36 +5,43 @@
   <title>Upload</title>
 </head>
 
-<body style="font-family:Arial;background:#111;color:white;text-align:center;padding-top:50px">
+<body style="margin:0;font-family:Arial;background:#111;color:white;text-align:center;padding-top:80px">
 
-<h2>UPLOAD PAGE</h2>
+<h1>UPLOAD PAGE</h1>
 
-<p id="status">Checking permission...</p>
+<div id="msg">Loading...</div>
 
 <script>
 
-window.onload = function(){
+try {
 
   const role = localStorage.getItem("role");
 
-  // chưa login
+  const msg = document.getElementById("msg");
+
+  // không login
   if(!role){
-    alert("Bạn chưa đăng nhập!");
-    window.location.href = "index.html";
-    return;
+    msg.innerText = "Chưa login → quay lại...";
+    setTimeout(()=> window.location.href="index.html", 1000);
   }
 
-  // user thường bị chặn upload
-  if(role !== "admin"){
-    alert("Bạn không có quyền upload!");
-    window.location.href = "home.html";
-    return;
+  // user thường
+  else if(role !== "admin"){
+    msg.innerText = "Bạn không có quyền upload → quay lại home...";
+    setTimeout(()=> window.location.href="home.html", 1000);
   }
 
   // admin OK
-  document.getElementById("status").innerText = "Welcome Admin ✔";
+  else {
+    msg.innerText = "WELCOME ADMIN ✔";
+  }
 
-};
+} catch(e){
+
+  // nếu lỗi gì cũng không trắng
+  document.body.innerHTML = "<h2>Đã xảy ra lỗi nhưng không crash ✔</h2>";
+
+}
 
 </script>
 
