@@ -1,134 +1,131 @@
 <!DOCTYPE html>
 <html>
 
-<body style="margin:0;background:black;color:white;font-family:Arial">
+<head>
+<meta charset="utf-8">
+<title>Đọc truyện</title>
 
-<div style="background:#00dc64;color:black;padding:10px;display:flex;justify-content:space-between">
-  <button onclick="location.href='home.html'">HOME</button>
-  <div id="title"></div>
+<style>
+body{
+  margin:0;
+  background:#0f0f0f;
+  color:white;
+  font-family:Arial;
+}
+
+.top{
+  background:#00dc64;
+  color:black;
+  padding:10px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.container{
+  padding:15px;
+}
+
+.chapter-list{
+  background:#1c1c1c;
+  padding:10px;
+  border-radius:10px;
+  margin-bottom:10px;
+}
+
+button{
+  padding:8px;
+  margin:5px;
+  border:none;
+  border-radius:5px;
+  cursor:pointer;
+}
+
+.green{background:#00dc64;}
+.gray{background:#333;color:white;}
+
+.content{
+  background:#111;
+  padding:20px;
+  border-radius:10px;
+  min-height:300px;
+}
+
+.nav{
+  display:flex;
+  justify-content:space-between;
+  margin-top:10px;
+}
+</style>
+
+</head>
+
+<body>
+
+<div class="top">
+<button onclick="home()">🏠 Trang chủ</button>
+<div id="title">Truyện</div>
+<button onclick="menu()">📖 Mục lục</button>
 </div>
 
-<div id="info" style="padding:10px"></div>
+<div class="container">
 
-<button onclick="like()">❤️ Like</button>
-<button onclick="approve()" id="approveBtn" style="display:none">✔ Approve</button>
+<div class="chapter-list" id="menu" style="display:none"></div>
 
-<!-- RECOMMEND -->
-<div style="padding:10px">
-  <h3>🔥 Recommended same genre</h3>
-  <div id="recommend"></div>
+<div class="content" id="content">
+Loading...
 </div>
 
-<script type="module">
+<div class="nav">
+<button class="gray" onclick="prev()">⬅ Trước</button>
+<button class="gray" onclick="next()">Sau ➡</button>
+</div>
 
-import {
-  initializeApp
-} from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
+</div>
 
-import {
-  getFirestore,
-  doc,
-  getDoc,
-  updateDoc,
-  increment,
-  collection,
-  query,
-  where,
-  getDocs
-} from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
+<script>
 
-const firebaseConfig = {
-  apiKey: "AIzaSyCDQk9DlMNKwn_508fDMI_3IB_dgpgHujA",
-  authDomain: "danmetopia.firebaseapp.com",
-  projectId: "danmetopia",
-  storageBucket: "danmetopia.appspot.com",
-  messagingSenderId: "178240377870",
-  appId: "1:178240377870:web:d094b222ebabadccc5585f"
-};
+const storyId = new URLSearchParams(location.search).get("id");
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+const chapters = [
+  "Chương 1: Khởi đầu",
+  "Chương 2: Bí ẩn",
+  "Chương 3: Cuộc chiến"
+];
 
-/* ================= ROLE ================= */
-const role = localStorage.getItem("role");
+let current = 0;
 
-/* ================= ID ================= */
-const id = new URLSearchParams(location.search).get("id");
-const ref = doc(db,"stories",id);
+document.getElementById("content").innerText = chapters[current];
 
-let story=null;
+document.getElementById("menu").innerHTML =
+chapters.map((c,i)=>`
+  <button class="green" onclick="go(${i})">${c}</button>
+`).join("");
 
-/* ================= LOAD STORY ================= */
-async function load(){
-
-  const snap = await getDoc(ref);
-  story = snap.data();
-
-  document.getElementById("title").innerText = story.title;
-
-  document.getElementById("info").innerHTML = `
-    <h2>${story.title}</h2>
-    <p>${story.genre}</p>
-    <b>Status:</b> ${story.status}
-  `;
-
-  if(role==="admin" || role==="editor"){
-    document.getElementById("approveBtn").style.display="block";
-  }
-
-  loadRecommend();
+function go(i){
+  current = i;
+  render();
 }
 
-load();
-
-/* ================= LIKE ================= */
-window.like = async ()=>{
-  await updateDoc(ref,{
-    likes: increment(1)
-  });
+function render(){
+  document.getElementById("content").innerText = chapters[current];
 }
 
-/* ================= APPROVE SYSTEM ================= */
-window.approve = async ()=>{
-
-  await updateDoc(ref,{
-    status:"approved"
-  });
-
-  alert("APPROVED");
+function prev(){
+  if(current>0){ current--; render(); }
 }
 
-/* ================= RECOMMEND SYSTEM ================= */
-async function loadRecommend(){
+function next(){
+  if(current<chapters.length-1){ current++; render(); }
+}
 
-  if(!story) return;
+function menu(){
+  const m = document.getElementById("menu");
+  m.style.display = m.style.display==="none"?"block":"none";
+}
 
-  const q = query(
-    collection(db,"stories"),
-    where("genre","==",story.genre)
-  );
-
-  const snap = await getDocs(q);
-
-  let html="";
-
-  snap.forEach(d=>{
-    if(d.id === id) return;
-
-    const s = d.data();
-
-    html += `
-      <div onclick="location.href='read.html?id=${d.id}'"
-        style="background:#1c1c1c;margin:5px;padding:10px">
-
-        ${s.title}<br>
-        <small>${s.genre}</small>
-
-      </div>
-    `;
-  });
-
-  document.getElementById("recommend").innerHTML = html;
+function home(){
+  window.location.href="home.html";
 }
 
 </script>
