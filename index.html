@@ -128,7 +128,85 @@ function login(){
 
 /* ================= OPTIONAL FIREBASE LOAD LATER ================= */
 try{
-  // nếu sau này bạn muốn gắn firebase thì thêm vào đây
+<!-- LOGIN -->
+<div id="login">
+
+  <div class="box">
+
+    <div class="title">DANMETOPIA</div>
+    <div class="sub">Nền tảng đọc truyện</div>
+
+    <input id="email" placeholder="Email (không bắt buộc)">
+    <input id="pass" type="password" placeholder="Mật khẩu (danmei)">
+
+    <button class="green" onclick="login()">ĐĂNG NHẬP</button>
+
+    <hr>
+
+    <div class="title">ĐĂNG KÝ NHÓM DỊCH</div>
+
+    <input id="groupName" placeholder="Tên nhóm dịch">
+    <input id="displayName" placeholder="Tên hiển thị">
+
+    <button onclick="registerGroup()" style="background:#ffcc00;">
+      TẠO NHÓM
+    </button>
+
+    <p id="msg" style="color:red"></p>
+
+  </div>
+
+</div>
+
+<script type="module">
+
+import { loginApp } from "./auth.js";
+
+/* ================= WARNING ================= */
+window.enter = ()=>{
+  document.getElementById("warning").style.display="none";
+  document.getElementById("login").style.display="flex";
+}
+
+window.leave = ()=>{
+  document.body.innerHTML="<h2 style='color:white;text-align:center;margin-top:100px'>Đã thoát</h2>";
+}
+
+/* ================= LOGIN ================= */
+window.login = async ()=>{
+
+  const email = document.getElementById("email").value || "user@danmei.com";
+  const pass = document.getElementById("pass").value;
+
+  if(pass !== "danmei"){
+    document.getElementById("msg").innerText="Sai mật khẩu";
+    return;
+  }
+
+  await loginApp(email, pass);
+
+  localStorage.setItem("email", email);
+
+  window.location.href="home.html";
+}
+
+/* ================= GROUP ================= */
+window.registerGroup = ()=>{
+
+  const groupName = document.getElementById("groupName").value;
+  const displayName = document.getElementById("displayName").value;
+
+  if(!groupName){
+    document.getElementById("msg").innerText="Vui lòng nhập tên nhóm";
+    return;
+  }
+
+  localStorage.setItem("groupName", groupName);
+  localStorage.setItem("displayName", displayName);
+
+  document.getElementById("msg").innerText="Đã tạo nhóm thành công!";
+}
+
   console.log("System OK");
 }catch(e){
   console.log("Firebase not loaded - safe mode");
