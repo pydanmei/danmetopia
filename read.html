@@ -1,197 +1,84 @@
 <!DOCTYPE html>
 <html>
 
-<head>
-  <title>READ</title>
+<body style="margin:0;background:black;color:white;font-family:Arial">
 
-  <style>
-    body{margin:0;background:black;color:white;font-family:Arial}
-
-    .topbar{
-      position:fixed;top:0;left:0;right:0;
-      background:#00dc64;color:black;
-      display:flex;justify-content:space-between;
-      padding:10px;font-weight:bold;z-index:999;
-    }
-
-    .btn{background:black;color:white;padding:6px 10px;border-radius:8px;cursor:pointer}
-
-    .info{margin-top:60px;background:#111;padding:15px}
-
-    .tags span{
-      background:#00dc64;color:black;padding:3px 8px;border-radius:10px;margin:3px;display:inline-block
-    }
-
-    img{width:100%;display:block}
-
-    .nav{
-      position:fixed;bottom:0;left:0;right:0;
-      background:#111;display:flex;padding:10px;
-    }
-
-    .nav button{
-      flex:1;margin:0 5px;background:#00dc64;border:none;padding:10px;border-radius:8px
-    }
-
-    input{width:100%;padding:6px;margin:3px 0}
-
-    .editBox{
-      background:#1c1c1c;padding:10px;margin-top:10px;border-radius:8px
-    }
-
-    .menu{
-      position:fixed;top:50px;right:10px;
-      background:#1c1c1c;padding:10px;border-radius:8px;display:none
-    }
-
-    .menu div{padding:5px;cursor:pointer}
-
-    .badge{
-      display:inline-block;
-      background:#333;
-      padding:3px 6px;
-      border-radius:6px;
-      font-size:11px;
-      margin-top:5px;
-      color:#aaa;
-    }
-
-  </style>
-
-</head>
-
-<body>
-
-<div class="topbar">
-  <div onclick="home()" class="btn">HOME</div>
-  <div id="title">READ</div>
-  <div onclick="toggle()" class="btn">MENU</div>
+<div style="background:#00dc64;color:black;padding:10px;display:flex;justify-content:space-between">
+  <button onclick="location.href='home.html'">HOME</button>
+  <div id="title"></div>
+  <button onclick="toggle()">MENU</button>
 </div>
 
-<div class="menu" id="menu"></div>
+<div id="menu" style="display:none;position:fixed;right:10px;top:50px;background:#1c1c1c;padding:10px"></div>
 
-<div class="info">
-
-  <div id="view"></div>
-
-  <div class="badge" id="ownerBox"></div>
-
-  <!-- ADMIN/GROUP EDIT -->
-  <div id="adminEdit" class="editBox" style="display:none">
-    <h3>EDIT INFO</h3>
-
-    <input id="t1" placeholder="Tên truyện">
-    <input id="t2" placeholder="Tên khác">
-    <input id="t3" placeholder="Tác giả">
-    <input id="t4" placeholder="Thể loại">
-    <input id="t5" placeholder="Tình trạng">
-    <input id="t6" placeholder="Số chương">
-    <input id="t7" placeholder="Tags (comma)">
-
-    <button onclick="save()" style="width:100%;padding:10px;background:#00dc64;border:none">
-      SAVE
-    </button>
-  </div>
-
-</div>
+<div id="info" style="padding:15px;background:#111;margin-top:40px"></div>
 
 <div id="pages"></div>
 
-<div class="nav">
-  <button onclick="prev()">⬅ Prev</button>
-  <button onclick="next()">Next ➡</button>
+<div style="position:fixed;bottom:0;left:0;right:0;background:#111;display:flex">
+  <button onclick="prev()" style="flex:1">⬅</button>
+  <button onclick="next()" style="flex:1">➡</button>
 </div>
 
 <script>
 
-let id = Number(new URLSearchParams(location.search).get("id")||1);
+let id = Number(new URLSearchParams(location.search).get("id"));
 
 const role = localStorage.getItem("role");
-const myGroup = localStorage.getItem("group") || "groupA";
+const myGroup = localStorage.getItem("group");
 
-/* STORY DATA */
-let data = JSON.parse(localStorage.getItem("story_"+id));
+/* LOAD STORY */
+let stories = JSON.parse(localStorage.getItem("stories") || "[]");
 
+let data = stories.find(s => s.id == id);
+
+/* fallback */
 if(!data){
-  data={
-    title:"Neko Mata",
-    alt:"Neko Cat Story",
+  data = {
+    title:"Demo",
+    alt:"Demo Alt",
     author:"Unknown",
-    genre:"Romance",
-    status:"Ongoing",
+    genre:"Test",
     chapters:3,
-    tags:["18+","Drama"],
-    owner:"groupA"   // 🔥 quan trọng
+    tags:["18+"],
+    owner:"system"
   };
 }
 
-/* SHOW INFO */
-function render(){
+document.getElementById("title").innerText = data.title;
 
-document.getElementById("view").innerHTML=`
+/* INFO */
+function renderInfo(){
+
+document.getElementById("info").innerHTML=`
   <h2>${data.title}</h2>
   <b>Tên khác:</b> ${data.alt}<br>
   <b>Tác giả:</b> ${data.author}<br>
   <b>Thể loại:</b> ${data.genre}<br>
-  <b>Tình trạng:</b> ${data.status}<br>
   <b>Số chương:</b> ${data.chapters}<br>
+  <b>Owner:</b> ${data.owner}</b><br>
 
-  <div>
-    ${data.tags.map(t=>`<span class="tags"><span>${t}</span></span>`).join("")}
-  </div>
+  <div>${data.tags.map(t=>`<span style="background:#00dc64;color:black;padding:3px 8px;margin:3px;display:inline-block">${t}</span>`).join("")}</div>
 `;
 
-document.getElementById("ownerBox").innerText =
-  "Uploader: " + data.owner;
+}
 
-/* 🔥 ROLE LOGIC FIX */
+renderInfo();
+
+/* PERMISSION RULE */
 const canEdit =
   role === "admin" ||
   (role === "group" && data.owner === myGroup);
 
-if(canEdit){
-  document.getElementById("adminEdit").style.display="block";
-
-  t1.value=data.title;
-  t2.value=data.alt;
-  t3.value=data.author;
-  t4.value=data.genre;
-  t5.value=data.status;
-  t6.value=data.chapters;
-  t7.value=data.tags.join(",");
-}
-}
-
-render();
-
-/* SAVE */
-function save(){
-
-data={
-  ...data,
-  title:t1.value,
-  alt:t2.value,
-  author:t3.value,
-  genre:t4.value,
-  status:t5.value,
-  chapters:Number(t6.value),
-  tags:t7.value.split(","),
-  owner:data.owner   // giữ nguyên owner
-};
-
-localStorage.setItem("story_"+id,JSON.stringify(data));
-render();
-}
-
 /* MENU */
-const chapters=[1,2,3];
+let chapters = [1,2,3];
 
-document.getElementById("menu").innerHTML=
+document.getElementById("menu").innerHTML =
 chapters.map(c=>`<div onclick="go(${c})">Chapter ${c}</div>`).join("");
 
 function toggle(){
   const m=document.getElementById("menu");
-  m.style.display=m.style.display==="block"?"none":"block";
+  m.style.display = m.style.display==="block"?"none":"block";
 }
 
 function go(cid){
@@ -199,23 +86,23 @@ function go(cid){
 }
 
 /* WEBTOON */
-let html="";
-for(let i=1;i<=6;i++){
-  html+=`<img src="https://picsum.photos/800/1200?${id}${i}">`;
+function load(){
+  let html="";
+  for(let i=1;i<=6;i++){
+    html+=`<img src="https://picsum.photos/800/1200?${id}${i}">`;
+  }
+  document.getElementById("pages").innerHTML=html;
 }
-document.getElementById("pages").innerHTML=html;
+
+load();
 
 /* NAV */
 function next(){
-  if(id<3) location.href="read.html?id="+(id+1);
+  location.href="read.html?id="+(id+1);
 }
 
 function prev(){
-  if(id>1) location.href="read.html?id="+(id-1);
-}
-
-function home(){
-  location.href="home.html";
+  location.href="read.html?id="+(id-1);
 }
 
 </script>
