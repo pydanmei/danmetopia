@@ -2,23 +2,66 @@
 <html>
 
 <head>
-  <title>DANMETOPIA LOGIN</title>
+  <title>DANMETOPIA</title>
 </head>
 
-<body style="background:#111;color:white;font-family:Arial;text-align:center;padding-top:80px">
+<body style="margin:0;background:#0f0f0f;color:white;font-family:Arial;display:flex;justify-content:center;align-items:center;height:100vh">
 
-<h2>WARNING 18+</h2>
+<!-- ⚠️ WARNING -->
+<div id="warning" style="background:#1c1c1c;padding:25px;border-radius:12px;width:350px;text-align:center">
 
-<p>Nội dung người lớn</p>
+  <h2>⚠️ CẢNH BÁO 18+</h2>
 
-<input id="pass" type="password" placeholder="password">
-<br><br>
-<button onclick="login()">ENTER</button>
+  <p style="font-size:14px;line-height:1.5">
+    Nội dung dành cho người trưởng thành.<br>
+    Bạn xác nhận đủ 18 tuổi để tiếp tục.
+  </p>
 
-<p id="error" style="color:red"></p>
+  <button onclick="enter()" style="width:100%;padding:10px;margin-top:10px;background:#00dc64;border:none;border-radius:8px;font-weight:bold">
+    Tôi đồng ý
+  </button>
+
+</div>
+
+<!-- LOGIN -->
+<div id="loginBox" style="display:none;background:#1c1c1c;padding:25px;border-radius:12px;width:350px;text-align:center">
+
+  <h2>DANMETOPIA</h2>
+
+  <input id="pass" type="password" placeholder="Password"
+    style="width:100%;padding:10px;margin-top:10px;border:none;border-radius:8px">
+
+  <button onclick="login()"
+    style="width:100%;padding:10px;margin-top:10px;background:#00dc64;border:none;border-radius:8px;font-weight:bold">
+    ENTER
+  </button>
+
+  <p id="error" style="color:red"></p>
+
+</div>
 
 <script>
 
+const today = new Date().toDateString();
+
+/* =========================
+   1. WARNING 1 LẦN / NGÀY
+========================= */
+if(localStorage.getItem("lastVisit") === today){
+  document.getElementById("warning").style.display = "none";
+  document.getElementById("loginBox").style.display = "block";
+}
+
+function enter(){
+  document.getElementById("warning").style.display = "none";
+  document.getElementById("loginBox").style.display = "block";
+
+  localStorage.setItem("lastVisit", today);
+}
+
+/* =========================
+   LOGIN SYSTEM (USER + ADMIN)
+========================= */
 function login(){
 
   const pass = document.getElementById("pass").value;
@@ -34,7 +77,7 @@ function login(){
   }
 
   else {
-    document.getElementById("error").innerText = "Sai mật khẩu";
+    document.getElementById("error").innerText = "Sai mật khẩu!";
   }
 
 }
