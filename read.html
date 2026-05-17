@@ -5,29 +5,18 @@
   <title>READ</title>
 
   <style>
-    body{
-      margin:0;
-      background:#0b0b0b;
-      color:white;
-      font-family:Arial;
-    }
+    body{margin:0;background:black;color:white;font-family:Arial}
 
-    /* TOP BAR */
     .topbar{
       position:fixed;
-      top:0;
-      left:0;
-      right:0;
-      height:50px;
+      top:0;left:0;right:0;
       background:#00dc64;
       color:black;
       display:flex;
       justify-content:space-between;
-      align-items:center;
-      padding:0 10px;
+      padding:10px;
       font-weight:bold;
       z-index:999;
-      box-shadow:0 2px 10px rgba(0,0,0,0.5);
     }
 
     .btn{
@@ -35,75 +24,42 @@
       color:white;
       padding:6px 10px;
       border-radius:8px;
-      font-size:13px;
       cursor:pointer;
-      text-decoration:none;
+      font-size:13px;
     }
 
-    /* STORY INFO CARD */
+    .menu{
+      position:fixed;
+      right:10px;
+      top:50px;
+      background:#1c1c1c;
+      padding:10px;
+      border-radius:10px;
+      display:none;
+      z-index:9999;
+    }
+
+    .menu div{
+      padding:5px;
+      cursor:pointer;
+    }
+
     .info{
       margin-top:60px;
-      background:#121212;
-      padding:16px;
-      border-bottom:1px solid #222;
+      background:#111;
+      padding:10px;
     }
 
-    .title{
-      font-size:20px;
-      font-weight:bold;
-      color:#00dc64;
-      margin-bottom:6px;
-    }
+    img{width:100%;display:block}
 
-    .meta{
-      font-size:12px;
-      color:#aaa;
-      line-height:1.6;
-    }
-
-    .tags{
-      margin-top:8px;
-    }
-
-    .tags span{
-      display:inline-block;
-      background:#00dc64;
-      color:black;
-      padding:3px 8px;
-      border-radius:12px;
-      font-size:11px;
-      margin:3px;
-    }
-
-    /* CHAPTER TITLE */
-    .chapterTitle{
-      text-align:center;
-      padding:12px;
-      font-size:14px;
-      color:#ccc;
-      border-top:1px solid #222;
-      border-bottom:1px solid #222;
-    }
-
-    /* READER */
-    .pages img{
-      width:100%;
-      display:block;
-      border-bottom:1px solid #111;
-    }
-
-    /* BOTTOM NAV */
     .nav{
       position:fixed;
       bottom:0;
-      left:0;
-      right:0;
+      left:0;right:0;
       background:#111;
       display:flex;
       justify-content:space-between;
       padding:10px;
-      z-index:999;
-      border-top:1px solid #222;
     }
 
     .nav button{
@@ -112,25 +68,7 @@
       background:#00dc64;
       border:none;
       padding:10px;
-      border-radius:10px;
-      font-weight:bold;
-      cursor:pointer;
-    }
-
-    /* BACK TO TOP */
-    .topBtn{
-      position:fixed;
-      right:15px;
-      bottom:70px;
-      background:#00dc64;
-      color:black;
-      border:none;
-      padding:10px;
-      border-radius:50%;
-      font-weight:bold;
-      cursor:pointer;
-      z-index:999;
-      box-shadow:0 3px 10px rgba(0,0,0,0.4);
+      border-radius:8px;
     }
 
   </style>
@@ -139,43 +77,21 @@
 
 <body>
 
-<!-- TOP -->
 <div class="topbar">
-  <a class="btn" href="home.html">🏠 Home</a>
-  <div id="title">Loading...</div>
-  <div class="btn">☰</div>
+  <div onclick="home()" class="btn">HOME</div>
+  <div id="title">READ</div>
+  <div onclick="toggle()" class="btn">MENU</div>
 </div>
 
-<!-- INFO -->
+<div class="menu" id="menu"></div>
+
 <div class="info">
-
-  <div class="title">Neko Mata</div>
-
-  <div class="meta">
-    <b>Tác giả:</b> Unknown<br>
-    <b>Thể loại:</b> Romance · Drama<br>
-    <b>Trạng thái:</b> Đang tiến hành<br>
-    <b>Nhóm dịch:</b> DANMETOPIA
-  </div>
-
-  <div class="tags">
-    <span>18+</span>
-    <span>BL</span>
-    <span>Drama</span>
-  </div>
-
+  <b>Neko Mata</b><br>
+  <small id="roleText"></small>
 </div>
 
-<!-- CHAPTER -->
-<div class="chapterTitle" id="chapterTitle"></div>
+<div id="pages"></div>
 
-<!-- PAGES -->
-<div class="pages" id="pages"></div>
-
-<!-- TOP BUTTON -->
-<button class="topBtn" onclick="goTop()">↑</button>
-
-<!-- NAV -->
 <div class="nav">
   <button onclick="prev()">⬅ Prev</button>
   <button onclick="next()">Next ➡</button>
@@ -183,45 +99,55 @@
 
 <script>
 
-let id = Number(new URLSearchParams(location.search).get("id") || 1);
+let id = Number(new URLSearchParams(location.search).get("id")||1);
 
-/* CHAPTER DATA */
-const chapters = {
-  1: "Chapter 1",
-  2: "Chapter 2",
-  3: "Chapter 3"
-};
+const role = localStorage.getItem("role");
+document.getElementById("roleText").innerText = "Role: " + role;
 
-document.getElementById("title").innerText = chapters[id];
-document.getElementById("chapterTitle").innerText = chapters[id];
+/* chapters */
+const chapters = [
+  {id:1,name:"Chapter 1"},
+  {id:2,name:"Chapter 2"},
+  {id:3,name:"Chapter 3"}
+];
 
-/* LOAD PAGES */
-let html = "";
-for(let i = 1; i <= 6; i++){
-  html += `
-    <img loading="lazy"
-      src="https://picsum.photos/800/1200?random=${id}${i}">
-  `;
+/* FIX MENU CLICK */
+document.getElementById("menu").innerHTML =
+  chapters.map(c=>`
+    <div onclick="go(${c.id})">${c.name}</div>
+  `).join("");
+
+function go(cid){
+  location.href="read.html?id="+cid;
 }
 
-document.getElementById("pages").innerHTML = html;
+function toggle(){
+  const m=document.getElementById("menu");
+  m.style.display = m.style.display==="block"?"none":"block";
+}
 
-/* NAV */
-function next(){
-  if(id < 3){
-    window.location.href = "read.html?id=" + (id+1);
+/* WEBTOON */
+function load(){
+  let html="";
+  for(let i=1;i<=6;i++){
+    html+=`<img src="https://picsum.photos/800/1200?${id}${i}">`;
   }
+  document.getElementById("pages").innerHTML=html;
+}
+
+load();
+
+/* NAV FIX */
+function next(){
+  if(id<3) location.href="read.html?id="+(id+1);
 }
 
 function prev(){
-  if(id > 1){
-    window.location.href = "read.html?id=" + (id-1);
-  }
+  if(id>1) location.href="read.html?id="+(id-1);
 }
 
-/* TOP */
-function goTop(){
-  window.scrollTo({top:0, behavior:"smooth"});
+function home(){
+  location.href="home.html";
 }
 
 </script>
