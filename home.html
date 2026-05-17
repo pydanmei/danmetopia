@@ -2,7 +2,7 @@
 <html>
 
 <head>
-  <title>DANMETOPIA FIREBASE</title>
+  <title>DANMETOPIA PRO SYSTEM</title>
   <meta charset="utf-8">
 </head>
 
@@ -10,12 +10,18 @@
 
 <!-- TOP -->
 <div style="background:#00dc64;color:black;padding:15px;display:flex;justify-content:space-between">
-  <b>DANMETOPIA</b>
+  <b>DANMETOPIA PRO</b>
   <button onclick="uploadStory()">UPLOAD</button>
 </div>
 
 <!-- LIST -->
 <div id="list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;padding:10px"></div>
+
+<!-- RECOMMEND -->
+<div style="padding:10px">
+  <h3>🔥 Recommended</h3>
+  <div id="recommend"></div>
+</div>
 
 <script type="module">
 
@@ -29,18 +35,13 @@ import {
   updateDoc,
   doc,
   getDoc,
-  increment,
-  arrayUnion
+  query,
+  where,
+  getDocs,
+  arrayUnion,
+  increment
 } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
 
-import {
-  getStorage,
-  ref,
-  uploadBytes,
-  getDownloadURL
-} from "https://www.gstatic.com/firebasejs/12.13.0/firebase-storage.js";
-
-/* CONFIG */
 const firebaseConfig = {
   apiKey: "AIzaSyCDQk9DlMNKwn_508fDMI_3IB_dgpgHujA",
   authDomain: "danmetopia.firebaseapp.com",
@@ -52,13 +53,43 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-const storage = getStorage(app);
 
 /* ================= ROLE ================= */
 const role = localStorage.getItem("role") || "user";
 const group = localStorage.getItem("group") || "groupA";
 
-/* ================= LOAD STORIES REALTIME ================= */
+/* ================= APPROVAL RULE ================= */
+/*
+status:
+- pending (chờ duyệt)
+- approved (đã duyệt)
+*/
+
+function canPublish(){
+  return role === "admin" || role === "editor" || role === "group";
+}
+
+/* ================= UPLOAD STORY ================= */
+window.uploadStory = async ()=>{
+
+  if(!canPublish()){
+    alert("NO PERMISSION");
+    return;
+  }
+
+  await addDoc(collection(db,"stories"),{
+    title:"New Story",
+    genre:"Action",
+    owner:group,
+    status:"pending",   // 🔥 APPROVAL SYSTEM
+    likes:0,
+    comments:[]
+  });
+
+  alert("UPLOADED (WAITING APPROVAL)");
+}
+
+/* ================= LOAD STORIES ================= */
 onSnapshot(collection(db,"stories"), (snap)=>{
 
   let html="";
@@ -66,19 +97,18 @@ onSnapshot(collection(db,"stories"), (snap)=>{
   snap.forEach(d=>{
     const s = d.data();
 
+    /* chỉ show approved hoặc admin */
+    if(s.status !== "approved" && role !== "admin" && role !== "editor") return;
+
     html += `
       <div onclick="openStory('${d.id}')"
-        style="background:#1c1c1c;border-radius:10px;overflow:hidden;cursor:pointer">
+        style="background:#1c1c1c;margin:10px;padding:10px;border-radius:10px">
 
-        <img src="https://picsum.photos/300/400?${d.id}"
-          style="width:100%;height:220px;object-fit:cover">
+        <b>${s.title}</b><br>
+        <small>${s.genre}</small><br>
+        👤 ${s.owner}<br>
 
-        <div style="padding:10px">
-          <b>${s.title}</b><br>
-          <small>${s.genre}</small><br>
-          ❤️ ${s.likes || 0}<br>
-          👤 ${s.owner}
-        </div>
+        ${s.status === "pending" ? "<span style='color:orange'>PENDING</span>" : ""}
 
       </div>
     `;
@@ -90,29 +120,7 @@ onSnapshot(collection(db,"stories"), (snap)=>{
 
 /* ================= OPEN ================= */
 window.openStory = (id)=>{
-  location.href = "read.html?id=" + id;
-}
-
-/* ================= UPLOAD STORY ================= */
-window.uploadStory = async ()=>{
-
-  if(role !== "admin" && role !== "group"){
-    alert("NO PERMISSION");
-    return;
-  }
-
-  await addDoc(collection(db,"stories"),{
-
-    title:"New Story",
-    genre:"Romance",
-    owner: group,
-    likes:0,
-    comments:[],
-    bookmarks:[]
-
-  });
-
-  alert("UPLOADED!");
+  location.href="read.html?id="+id;
 }
 
 </script>
