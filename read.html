@@ -3,59 +3,13 @@
 
 <head>
 <meta charset="utf-8">
-<title>Đọc truyện</title>
+<title>Reader</title>
 
 <style>
-body{
-  margin:0;
-  background:#0f0f0f;
-  color:white;
-  font-family:Arial;
-}
-
-.top{
-  background:#00dc64;
-  color:black;
-  padding:10px;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-}
-
-.container{
-  padding:15px;
-}
-
-.chapter-list{
-  background:#1c1c1c;
-  padding:10px;
-  border-radius:10px;
-  margin-bottom:10px;
-}
-
-button{
-  padding:8px;
-  margin:5px;
-  border:none;
-  border-radius:5px;
-  cursor:pointer;
-}
-
-.green{background:#00dc64;}
-.gray{background:#333;color:white;}
-
-.content{
-  background:#111;
-  padding:20px;
-  border-radius:10px;
-  min-height:300px;
-}
-
-.nav{
-  display:flex;
-  justify-content:space-between;
-  margin-top:10px;
-}
+body{margin:0;background:#000;color:white;font-family:Arial}
+.top{background:#00dc64;color:black;padding:10px;display:flex;justify-content:space-between}
+.page{padding:20px;text-align:center}
+button{padding:8px;margin:5px}
 </style>
 
 </head>
@@ -67,12 +21,14 @@ button{
 <div id="title">Truyện</div>
 <button onclick="menu()">📖 Mục lục</button>
 </div>
-
+ 
 <div class="container">
 
 <div class="chapter-list" id="menu" style="display:none"></div>
 
-<div class="content" id="content">
+<div class="page" id="content"></div>
+
+<script type="module">
 Loading...
 </div>
 
@@ -85,7 +41,10 @@ Loading...
 
 <script>
 
-const storyId = new URLSearchParams(location.search).get("id");
+import { DB } from "./db.js";
+  
+const id = new URLSearchParams(location.search).get("id");
+let chap = parseInt(new URLSearchParams(location.search).get(""));
 
 const chapters = [
   "Chương 1: Khởi đầu",
@@ -102,21 +61,37 @@ chapters.map((c,i)=>`
   <button class="green" onclick="go(${i})">${c}</button>
 `).join("");
 
+const manga = DB.manga.find(m=>m.id==id);
+  
 function go(i){
   current = i;
   render();
 }
 
 function render(){
-  document.getElementById("content").innerText = chapters[current];
+   const c = manga.chapters[chap];
+
+  document.getElementById("title").innerText = c.title;
+
+  document.getElementById("content").innerHTML =
+    c.pages.map(p=>`<p>${p}</p>`).join("");
 }
 
-function prev(){
-  if(current>0){ current--; render(); }
-}
+render()
 
-function next(){
-  if(current<chapters.length-1){ current++; render(); }
+window.next = ()=>{
+  if(chap < manga.chapters.length-1){
+    chap++;
+    render();
+  }
+}
+window.back = ()=>{
+  if(chap > 0){
+    chap--;
+    render();
+  }else{
+    location.href="manga.html?id="+id;
+  }
 }
 
 function menu(){
