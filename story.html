@@ -1,101 +1,34 @@
 <!DOCTYPE html>
 <html>
 
-<head>
-  <title>Story</title>
+<body style="background:black;color:white;font-family:Arial;text-align:center">
 
-  <style>
-    body{
-      background:#0f0f0f;
-      color:white;
-      font-family:Arial;
-      padding:20px;
-    }
+<h2>STORY</h2>
 
-    .chapter{
-      background:#1c1c1c;
-      padding:12px;
-      margin-top:10px;
-      border-radius:10px;
-      cursor:pointer;
-    }
-
-    .back{
-      color:#00dc64;
-      text-decoration:none;
-    }
-  </style>
-</head>
-
-<body>
-
-<a class="back" href="index.html">
-← Back
-</a>
-
-<h1 id="title">
-Loading...
-</h1>
-
-<p id="genre"></p>
-
-<h2>Chapters</h2>
-
-<div id="chapters"></div>
+<div id="chapters">Loading...</div>
 
 <script>
 
-const params = new URLSearchParams(window.location.search);
+const role = localStorage.getItem("role");
+if(!role){
+  window.location.href = "index.html";
+}
 
-const id = params.get("id");
+const chapters = [
+  {id:1,name:"Chapter 1"},
+  {id:2,name:"Chapter 2"}
+];
 
-/* =========================
-   LOAD STORY
-========================= */
+document.getElementById("chapters").innerHTML =
+  chapters.map(c=>`
+    <div onclick="openChapter(${c.id})"
+      style="padding:10px;margin:10px;background:#222;cursor:pointer">
+      ${c.name}
+    </div>
+  `).join("");
 
-fetch("http://localhost:3000/api/stories")
-  .then(res => res.json())
-  .then(data => {
-
-    const story = data.find(s => s.id == id);
-
-    document.getElementById("title").innerText =
-      story.title;
-
-    document.getElementById("genre").innerText =
-      story.genre;
-
-  });
-
-/* =========================
-   LOAD CHAPTERS
-========================= */
-
-fetch("http://localhost:3000/api/chapters/" + id)
-  .then(res => res.json())
-  .then(data => {
-
-    document.getElementById("chapters").innerHTML =
-      data.map(c => `
-        <div class="chapter"
-          onclick="openChapter(${c.id})">
-
-          ${c.title}
-
-        </div>
-      `).join("");
-
-  });
-
-/* =========================
-   OPEN CHAPTER
-========================= */
-
-function openChapter(chapterId){
-
-  window.location.href =
-    "read.html?chapter=" + chapterId;
-
+function openChapter(id){
+  window.location.href = "read.html?id="+id;
 }
 
 </script>
