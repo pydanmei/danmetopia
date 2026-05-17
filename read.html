@@ -12,56 +12,48 @@
       font-family:Arial;
     }
 
-    img{
-      width:100%;
-      display:block;
-    }
-
     /* TOP BAR */
     .topbar{
       position:fixed;
       top:0;
       left:0;
       right:0;
-      height:50px;
       background:#00dc64;
       color:black;
       display:flex;
       justify-content:space-between;
       align-items:center;
-      padding:0 10px;
+      padding:10px;
       font-weight:bold;
-      z-index:9999;
+      z-index:999;
     }
 
     .btn{
       background:black;
       color:white;
-      padding:5px 10px;
+      padding:6px 10px;
       border-radius:8px;
-      cursor:pointer;
       text-decoration:none;
+      cursor:pointer;
       font-size:13px;
     }
 
-    /* INFO BOX (FORCE VISIBLE) */
+    /* INFO BOX */
     .info{
       margin-top:60px;
       background:#111;
       padding:15px;
-      border-bottom:2px solid #333;
+      border-bottom:1px solid #333;
     }
 
-    .info h1{
+    .info h2{
       margin:0;
-      font-size:20px;
       color:#00dc64;
     }
 
-    .info p{
-      margin:5px 0;
-      font-size:13px;
-      color:#ccc;
+    .meta{
+      font-size:12px;
+      color:#bbb;
       line-height:1.5;
     }
 
@@ -71,53 +63,21 @@
       color:black;
       padding:3px 8px;
       border-radius:10px;
-      font-size:12px;
+      font-size:11px;
       margin:3px;
     }
 
-    /* MENU */
-    .menu{
-      display:none;
-      position:fixed;
-      top:50px;
-      right:10px;
-      background:#1c1c1c;
+    /* CHAPTER TITLE */
+    .chapterTitle{
+      text-align:center;
       padding:10px;
-      border-radius:10px;
-      z-index:9999;
+      color:#aaa;
     }
 
-    .menu a{
+    /* IMAGES */
+    .pages img{
+      width:100%;
       display:block;
-      color:white;
-      padding:5px;
-      text-decoration:none;
-    }
-
-    /* BOTTOM NAV */
-    .nav{
-      position:fixed;
-      bottom:0;
-      left:0;
-      right:0;
-      background:#111;
-      display:flex;
-      justify-content:space-between;
-      padding:10px;
-      z-index:9999;
-    }
-
-    .nav button{
-      background:#00dc64;
-      border:none;
-      padding:10px;
-      border-radius:8px;
-      font-weight:bold;
-    }
-
-    /* CONTENT */
-    .content{
-      padding-bottom:70px;
     }
 
   </style>
@@ -129,21 +89,21 @@
 <!-- TOP -->
 <div class="topbar">
   <a class="btn" href="home.html">🏠 HOME</a>
-  <div id="chapterTitle">Loading...</div>
-  <div class="btn" onclick="toggleMenu()">📖 MENU</div>
+  <div id="title">Loading...</div>
+  <div class="btn">MENU</div>
 </div>
 
-<!-- 🔥 INFO TRUYỆN (FORCE SHOW) -->
+<!-- INFO -->
 <div class="info">
 
-  <h1>NEKO MATA</h1>
+  <h2 id="storyTitle">Neko Mata</h2>
 
-  <p><b>Tên khác:</b> Neko Cat Story</p>
-  <p><b>Tác giả:</b> Unknown</p>
-  <p><b>Thể loại:</b> Yaoi, Romance, Drama</p>
-  <p><b>Nhóm dịch:</b> DANMETOPIA TEAM</p>
-  <p><b>Tình trạng:</b> Đang tiến hành</p>
-  <p><b>Số chương:</b> 3</p>
+  <div class="meta">
+    <b>Tác giả:</b> Unknown<br>
+    <b>Thể loại:</b> Romance, Drama<br>
+    <b>Trạng thái:</b> Đang tiến hành<br>
+    <b>Nhóm dịch:</b> DANMETOPIA
+  </div>
 
   <div class="tags">
     <span>18+</span>
@@ -151,74 +111,40 @@
     <span>Drama</span>
   </div>
 
-  <p>
-    Một câu chuyện tình yêu giữa con người và thế giới bí ẩn,
-    nơi cảm xúc và định mệnh đan xen.
-  </p>
-
 </div>
 
-<!-- MENU CHAPTER -->
-<div id="menu" class="menu"></div>
+<!-- CHAPTER -->
+<div class="chapterTitle" id="chapterTitle"></div>
 
-<!-- CONTENT -->
-<div class="content" id="content"></div>
-
-<!-- NAV -->
-<div class="nav">
-  <button onclick="prev()">⬅ Prev</button>
-  <button onclick="next()">Next ➡</button>
-</div>
+<!-- PAGES -->
+<div class="pages" id="pages"></div>
 
 <script>
 
-let id = Number(new URLSearchParams(location.search).get("id") || 1);
+const id = new URLSearchParams(location.search).get("id") || 1;
 
-/* CHAPTER DATA */
-const chapters = [
-  {id:1, name:"Chapter 1"},
-  {id:2, name:"Chapter 2"},
-  {id:3, name:"Chapter 3"}
-];
+/* FAKE CHAPTER DATA */
+const chapters = {
+  1: "Chapter 1",
+  2: "Chapter 2",
+  3: "Chapter 3"
+};
 
-/* CHAPTER TITLE */
-document.getElementById("chapterTitle").innerText =
-  chapters.find(c=>c.id==id)?.name || "Chapter";
+/* TITLE */
+document.getElementById("title").innerText = chapters[id];
+document.getElementById("chapterTitle").innerText = chapters[id];
 
-/* MENU */
-document.getElementById("menu").innerHTML =
-  chapters.map(c =>
-    `<a href="read.html?id=${c.id}">${c.name}</a>`
-  ).join("");
+/* IMAGES (WEBTOON STYLE SCROLL) */
+const pageCount = 5;
 
-/* LOAD CONTENT */
-function load(){
-  document.getElementById("content").innerHTML = `
-    <img src="https://picsum.photos/800/1200?random=${id}1">
-    <img src="https://picsum.photos/800/1200?random=${id}2">
+let html = "";
+for(let i = 1; i <= pageCount; i++){
+  html += `
+    <img src="https://picsum.photos/800/1200?random=${id}${i}">
   `;
 }
 
-load();
-
-/* MENU TOGGLE */
-function toggleMenu(){
-  const m = document.getElementById("menu");
-  m.style.display = m.style.display === "block" ? "none" : "block";
-}
-
-/* NAV */
-function next(){
-  if(id < chapters.length){
-    window.location.href = "read.html?id=" + (id+1);
-  }
-}
-
-function prev(){
-  if(id > 1){
-    window.location.href = "read.html?id=" + (id-1);
-  }
-}
+document.getElementById("pages").innerHTML = html;
 
 </script>
 
