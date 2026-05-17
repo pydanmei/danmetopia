@@ -3,13 +3,52 @@
 
 <head>
 <meta charset="utf-8">
-<title>Reader</title>
+<title>Đọc truyện</title>
 
 <style>
-body{margin:0;background:#000;color:white;font-family:Arial}
-.top{background:#00dc64;color:black;padding:10px;display:flex;justify-content:space-between}
-.page{padding:20px;text-align:center}
-button{padding:8px;margin:5px}
+body{
+  margin:0;
+  background:#000;
+  color:white;
+  font-family:Arial;
+}
+
+.top{
+  background:#00dc64;
+  color:black;
+  padding:10px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.container{
+  padding:15px;
+}
+
+.chapter-list{
+  background:#1c1c1c;
+  padding:10px;
+  margin-bottom:10px;
+  display:none;
+}
+
+.page{
+  background:#111;
+  padding:20px;
+  border-radius:10px;
+  min-height:300px;
+}
+
+button{
+  padding:8px;
+  margin:5px;
+  border:none;
+  cursor:pointer;
+}
+
+.green{background:#00dc64;}
+.gray{background:#333;color:white;}
 </style>
 
 </head>
@@ -19,73 +58,69 @@ button{padding:8px;margin:5px}
 <div class="top">
 <button onclick="home()">🏠 Trang chủ</button>
 <div id="title">Truyện</div>
-<button onclick="menu()">📖 Mục lục</button>
+<button onclick="toggleMenu()">📖 Mục lục</button>
 </div>
- 
+
 <div class="container">
 
-<div class="chapter-list" id="menu" style="display:none"></div>
+<div class="chapter-list" id="menu"></div>
 
-<div class="page" id="content"></div>
+<div class="page" id="content">Loading...</div>
 
-<script type="module">
-Loading...
-</div>
-
-<div class="nav">
+<div>
 <button class="gray" onclick="prev()">⬅ Trước</button>
 <button class="gray" onclick="next()">Sau ➡</button>
 </div>
 
 </div>
 
-<script>
+<script type="module">
 
 import { DB } from "./db.js";
-  
+
+/* ================= GET DATA ================= */
 const id = new URLSearchParams(location.search).get("id");
-let chap = parseInt(new URLSearchParams(location.search).get(""));
 
-const chapters = [
-  "Chương 1: Khởi đầu",
-  "Chương 2: Bí ẩn",
-  "Chương 3: Cuộc chiến"
-];
+const manga = DB.manga.find(m => m.id == id);
 
-let current = 0;
-
-document.getElementById("content").innerText = chapters[current];
-
-document.getElementById("menu").innerHTML =
-chapters.map((c,i)=>`
-  <button class="green" onclick="go(${i})">${c}</button>
-`).join("");
-
-const manga = DB.manga.find(m=>m.id==id);
-  
-function go(i){
-  current = i;
-  render();
+if(!manga){
+  document.getElementById("content").innerText = "Không tìm thấy truyện";
 }
 
+/* ================= STATE ================= */
+let chap = 0;
+
+/* ================= RENDER ================= */
 function render(){
-   const c = manga.chapters[chap];
+
+  const c = manga.chapters[chap];
 
   document.getElementById("title").innerText = c.title;
 
   document.getElementById("content").innerHTML =
-    c.pages.map(p=>`<p>${p}</p>`).join("");
+    c.pages.map(p => `<p>${p}</p>`).join("");
 }
 
-render()
+/* ================= MENU ================= */
+document.getElementById("menu").innerHTML =
+manga.chapters.map((c,i)=>`
+  <button class="green" onclick="go(${i})">${c.title}</button>
+`).join("");
 
+window.go = (i)=>{
+  chap = i;
+  render();
+}
+
+/* ================= NAV ================= */
 window.next = ()=>{
-  if(chap < manga.chapters.length-1){
+  if(chap < manga.chapters.length - 1){
     chap++;
     render();
   }
 }
-window.back = ()=>{
+
+window.prev = ()=>{
   if(chap > 0){
     chap--;
     render();
@@ -94,14 +129,19 @@ window.back = ()=>{
   }
 }
 
-function menu(){
+/* ================= MENU TOGGLE ================= */
+window.toggleMenu = ()=>{
   const m = document.getElementById("menu");
-  m.style.display = m.style.display==="none"?"block":"none";
+  m.style.display = m.style.display === "none" ? "block" : "none";
 }
 
-function home(){
-  window.location.href="home.html";
+/* ================= HOME ================= */
+window.home = ()=>{
+  location.href="home.html";
 }
+
+/* ================= INIT ================= */
+render();
 
 </script>
 
