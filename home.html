@@ -1,28 +1,36 @@
 <!DOCTYPE html>
 <html>
 
+<head>
+  <title>DANMETOPIA FIREBASE</title>
+  <meta charset="utf-8">
+</head>
+
 <body style="margin:0;background:#0f0f0f;color:white;font-family:Arial">
 
+<!-- TOP -->
 <div style="background:#00dc64;color:black;padding:15px;display:flex;justify-content:space-between">
-  DANMETOPIA
-  <button onclick="location.href='read.html'">NEW</button>
+  <b>DANMETOPIA</b>
+  <button onclick="uploadStory()">UPLOAD</button>
 </div>
 
-<div id="list"></div>
+<!-- LIST -->
+<div id="list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;padding:10px"></div>
 
 <script type="module">
+
+/* ================= FIREBASE ================= */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
 import {
   getFirestore,
   collection,
   addDoc,
-  getDocs,
+  onSnapshot,
+  updateDoc,
   doc,
   getDoc,
-  updateDoc,
   increment,
-  arrayUnion,
-  onSnapshot
+  arrayUnion
 } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
 
 import {
@@ -32,71 +40,80 @@ import {
   getDownloadURL
 } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-storage.js";
 
-/* 🔥 FIREBASE CONFIG (FIXED) */
+/* CONFIG */
 const firebaseConfig = {
   apiKey: "AIzaSyCDQk9DlMNKwn_508fDMI_3IB_dgpgHujA",
   authDomain: "danmetopia.firebaseapp.com",
   projectId: "danmetopia",
-  storageBucket: "danmetopia.appspot.com", // ✅ FIXED
+  storageBucket: "danmetopia.appspot.com",
   messagingSenderId: "178240377870",
   appId: "1:178240377870:web:d094b222ebabadccc5585f"
 };
 
-/* INIT */
 const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const storage = getStorage(app);
 
-/* GLOBAL */
-window.db = getFirestore(app);
-window.storage = getStorage(app);
+/* ================= ROLE ================= */
+const role = localStorage.getItem("role") || "user";
+const group = localStorage.getItem("group") || "groupA";
 
-/* EXPORT HELPERS */
-window.fb = {
-  collection,
-  addDoc,
-  getDocs,
-  doc,
-  getDoc,
-  updateDoc,
-  increment,
-  arrayUnion,
-  onSnapshot,
-  ref,
-  uploadBytes,
-  getDownloadURL
-};
-
-console.log("🔥 Firebase Ready");
-</script>
-  
-/* REALTIME LOAD */
-const col = collection(db,"stories");
-
-onSnapshot(col,(snap)=>{
+/* ================= LOAD STORIES REALTIME ================= */
+onSnapshot(collection(db,"stories"), (snap)=>{
 
   let html="";
 
   snap.forEach(d=>{
-    const s=d.data();
+    const s = d.data();
 
-    html+=`
+    html += `
       <div onclick="openStory('${d.id}')"
-        style="background:#1c1c1c;margin:10px;padding:10px;cursor:pointer">
+        style="background:#1c1c1c;border-radius:10px;overflow:hidden;cursor:pointer">
 
-        <b>${s.title}</b><br>
-        <small>${s.genre}</small><br>
-        ❤️ ${s.likes || 0} | 👤 ${s.owner}
+        <img src="https://picsum.photos/300/400?${d.id}"
+          style="width:100%;height:220px;object-fit:cover">
+
+        <div style="padding:10px">
+          <b>${s.title}</b><br>
+          <small>${s.genre}</small><br>
+          ❤️ ${s.likes || 0}<br>
+          👤 ${s.owner}
+        </div>
 
       </div>
     `;
   });
 
-  document.getElementById("list").innerHTML=html;
+  document.getElementById("list").innerHTML = html;
 
 });
 
-window.openStory=(id)=>{
-  location.href="read.html?id="+id;
-};
+/* ================= OPEN ================= */
+window.openStory = (id)=>{
+  location.href = "read.html?id=" + id;
+}
+
+/* ================= UPLOAD STORY ================= */
+window.uploadStory = async ()=>{
+
+  if(role !== "admin" && role !== "group"){
+    alert("NO PERMISSION");
+    return;
+  }
+
+  await addDoc(collection(db,"stories"),{
+
+    title:"New Story",
+    genre:"Romance",
+    owner: group,
+    likes:0,
+    comments:[],
+    bookmarks:[]
+
+  });
+
+  alert("UPLOADED!");
+}
 
 </script>
 
