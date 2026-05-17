@@ -24,6 +24,14 @@ body{
   z-index:999;
 }
 
+.box{
+  background:#1c1c1c;
+  padding:20px;
+  width:340px;
+  border-radius:12px;
+  text-align:center;
+}
+
 /* ===== LOGIN ===== */
 #login{
   display:none;
@@ -35,19 +43,18 @@ body{
   z-index:998;
 }
 
-/* ===== HOME ===== */
-#home{
-  display:none;
+/* INPUT */
+input{
+  width:100%;
+  padding:10px;
+  margin-top:8px;
+  border:none;
+  border-radius:8px;
+  background:#2a2a2a;
+  color:white;
 }
 
-.box{
-  background:#1c1c1c;
-  padding:20px;
-  width:320px;
-  border-radius:12px;
-  text-align:center;
-}
-
+/* BUTTON */
 button{
   width:100%;
   padding:10px;
@@ -61,14 +68,18 @@ button{
 .green{background:#00dc64;color:black;}
 .red{background:#ff4444;color:white;}
 
+/* ===== HOME ===== */
+#home{
+  display:none;
+}
+
 .topbar{
   background:#00dc64;
   color:black;
   padding:15px;
-  font-weight:bold;
   display:flex;
   justify-content:space-between;
-  align-items:center;
+  font-weight:bold;
 }
 
 .container{
@@ -80,11 +91,6 @@ button{
   padding:15px;
   margin-top:10px;
   border-radius:10px;
-  cursor:pointer;
-}
-
-.card:hover{
-  background:#2a2a2a;
 }
 </style>
 
@@ -92,55 +98,68 @@ button{
 
 <body>
 
-<!-- WARNING -->
+<!-- ================= WARNING ================= -->
 <div id="warning">
   <div class="box">
     <h2>⚠️ CẢNH BÁO 18+</h2>
-
-    <p>Trang có nội dung người lớn</p>
-    Xác nhận đủ tuổi khi tiếp tục.
+    <p>Trang truyện người lớn. Xác nhận đủ tuổi khi tiếp tục.</p>
 
     <button class="green" onclick="enter()">TIẾP TỤC</button>
     <button class="red" onclick="leave()">THOÁT</button>
   </div>
 </div>
 
-<!-- LOGIN -->
+<!-- ================= LOGIN ================= -->
 <div id="login">
+
   <div class="box">
 
     <h2>DANMETOPIA</h2>
     <p>Nền tảng đọc truyện</p>
 
-    <input id="pass" type="password" placeholder="Mật khẩu">
+    <!-- 🔥 REQUIRED PASSWORD -->
+    <input id="mainPass" type="password" placeholder="Mật khẩu (danmei)">
 
-    <button class="green" onclick="login()">TRUY CẬP</button>
+    <hr>
+
+    <!-- OPTIONAL LOGIN -->
+    <input id="email" placeholder="Email / Tên đăng nhập (không bắt buộc)">
+    <input id="pass" type="password" placeholder="Mật khẩu tài khoản (nếu có)">
+
+    <button class="green" onclick="login()">VÀO WEB</button>
 
     <p id="msg" style="color:red"></p>
 
   </div>
 </div>
 
-<!-- HOME -->
+<!-- ================= HOME ================= -->
 <div id="home">
 
   <div class="topbar">
-    <span>🏠 DANMETOPIA HOME</span>
-    <button style="width:auto;padding:8px" onclick="logout()">Đăng xuất</button>
+    <div>🏠 DANMETOPIA HOME</div>
+    <div id="userBox">Ẩn danh</div>
   </div>
 
   <div class="container">
+
     <h3>📚 Danh sách truyện</h3>
 
-    <div class="card" onclick="goRead(1)">📖 Truyện 1 - Hành trình tu tiên</div>
-    <div class="card" onclick="goRead(2)">📖 Truyện 2 - Tình yêu cấm</div>
-    <div class="card" onclick="goRead(3)">📖 Truyện 3 - Dị giới phiêu lưu</div>
+    <div class="card">📖 Truyện 1</div>
+    <div class="card">📖 Truyện 2</div>
+    <div class="card">📖 Truyện 3</div>
 
   </div>
 
 </div>
 
 <script>
+
+/* ================= STATE ================= */
+let user = {
+  email:null,
+  role:"guest"
+};
 
 /* ================= ENTER ================= */
 function enter(){
@@ -150,49 +169,79 @@ function enter(){
 
 /* ================= EXIT ================= */
 function leave(){
-  document.body.innerHTML="<h2 style='color:white;text-align:center;margin-top:100px'>Đã thoát</h2>";
+  document.body.innerHTML = "<h2 style='color:white;text-align:center;margin-top:100px'>Đã thoát</h2>";
+}
+
+/* ================= ROLE CHECK ================= */
+function getRole(email){
+
+  if(!email) return "user";
+
+  if(
+    email === "pydanmeii@gmail.com" ||
+    email === "pepyl4298@gmail.com"
+  ) return "admin";
+
+  if(email.includes("@group")) return "group";
+
+  return "user";
 }
 
 /* ================= LOGIN ================= */
 function login(){
 
-  const pass = document.getElementById("pass").value;
+  const mainPass = document.getElementById("mainPass").value;
 
-  if(pass !== "danmei"){
-    document.getElementById("msg").innerText="Sai mật khẩu";
+  if(mainPass !== "danmei"){
+    document.getElementById("msg").innerText = "Sai mật khẩu chính";
     return;
   }
 
-  localStorage.setItem("auth","ok");
+  const email = document.getElementById("email").value;
+
+  // 🔥 CASE 1: ANON
+  if(!email){
+    user = { email:null, role:"guest" };
+  }
+
+  // 🔥 CASE 2: LOGIN USER
+  else{
+    user = {
+      email: email,
+      role: getRole(email)
+    };
+  }
+
+  localStorage.setItem("user", JSON.stringify(user));
 
   showHome();
 }
 
-/* ================= SHOW HOME ================= */
+/* ================= HOME ================= */
 function showHome(){
 
   document.getElementById("warning").style.display="none";
   document.getElementById("login").style.display="none";
   document.getElementById("home").style.display="block";
 
-  // chống back quay lại login
-  history.pushState(null,null,location.href);
+  updateUI();
 }
 
-/* ================= READ ================= */
-function goRead(id){
-  window.location.href="read.html?id="+id;
+/* ================= UI ================= */
+function updateUI(){
+
+  if(!user.email){
+    document.getElementById("userBox").innerText = "Ẩn danh";
+  }else{
+    document.getElementById("userBox").innerText =
+      user.email + " (" + user.role + ")";
+  }
 }
 
-/* ================= LOGOUT ================= */
-function logout(){
-  localStorage.removeItem("auth");
-  location.reload();
-}
-
-/* ================= AUTO LOGIN ================= */
-if(localStorage.getItem("auth") === "ok"){
-  showHome();
+/* ================= INIT ================= */
+const saved = localStorage.getItem("user");
+if(saved){
+  user = JSON.parse(saved);
 }
 
 </script>
