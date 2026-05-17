@@ -3,145 +3,77 @@
 
 <head>
 <meta charset="utf-8">
-<title>Đọc truyện</title>
-
-<style>
-body{
-  margin:0;
-  background:#000;
-  color:white;
-  font-family:Arial;
-}
-
-.top{
-  background:#00dc64;
-  color:black;
-  padding:10px;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-}
-
-.container{
-  padding:15px;
-}
-
-.chapter-list{
-  background:#1c1c1c;
-  padding:10px;
-  margin-bottom:10px;
-  display:none;
-}
-
-.page{
-  background:#111;
-  padding:20px;
-  border-radius:10px;
-  min-height:300px;
-}
-
-button{
-  padding:8px;
-  margin:5px;
-  border:none;
-  cursor:pointer;
-}
-
-.green{background:#00dc64;}
-.gray{background:#333;color:white;}
-</style>
-
+<title>READ</title>
 </head>
 
-<body>
+<body style="background:#0f0f0f;color:white;font-family:Arial">
 
-<div class="top">
-<button onclick="home()">🏠 Trang chủ</button>
-<div id="title">Truyện</div>
-<button onclick="toggleMenu()">📖 Mục lục</button>
-</div>
+<h2 id="title"></h2>
 
-<div class="container">
+<div id="chapters"></div>
 
-<div class="chapter-list" id="menu"></div>
+<h3>💬 Comment</h3>
 
-<div class="page" id="content">Loading...</div>
+<input id="c" placeholder="Comment">
 
-<div>
-<button class="gray" onclick="prev()">⬅ Trước</button>
-<button class="gray" onclick="next()">Sau ➡</button>
-</div>
+<button onclick="comment()">Send</button>
 
-</div>
+<div id="list"></div>
 
 <script type="module">
 
-import { DB } from "./db.js";
+import {
+  getFirestore,
+  doc,
+  getDoc,
+  collection,
+  addDoc,
+  getDocs
+} from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
 
-/* ================= GET DATA ================= */
+const db = window.db;
+
+const user = JSON.parse(localStorage.getItem("user") || "{}");
+
 const id = new URLSearchParams(location.search).get("id");
 
-const manga = DB.manga.find(m => m.id == id);
+/* ================= LOAD STORY ================= */
+async function load(){
 
-if(!manga){
-  document.getElementById("content").innerText = "Không tìm thấy truyện";
+  const snap = await getDoc(doc(db,"stories",id));
+
+  const data = snap.data();
+
+  document.getElementById("title").innerText = data.title;
+
+  document.getElementById("chapters").innerHTML =
+    (data.chapters || []).map(c=>`
+      <p>📖 ${c.title}</p>
+    `).join("");
 }
 
-/* ================= STATE ================= */
-let chap = 0;
+load();
 
-/* ================= RENDER ================= */
-function render(){
+/* ================= COMMENT ================= */
+window.comment = async ()=>{
 
-  const c = manga.chapters[chap];
+  const text = document.getElementById("c").value;
 
-  document.getElementById("title").innerText = c.title;
+  let name = "Ẩn danh";
 
-  document.getElementById("content").innerHTML =
-    c.pages.map(p => `<p>${p}</p>`).join("");
-}
-
-/* ================= MENU ================= */
-document.getElementById("menu").innerHTML =
-manga.chapters.map((c,i)=>`
-  <button class="green" onclick="go(${i})">${c.title}</button>
-`).join("");
-
-window.go = (i)=>{
-  chap = i;
-  render();
-}
-
-/* ================= NAV ================= */
-window.next = ()=>{
-  if(chap < manga.chapters.length - 1){
-    chap++;
-    render();
+  if(user.email){
+    name = user.email + " (" + user.role + ")";
   }
-}
 
-window.prev = ()=>{
-  if(chap > 0){
-    chap--;
-    render();
-  }else{
-    location.href="manga.html?id="+id;
-  }
-}
+  await addDoc(collection(db,"comments"),{
+    storyId:id,
+    text,
+    name,
+    time: Date.now()
+  });
 
-/* ================= MENU TOGGLE ================= */
-window.toggleMenu = ()=>{
-  const m = document.getElementById("menu");
-  m.style.display = m.style.display === "none" ? "block" : "none";
-}
-
-/* ================= HOME ================= */
-window.home = ()=>{
-  location.href="home.html";
-}
-
-/* ================= INIT ================= */
-render();
+  alert("Đã gửi");
+};
 
 </script>
 
