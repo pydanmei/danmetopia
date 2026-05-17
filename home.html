@@ -3,13 +3,95 @@
 
 <head>
   <title>HOME</title>
+
+  <style>
+    body{
+      margin:0;
+      background:#0f0f0f;
+      color:white;
+      font-family:Arial;
+    }
+
+    /* TOP BAR */
+    .topbar{
+      background:#00dc64;
+      color:black;
+      padding:15px;
+      font-size:22px;
+      font-weight:bold;
+      position:sticky;
+      top:0;
+      z-index:999;
+    }
+
+    /* GRID */
+    .grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fill,minmax(160px,1fr));
+      gap:15px;
+      padding:15px;
+    }
+
+    /* CARD */
+    .card{
+      background:#1c1c1c;
+      border-radius:12px;
+      overflow:hidden;
+      cursor:pointer;
+      transition:0.2s;
+    }
+
+    .card:hover{
+      transform:scale(1.05);
+    }
+
+    .cover{
+      width:100%;
+      height:220px;
+      object-fit:cover;
+    }
+
+    .info{
+      padding:10px;
+    }
+
+    .title{
+      font-size:14px;
+      font-weight:bold;
+      margin-bottom:5px;
+    }
+
+    .genre{
+      font-size:12px;
+      color:#aaa;
+    }
+
+    /* SEARCH (optional đẹp thêm) */
+    .search{
+      padding:10px 15px;
+    }
+
+    .search input{
+      width:100%;
+      padding:10px;
+      border:none;
+      border-radius:8px;
+      outline:none;
+    }
+
+  </style>
+
 </head>
 
-<body style="background:#111;color:white;font-family:Arial">
+<body>
 
-<h2>HOME</h2>
+<div class="topbar">DANMETOPIA</div>
 
-<div id="list"></div>
+<div class="search">
+  <input placeholder="Tìm truyện... (demo UI)">
+</div>
+
+<div id="list" class="grid"></div>
 
 <script>
 
@@ -17,21 +99,34 @@ const stories = [
   {
     id: 1,
     title: "Neko Mata",
-    genre: "Yaoi / Drama"
+    genre: "Yaoi / Drama",
+    cover: "https://picsum.photos/300/450?1"
   },
   {
     id: 2,
     title: "Chó Mực",
-    genre: "Romance"
+    genre: "Romance",
+    cover: "https://picsum.photos/300/450?2"
+  },
+  {
+    id: 3,
+    title: "Dark Soul",
+    genre: "Action / Fantasy",
+    cover: "https://picsum.photos/300/450?3"
   }
 ];
 
 document.getElementById("list").innerHTML =
   stories.map(s => `
-    <div onclick="openRead(${s.id})"
-      style="padding:10px;margin:10px;background:#222;cursor:pointer">
-      <b>${s.title}</b><br>
-      <small>${s.genre}</small>
+    <div class="card" onclick="openRead(${s.id})">
+
+      <img class="cover" src="${s.cover}">
+
+      <div class="info">
+        <div class="title">${s.title}</div>
+        <div class="genre">${s.genre}</div>
+      </div>
+
     </div>
   `).join("");
 
