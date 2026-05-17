@@ -24,6 +24,22 @@ body{
   z-index:999;
 }
 
+/* ===== LOGIN ===== */
+#login{
+  display:none;
+  position:fixed;
+  inset:0;
+  justify-content:center;
+  align-items:center;
+  background:#0f0f0f;
+  z-index:998;
+}
+
+/* ===== HOME ===== */
+#home{
+  display:none;
+}
+
 .box{
   background:#1c1c1c;
   padding:20px;
@@ -44,19 +60,6 @@ button{
 
 .green{background:#00dc64;color:black;}
 .red{background:#ff4444;color:white;}
-
-/* ===== LOGIN ===== */
-#login{
-  display:none;
-  height:100vh;
-  justify-content:center;
-  align-items:center;
-}
-
-/* ===== HOME ===== */
-#home{
-  display:none;
-}
 
 .topbar{
   background:#00dc64;
@@ -139,17 +142,18 @@ button{
 
 <script>
 
-/* ===== WARNING ===== */
+/* ================= ENTER ================= */
 function enter(){
   document.getElementById("warning").style.display="none";
   document.getElementById("login").style.display="flex";
 }
 
+/* ================= EXIT ================= */
 function leave(){
   document.body.innerHTML="<h2 style='color:white;text-align:center;margin-top:100px'>Đã thoát</h2>";
 }
 
-/* ===== LOGIN ===== */
+/* ================= LOGIN ================= */
 function login(){
 
   const pass = document.getElementById("pass").value;
@@ -164,25 +168,29 @@ function login(){
   showHome();
 }
 
-/* ===== HOME ===== */
+/* ================= SHOW HOME ================= */
 function showHome(){
+
   document.getElementById("warning").style.display="none";
   document.getElementById("login").style.display="none";
   document.getElementById("home").style.display="block";
+
+  // chống back quay lại login
+  history.pushState(null,null,location.href);
 }
 
-/* ===== READ ===== */
+/* ================= READ ================= */
 function goRead(id){
   window.location.href="read.html?id="+id;
 }
 
-/* ===== LOGOUT ===== */
+/* ================= LOGOUT ================= */
 function logout(){
   localStorage.removeItem("auth");
   location.reload();
 }
 
-/* ===== AUTO LOGIN ===== */
+/* ================= AUTO LOGIN ================= */
 if(localStorage.getItem("auth") === "ok"){
   showHome();
 }
