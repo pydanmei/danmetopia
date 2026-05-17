@@ -13,6 +13,7 @@ body{
   font-family:Arial;
 }
 
+/* ===== WARNING ===== */
 #warning{
   position:fixed;
   inset:0;
@@ -20,12 +21,13 @@ body{
   display:flex;
   justify-content:center;
   align-items:center;
+  z-index:999;
 }
 
 .box{
   background:#1c1c1c;
   padding:20px;
-  width:320px;
+  width:340px;
   border-radius:12px;
   text-align:center;
 }
@@ -42,7 +44,9 @@ button{
 
 .green{background:#00dc64;color:black;}
 .red{background:#ff4444;color:white;}
+.yellow{background:#ffcc00;color:black;}
 
+/* ===== LOGIN ===== */
 #login{
   display:none;
   height:100vh;
@@ -59,44 +63,74 @@ input{
   background:#2a2a2a;
   color:white;
 }
+
+hr{
+  border:0;
+  border-top:1px solid #333;
+  margin:15px 0;
+}
+
+.title{
+  font-size:18px;
+  font-weight:bold;
+}
+
+.sub{
+  font-size:12px;
+  color:#aaa;
+}
 </style>
 
 </head>
 
 <body>
 
-<!-- WARNING -->
+<!-- ⚠️ WARNING -->
 <div id="warning">
   <div class="box">
+
     <h2>⚠️ CẢNH BÁO 18+</h2>
 
-    <p>Xác nhận đủ 18 tuổi khi tiếp tục.</p>
+    <p style="font-size:14px;line-height:1.5">
+      Trang có nội dung 18+<br>
+      Bạn xác nhận đủ tuổi để tiếp tục
+    </p>
 
     <button class="green" onclick="enter()">TRUY CẬP</button>
     <button class="red" onclick="leave()">THOÁT</button>
+
   </div>
 </div>
 
 <!-- LOGIN -->
 <div id="login">
+
   <div class="box">
 
-    <h2>ĐĂNG NHẬP</h2>
+    <div class="title">DANMETOPIA</div>
+    <div class="sub">Nền tảng đọc truyện</div>
 
-    <input id="email" placeholder="Email">
-    <input id="pass" type="password" placeholder="Mật khẩu (danmei)">
+    <input id="email" placeholder="Email (không bắt buộc)">
+    <input id="pass" type="password" placeholder="Mật khẩu: danmei">
 
     <button class="green" onclick="login()">ĐĂNG NHẬP</button>
+
+    <hr>
+
+    <div class="title">NHÓM DỊCH</div>
+
+    <input id="groupName" placeholder="Tên nhóm dịch">
+    <input id="displayName" placeholder="Tên hiển thị">
+
+    <button class="yellow" onclick="registerGroup()">TẠO NHÓM</button>
 
     <p id="msg" style="color:red"></p>
 
   </div>
+
 </div>
 
 <script>
-
-/* ================= SAFE STATE ================= */
-let firebaseReady = false;
 
 /* ================= WARNING ================= */
 function enter(){
@@ -108,72 +142,8 @@ function leave(){
   document.body.innerHTML="<h2 style='color:white;text-align:center;margin-top:100px'>Đã thoát</h2>";
 }
 
-/* ================= SIMPLE LOGIN (NO CRASH) ================= */
-function login(){
-
-  const pass = document.getElementById("pass").value;
-
-  if(pass !== "danmei"){
-    document.getElementById("msg").innerText="Sai mật khẩu";
-    return;
-  }
-
-  // SAFE: không phụ thuộc firebase → tránh chết web
-  localStorage.setItem("login","ok");
-
-  alert("Đăng nhập thành công");
-
-  window.location.href="home.html";
-}
-
-/* ================= OPTIONAL FIREBASE LOAD LATER ================= */
-try{
-<!-- LOGIN -->
-<div id="login">
-
-  <div class="box">
-
-    <div class="title">DANMETOPIA</div>
-    <div class="sub">Nền tảng đọc truyện</div>
-
-    <input id="email" placeholder="Email (không bắt buộc)">
-    <input id="pass" type="password" placeholder="Mật khẩu (danmei)">
-
-    <button class="green" onclick="login()">ĐĂNG NHẬP</button>
-
-    <hr>
-
-    <div class="title">ĐĂNG KÝ NHÓM DỊCH</div>
-
-    <input id="groupName" placeholder="Tên nhóm dịch">
-    <input id="displayName" placeholder="Tên hiển thị">
-
-    <button onclick="registerGroup()" style="background:#ffcc00;">
-      TẠO NHÓM
-    </button>
-
-    <p id="msg" style="color:red"></p>
-
-  </div>
-
-</div>
-
-<script type="module">
-
-import { loginApp } from "./auth.js";
-
-/* ================= WARNING ================= */
-window.enter = ()=>{
-  document.getElementById("warning").style.display="none";
-  document.getElementById("login").style.display="flex";
-}
-
-window.leave = ()=>{
-  document.body.innerHTML="<h2 style='color:white;text-align:center;margin-top:100px'>Đã thoát</h2>";
-}
-
 /* ================= LOGIN ================= */
-window.login = async ()=>{
+function login(){
 
   const email = document.getElementById("email").value || "user@danmei.com";
   const pass = document.getElementById("pass").value;
@@ -183,33 +153,34 @@ window.login = async ()=>{
     return;
   }
 
-  await loginApp(email, pass);
-
+  // USER DATA RESTORE
   localStorage.setItem("email", email);
+  localStorage.setItem("role", "user");
+
+  // nếu là admin (tuỳ bạn chỉnh)
+  if(email === "admin@danmei.com"){
+    localStorage.setItem("role","admin");
+  }
 
   window.location.href="home.html";
 }
 
 /* ================= GROUP ================= */
-window.registerGroup = ()=>{
+function registerGroup(){
 
   const groupName = document.getElementById("groupName").value;
   const displayName = document.getElementById("displayName").value;
 
   if(!groupName){
-    document.getElementById("msg").innerText="Vui lòng nhập tên nhóm";
+    document.getElementById("msg").innerText="Nhập tên nhóm";
     return;
   }
 
   localStorage.setItem("groupName", groupName);
   localStorage.setItem("displayName", displayName);
+  localStorage.setItem("role", "group");
 
-  document.getElementById("msg").innerText="Đã tạo nhóm thành công!";
-}
-
-  console.log("System OK");
-}catch(e){
-  console.log("Firebase not loaded - safe mode");
+  document.getElementById("msg").innerText="Tạo nhóm thành công!";
 }
 
 </script>
