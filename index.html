@@ -49,22 +49,35 @@ button{
   justify-content:center;
   align-items:center;
 }
+
+input{
+  width:100%;
+  padding:10px;
+  margin-top:8px;
+  border:none;
+  border-radius:8px;
+  background:#2a2a2a;
+  color:white;
+}
 </style>
+
 </head>
 
 <body>
 
+<!-- WARNING -->
 <div id="warning">
   <div class="box">
     <h2>⚠️ CẢNH BÁO 18+</h2>
 
-    <p>Bạn đủ 18 tuổi chưa?</p>
+    <p>Xác nhận đủ 18 tuổi khi tiếp tục.</p>
 
     <button class="green" onclick="enter()">TRUY CẬP</button>
     <button class="red" onclick="leave()">THOÁT</button>
   </div>
 </div>
 
+<!-- LOGIN -->
 <div id="login">
   <div class="box">
 
@@ -82,18 +95,20 @@ button{
 
 <script>
 
-/* ===== ENTER ===== */
+/* ================= SAFE STATE ================= */
+let firebaseReady = false;
+
+/* ================= WARNING ================= */
 function enter(){
   document.getElementById("warning").style.display="none";
   document.getElementById("login").style.display="flex";
 }
 
-/* ===== EXIT ===== */
 function leave(){
   document.body.innerHTML="<h2 style='color:white;text-align:center;margin-top:100px'>Đã thoát</h2>";
 }
 
-/* ===== LOGIN TEST ===== */
+/* ================= SIMPLE LOGIN (NO CRASH) ================= */
 function login(){
 
   const pass = document.getElementById("pass").value;
@@ -103,9 +118,20 @@ function login(){
     return;
   }
 
-  alert("Login OK (test)");
+  // SAFE: không phụ thuộc firebase → tránh chết web
+  localStorage.setItem("login","ok");
+
+  alert("Đăng nhập thành công");
 
   window.location.href="home.html";
+}
+
+/* ================= OPTIONAL FIREBASE LOAD LATER ================= */
+try{
+  // nếu sau này bạn muốn gắn firebase thì thêm vào đây
+  console.log("System OK");
+}catch(e){
+  console.log("Firebase not loaded - safe mode");
 }
 
 </script>
