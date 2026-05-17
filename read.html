@@ -1,147 +1,209 @@
 <!DOCTYPE html>
 <html>
 
+<head>
+  <title>READ</title>
+  <meta charset="utf-8">
+</head>
+
 <body style="margin:0;background:black;color:white;font-family:Arial">
 
+<!-- TOP BAR -->
 <div style="background:#00dc64;color:black;padding:10px;display:flex;justify-content:space-between">
   <button onclick="location.href='home.html'">HOME</button>
-  <div id="title"></div>
-  <button onclick="toggle()">MENU</button>
+  <div id="title">LOADING...</div>
+  <button onclick="toggleMenu()">MENU</button>
 </div>
 
+<!-- INFO -->
 <div id="info" style="padding:10px;background:#111"></div>
 
-<!-- LIKE + BOOKMARK -->
+<!-- ACTIONS -->
 <div style="padding:10px">
   <button onclick="like()">❤️ Like</button>
   <button onclick="bookmark()">🔖 Bookmark</button>
 </div>
 
-<!-- UPLOAD CHAPTER IMAGES (ADMIN/GROUP) -->
+<!-- UPLOAD CHAPTER IMAGES -->
 <div id="uploadBox" style="display:none;padding:10px;background:#1c1c1c">
   <h3>Upload Chapter Images</h3>
   <input type="file" multiple onchange="uploadImages(event)">
 </div>
 
+<!-- CHAPTER IMAGES -->
 <div id="pages"></div>
 
-<!-- COMMENT -->
+<!-- COMMENTS -->
 <div style="padding:10px;background:#111">
   <h3>Comments</h3>
 
   <input id="cmt" placeholder="comment..." style="width:100%;padding:8px">
-  <button onclick="addComment()" style="margin-top:5px">Send</button>
+  <button onclick="addComment()">Send</button>
 
-  <div id="comments"></div>
+  <div id="commentList"></div>
 </div>
 
-<script>
+<script type="module">
 
-let id = Number(new URLSearchParams(location.search).get("id"));
+/* ================= FIREBASE ================= */
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
+import {
+  getFirestore,
+  doc,
+  getDoc,
+  updateDoc,
+  increment,
+  arrayUnion
+} from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
 
-let stories = JSON.parse(localStorage.getItem("stories") || "[]");
+import {
+  getStorage,
+  ref,
+  uploadBytes,
+  getDownloadURL
+} from "https://www.gstatic.com/firebasejs/12.13.0/firebase-storage.js";
 
-let story = stories.find(s=>s.id==id);
+/* CONFIG */
+const firebaseConfig = {
+  apiKey: "AIzaSyCDQk9DlMNKwn_508fDMI_3IB_dgpgHujA",
+  authDomain: "danmetopia.firebaseapp.com",
+  projectId: "danmetopia",
+  storageBucket: "danmetopia.appspot.com",
+  messagingSenderId: "178240377870",
+  appId: "1:178240377870:web:d094b222ebabadccc5585f"
+};
 
-/* SAFE INIT */
-if(!story){
-  story={
-    id,
-    title:"Demo",
-    genre:"Test",
-    owner:"system",
-    likes:0,
-    comments:[],
-    bookmarks:[],
-    images:[]
-  };
-}
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const storage = getStorage(app);
 
-document.getElementById("title").innerText = story.title;
+/* ================= USER ================= */
+const role = localStorage.getItem("role") || "user";
+const group = localStorage.getItem("group") || "groupA";
 
-/* INIT ARRAYS */
-story.likes ||= 0;
-story.comments ||= [];
-story.bookmarks ||= [];
-story.images ||= [];
+/* ================= STORY ID ================= */
+const id = new URLSearchParams(location.search).get("id");
+const refDoc = doc(db,"stories",id);
 
-/* SAVE BACK */
-function save(){
-  localStorage.setItem("stories", JSON.stringify(stories));
-}
+let storyData = null;
 
-/* INFO */
-document.getElementById("info").innerHTML=`
-<h2>${story.title}</h2>
-<b>Owner:</b> ${story.owner}<br>
-<b>Likes:</b> ${story.likes}
-`;
+/* ================= LOAD STORY ================= */
+async function load(){
 
-/* LIKE */
-function like(){
-  story.likes++;
-  save();
-  location.reload();
-}
+  const snap = await getDoc(refDoc);
+  storyData = snap.data();
 
-/* BOOKMARK */
-function bookmark(){
-  let user = "me";
-  story.bookmarks.push(user);
-  save();
-  alert("bookmarked!");
-}
-
-/* COMMENTS */
-function addComment(){
-  story.comments.push(cmt.value);
-  save();
-  renderComments();
-}
-
-function renderComments(){
-  document.getElementById("comments").innerHTML =
-  story.comments.map(c=>`<div style="padding:5px;border-bottom:1px solid #333">${c}</div>`).join("");
-}
-
-renderComments();
-
-/* CHAPTER IMAGES */
-function renderImages(){
-  let html="";
-
-  if(story.images.length==0){
-    for(let i=1;i<=5;i++){
-      html+=`<img src="https://picsum.photos/800/1200?${id}${i}">`;
-    }
-  }else{
-    html = story.images.map(img=>`<img src="${img}">`).join("");
+  if(!storyData){
+    document.body.innerHTML = "NOT FOUND";
+    return;
   }
 
-  document.getElementById("pages").innerHTML=html;
+  document.getElementById("title").innerText = storyData.title;
+
+  document.getElementById("info").innerHTML = `
+    <h2>${storyData.title}</h2>
+    <b>Genre:</b> ${storyData.genre}<br>
+    <b>Owner:</b> ${storyData.owner}<br>
+    <b>Likes:</b> ${storyData.likes || 0}
+  `;
+
+  renderComments(storyData.comments || []);
+  renderImages(storyData.images || []);
+
+  checkPermission();
 }
 
-renderImages();
+load();
 
-/* UPLOAD IMAGES (GROUP/ADMIN ONLY) */
-const role = localStorage.getItem("role");
+/* ================= PERMISSION ================= */
+function checkPermission(){
 
-if(role==="admin" || role==="group"){
-  document.getElementById("uploadBox").style.display="block";
+  const canEdit =
+    role === "admin" ||
+    (role === "group" && storyData.owner === group);
+
+  if(canEdit){
+    document.getElementById("uploadBox").style.display = "block";
+  }
 }
 
-function uploadImages(e){
+/* ================= LIKE ================= */
+window.like = async ()=>{
+  await updateDoc(refDoc,{
+    likes: increment(1)
+  });
+  load();
+}
+
+/* ================= BOOKMARK ================= */
+window.bookmark = async ()=>{
+  await updateDoc(refDoc,{
+    bookmarks: arrayUnion("me")
+  });
+  alert("bookmarked");
+}
+
+/* ================= COMMENT ================= */
+window.addComment = async ()=>{
+  const text = document.getElementById("cmt").value;
+
+  if(!text) return;
+
+  await updateDoc(refDoc,{
+    comments: arrayUnion(text)
+  });
+
+  document.getElementById("cmt").value = "";
+  load();
+}
+
+/* ================= RENDER COMMENTS ================= */
+function renderComments(list){
+
+  document.getElementById("commentList").innerHTML =
+    list.map(c=>`
+      <div style="padding:5px;border-bottom:1px solid #333">
+        ${c}
+      </div>
+    `).join("");
+
+}
+
+/* ================= CHAPTER IMAGES ================= */
+function renderImages(list){
+
+  let html="";
+
+  if(!list || list.length===0){
+    html = "<p style='padding:10px'>No images yet</p>";
+  } else {
+    html = list.map(img=>`
+      <img src="${img}" style="width:100%;display:block">
+    `).join("");
+  }
+
+  document.getElementById("pages").innerHTML = html;
+}
+
+/* ================= UPLOAD IMAGES ================= */
+window.uploadImages = async (e)=>{
+
   const files = [...e.target.files];
 
-  files.forEach(f=>{
-    const reader = new FileReader();
-    reader.onload = function(){
-      story.images.push(reader.result);
-      save();
-      renderImages();
-    };
-    reader.readAsDataURL(f);
-  });
+  for(const f of files){
+
+    const storageRef = ref(storage, "chapters/" + Date.now() + "_" + f.name);
+
+    await uploadBytes(storageRef, f);
+
+    const url = await getDownloadURL(storageRef);
+
+    await updateDoc(refDoc,{
+      images: arrayUnion(url)
+    });
+  }
+
+  load();
 }
 
 </script>
