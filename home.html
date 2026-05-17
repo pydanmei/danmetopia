@@ -3,41 +3,55 @@
 
 <body style="margin:0;background:#0f0f0f;color:white;font-family:Arial">
 
-<div style="background:#00dc64;color:black;padding:15px;font-weight:bold;display:flex;justify-content:space-between">
+<div style="background:#00dc64;color:black;padding:15px;display:flex;justify-content:space-between">
   DANMETOPIA
-  <button onclick="location.href='upload.html'">UPLOAD</button>
 </div>
 
 <div id="list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;padding:10px"></div>
 
 <script>
 
-const role = localStorage.getItem("role");
+/* 🔥 SAFE LOAD (KHÔNG MẤT DATA CŨ) */
+let stories = JSON.parse(localStorage.getItem("stories") || "[]");
 
-function load(){
+/* MIGRATE nếu chưa có owner */
+stories = stories.map(s=>{
+  if(!s.owner) s.owner = "system";
+  if(!s.likes) s.likes = 0;
+  if(!s.comments) s.comments = [];
+  if(!s.bookmarks) s.bookmarks = [];
+  return s;
+});
 
-  const stories = JSON.parse(localStorage.getItem("stories") || "[]");
+localStorage.setItem("stories", JSON.stringify(stories));
 
-  document.getElementById("list").innerHTML =
-  stories.map(s=>`
-    <div onclick="openR(${s.id})"
-      style="background:#1c1c1c;border-radius:10px;overflow:hidden;cursor:pointer">
+function render(){
 
-      <img src="https://picsum.photos/300/400?${s.id}"
-        style="width:100%;height:220px;object-fit:cover">
+document.getElementById("list").innerHTML =
+stories.map(s=>`
 
-      <div style="padding:10px">
-        <b>${s.title}</b><br>
-        <small>${s.genre}</small><br>
-        <small style="color:#00dc64">${s.owner}</small>
-      </div>
+<div onclick="openR(${s.id})"
+ style="background:#1c1c1c;border-radius:10px;overflow:hidden;cursor:pointer">
 
-    </div>
-  `).join("");
+<img src="https://picsum.photos/300/400?${s.id}"
+ style="width:100%;height:220px;object-fit:cover">
+
+<div style="padding:10px">
+
+<b>${s.title}</b><br>
+<small>${s.genre}</small><br>
+
+<small>❤️ ${s.likes || 0}</small>
+
+</div>
+
+</div>
+
+`).join("");
 
 }
 
-load();
+render();
 
 function openR(id){
   location.href="read.html?id="+id;
