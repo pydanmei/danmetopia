@@ -2,69 +2,128 @@
 <html>
 
 <head>
-  <title>DANMETOPIA LOGIN</title>
+  <title>DANMETOPIA - Đọc Truyện</title>
   <meta charset="utf-8">
+
+  <style>
+    body{
+      margin:0;
+      background:#0f0f0f;
+      color:white;
+      font-family:Arial;
+    }
+
+    /* ===== WARNING ===== */
+    #warning{
+      position:fixed;
+      inset:0;
+      background:black;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      z-index:999;
+    }
+
+    .box{
+      background:#1c1c1c;
+      padding:20px;
+      border-radius:12px;
+      width:320px;
+      text-align:center;
+    }
+
+    button{
+      width:100%;
+      padding:10px;
+      margin-top:10px;
+      border:none;
+      border-radius:8px;
+      cursor:pointer;
+      font-weight:bold;
+    }
+
+    .green{background:#00dc64;color:black;}
+    .yellow{background:#ffcc00;color:black;}
+    .red{background:#ff4444;color:white;}
+
+    /* ===== LOGIN ===== */
+    #login{
+      display:none;
+      height:100vh;
+      justify-content:center;
+      align-items:center;
+    }
+
+    input{
+      width:100%;
+      padding:10px;
+      margin-top:8px;
+      border:none;
+      border-radius:8px;
+      background:#2a2a2a;
+      color:white;
+    }
+
+    hr{
+      border:0;
+      border-top:1px solid #333;
+      margin:15px 0;
+    }
+
+    /* ===== TOP UI STYLE ===== */
+    .title{
+      font-size:20px;
+      font-weight:bold;
+      margin-bottom:10px;
+    }
+
+    .sub{
+      font-size:12px;
+      color:#aaa;
+      margin-bottom:10px;
+    }
+
+  </style>
 </head>
 
-<body style="margin:0;background:#0f0f0f;color:white;font-family:Arial">
+<body>
 
 <!-- ⚠️ WARNING -->
-<div id="warning"
-style="position:fixed;inset:0;background:black;display:flex;justify-content:center;align-items:center;z-index:999">
+<div id="warning">
+  <div class="box">
+    <h2>⚠️ CẢNH BÁO 18+</h2>
+    <p style="font-size:14px;line-height:1.5">
+      Đây là trang truyện có nội dung 18+.<br><br>
+      Bạn xác nhận đủ 18 tuổi khi tiếp tục.
+    </p>
 
-  <div style="background:#1c1c1c;padding:20px;border-radius:10px;width:320px;text-align:center">
-
-    <h2>⚠️ CẢNH BÁO NỘI DUNG 18+</h2>
-
-    <p>Bằng việc tiếp tục, bạn xác nhận rằng bạn đủ 18 tuổi trở lên và việc xem nội dung này hợp pháp tại khu vực của bạn.</p>
-
-    <button onclick="enter()"
-    style="width:100%;padding:10px;background:#00dc64;border:none">
-      TRUY CẬP
-    </button>
-
-    <button onclick="leave()"
-    style="width:100%;padding:10px;margin-top:5px">
-      THOÁT
-    </button>
-
+    <button class="green" onclick="enter()">TRUY CẬP</button>
+    <button class="red" onclick="leave()">THOÁT</button>
   </div>
-
 </div>
 
 <!-- LOGIN -->
-<div id="login"
-style="display:none;justify-content:center;align-items:center;height:100vh">
+<div id="login">
 
-  <div style="background:#1c1c1c;padding:20px;border-radius:10px;width:320px">
+  <div class="box">
 
-    <h2>ĐĂNG NHẬP</h2>
+    <div class="title">DANMETOPIA</div>
+    <div class="sub">Nền tảng đọc truyện nhóm dịch</div>
 
-    <input id="email" placeholder="Email (optional)"
-    style="width:100%;padding:10px;margin-top:5px">
+    <input id="email" placeholder="Email (không bắt buộc)">
+    <input id="pass" type="password" placeholder="Mật khẩu (danmei)">
 
-    <input id="pass" type="password" placeholder="Password"
-    style="width:100%;padding:10px;margin-top:5px">
-
-    <button onclick="login()"
-    style="width:100%;padding:10px;background:#00dc64;border:none;margin-top:10px">
-      ĐĂNG 
-    </button>
+    <button class="green" onclick="login()">ĐĂNG NHẬP</button>
 
     <hr>
 
-    <h3>ĐĂNG KÝ NHÓM DỊCH</h3>
+    <div class="title">ĐĂNG KÝ NHÓM DỊCH</div>
+    <div class="sub">Dùng để đăng truyện và chỉnh sửa</div>
 
-    <input id="groupName" placeholder="Group name"
-    style="width:100%;padding:10px;margin-top:5px">
+    <input id="groupName" placeholder="Tên nhóm dịch">
+    <input id="displayName" placeholder="Tên hiển thị">
 
-    <input id="displayName" placeholder="Display name"
-    style="width:100%;padding:10px;margin-top:5px">
-
-    <button onclick="registerGroup()"
-    style="width:100%;padding:10px;background:#ffcc00;border:none;margin-top:10px">
-      ĐĂNG 
-    </button>
+    <button class="yellow" onclick="registerGroup()">TẠO NHÓM</button>
 
     <p id="msg" style="color:red"></p>
 
@@ -79,11 +138,16 @@ import { loginApp } from "./auth.js";
 /* ================= WARNING ================= */
 window.enter = ()=>{
   document.getElementById("warning").style.display="none";
-  document.getElementById("login").style.display="flex";
+
+  const login = document.getElementById("login");
+  login.style.display="flex";
+  login.style.flexDirection="column";
+  login.style.alignItems="center";
+  login.style.justifyContent="center";
 }
 
 window.leave = ()=>{
-  document.body.innerHTML="<h2 style='color:white;text-align:center;margin-top:100px'>EXIT</h2>";
+  document.body.innerHTML="<h2 style='color:white;text-align:center;margin-top:100px'>Bạn đã thoát trang</h2>";
 }
 
 /* ================= LOGIN ================= */
@@ -93,7 +157,7 @@ window.login = async ()=>{
   const pass = document.getElementById("pass").value;
 
   if(pass !== "danmei"){
-    document.getElementById("msg").innerText="Wrong password";
+    document.getElementById("msg").innerText="Sai mật khẩu";
     return;
   }
 
@@ -104,21 +168,21 @@ window.login = async ()=>{
   window.location.href="home.html";
 }
 
-/* ================= REGISTER GROUP ================= */
+/* ================= GROUP ================= */
 window.registerGroup = ()=>{
 
   const groupName = document.getElementById("groupName").value;
   const displayName = document.getElementById("displayName").value;
 
   if(!groupName){
-    document.getElementById("msg").innerText="Fill group name";
+    document.getElementById("msg").innerText="Vui lòng nhập tên nhóm";
     return;
   }
 
   localStorage.setItem("groupName", groupName);
   localStorage.setItem("displayName", displayName);
 
-  document.getElementById("msg").innerText="Group saved. Now login!";
+  document.getElementById("msg").innerText="Đã tạo nhóm thành công!";
 }
 
 </script>
