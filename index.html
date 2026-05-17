@@ -1,40 +1,78 @@
 <!DOCTYPE html>
 <html>
 
+<head>
+  <title>DANMETOPIA LOGIN</title>
+  <meta charset="utf-8">
+</head>
+
 <body style="background:#111;color:white;font-family:Arial;display:flex;justify-content:center;align-items:center;height:100vh">
 
-<div style="background:#1c1c1c;padding:20px;border-radius:10px;width:300px">
+<div style="background:#1c1c1c;padding:20px;border-radius:10px;width:320px">
 
-<h2>LOGIN</h2>
+<h2 style="text-align:center">LOGIN</h2>
 
-<input id="pass" type="password" placeholder="password" style="width:100%;padding:10px"><br><br>
-<input id="group" placeholder="group (nếu có)" style="width:100%;padding:10px"><br><br>
+<input id="pass" type="password" placeholder="Password"
+  style="width:100%;padding:10px;margin-bottom:10px">
 
-<button onclick="login()" style="width:100%;padding:10px;background:#00dc64;border:none">
+<input id="group" placeholder="Group name (nếu là nhóm dịch)"
+  style="width:100%;padding:10px;margin-bottom:10px">
+
+<button onclick="login()"
+  style="width:100%;padding:10px;background:#00dc64;border:none;font-weight:bold">
 ENTER
 </button>
+
+<p id="err" style="color:red;text-align:center"></p>
 
 </div>
 
 <script>
 
+/* ================= LOGIN SYSTEM ================= */
+
 function login(){
 
-  const p = pass.value;
-  const g = group.value;
+  const pass = document.getElementById("pass").value;
+  const group = document.getElementById("group").value;
 
-  if(p === "pydanmetopia"){
+  /* ADMIN */
+  if(pass === "pydanmetopia"){
     localStorage.setItem("role","admin");
-  }
-  else if(p === "group123"){
-    localStorage.setItem("role","group");
-    localStorage.setItem("group", g || "groupA");
-  }
-  else if(p === "1234"){
-    localStorage.setItem("role","user");
+    localStorage.setItem("group","admin");
+    location.href="home.html";
+    return;
   }
 
-  location.href="home.html";
+  /* GROUP */
+  if(pass === "group123"){
+    localStorage.setItem("role","group");
+    localStorage.setItem("group", group || "groupA");
+    location.href="home.html";
+    return;
+  }
+
+  /* USER */
+  if(pass === "1234"){
+    localStorage.setItem("role","user");
+    localStorage.setItem("group","user");
+    location.href="home.html";
+    return;
+  }
+
+  document.getElementById("err").innerText = "Sai mật khẩu";
+
+}
+
+/* ================= AUTO REDIRECT ================= */
+window.onload = ()=>{
+
+  const role = localStorage.getItem("role");
+
+  if(role){
+    location.href="home.html";
+  }
+
 }
 
 </script>
