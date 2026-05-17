@@ -1,47 +1,26 @@
 <!DOCTYPE html>
 <html>
 
-<head>
-  <title>Upload</title>
-</head>
+<body style="background:#111;color:white;font-family:Arial;text-align:center">
 
-<body style="margin:0;font-family:Arial;background:#111;color:white;text-align:center;padding-top:80px">
+<h2>UPLOAD</h2>
 
-<h1>UPLOAD PAGE</h1>
-
-<div id="msg">Loading...</div>
+<div id="msg">Checking...</div>
 
 <script>
 
-try {
+const role = localStorage.getItem("role");
 
-  const role = localStorage.getItem("role");
-
-  const msg = document.getElementById("msg");
-
-  // không login
-  if(!role){
-    msg.innerText = "Chưa login → quay lại...";
-    setTimeout(()=> window.location.href="index.html", 1000);
-  }
-
-  // user thường
-  else if(role !== "admin"){
-    msg.innerText = "Bạn không có quyền upload → quay lại home...";
-    setTimeout(()=> window.location.href="home.html", 1000);
-  }
-
-  // admin OK
-  else {
-    msg.innerText = "WELCOME ADMIN ✔";
-  }
-
-} catch(e){
-
-  // nếu lỗi gì cũng không trắng
-  document.body.innerHTML = "<h2>Đã xảy ra lỗi nhưng không crash ✔</h2>";
-
+if(!role){
+  window.location.href = "index.html";
 }
+
+if(role !== "admin"){
+  alert("No permission");
+  window.location.href = "home.html";
+}
+
+document.getElementById("msg").innerText = "WELCOME ADMIN ✔";
 
 </script>
 
