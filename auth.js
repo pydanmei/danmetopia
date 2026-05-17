@@ -18,38 +18,58 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
-/* ================= LOGIN ================= */
-window.loginApp = async (email, pass)=>{
+/* ================= LOGIN SYSTEM ================= */
+window.loginApp = async (email, pass) => {
 
-  if(pass !== "danmei"){
+  if (pass !== "danmei") {
     alert("Sai mật khẩu");
     return;
   }
 
   try {
     await createUserWithEmailAndPassword(auth, email, pass);
-  } catch(e){
-    // user đã tồn tại thì bỏ qua
+  } catch (e) {
+    // user đã tồn tại → bỏ qua
   }
 
   await signInWithEmailAndPassword(auth, email, pass);
 
-}
+};
 
-/* ================= CURRENT USER ================= */
+/* ================= USER STATE ================= */
 window.currentUser = null;
 
-onAuthStateChanged(auth,(user)=>{
+onAuthStateChanged(auth, (user) => {
   window.currentUser = user;
 });
 
-/* ================= ROLE ================= */
-window.getRole = ()=>{
+/* ================= ROLE SYSTEM ================= */
+window.getRole = () => {
+
   const email = window.currentUser?.email || "";
 
-  if(email === "admin@danmei.com") return "admin";
+  // 🔥 ADMIN
+  if (email === "pydanmeii@gmail.com") return "admin";
 
-  if(email.includes("@group")) return "group";
+  // 🔥 GROUP (nhóm dịch)
+  if (email.includes("@group")) return "group";
 
+  // 🔥 USER
   return "user";
-}
+};
+
+/* ================= USER DISPLAY NAME ================= */
+window.getDisplayName = () => {
+
+  const email = window.currentUser?.email || "";
+
+  if (!email) return "Anonymous";
+
+  const groupName = localStorage.getItem("groupName");
+
+  if (getRole() === "group") {
+    return groupName ? `${email} (${groupName})` : email;
+  }
+
+  return email;
+};
