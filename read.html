@@ -2,35 +2,173 @@
 <html>
 
 <head>
-  <title>READ TEST</title>
+  <title>Read Chapter</title>
+
+  <style>
+    body{
+      margin:0;
+      background:black;
+      color:white;
+      font-family:Arial;
+      text-align:center;
+    }
+
+    img{
+      width:100%;
+      display:block;
+    }
+
+    .topbar{
+      position:fixed;
+      top:0;
+      left:0;
+      right:0;
+      background:#00dc64;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      padding:10px;
+      z-index:999;
+      color:black;
+      font-weight:bold;
+    }
+
+    .btn{
+      background:black;
+      color:white;
+      padding:6px 10px;
+      border-radius:8px;
+      text-decoration:none;
+      cursor:pointer;
+      font-size:14px;
+    }
+
+    .content{
+      padding-top:60px;
+    }
+
+    .chapters{
+      display:none;
+      background:#1c1c1c;
+      position:fixed;
+      top:50px;
+      right:10px;
+      padding:10px;
+      border-radius:10px;
+      z-index:999;
+      max-height:300px;
+      overflow:auto;
+    }
+
+    .chapters a{
+      display:block;
+      color:white;
+      text-decoration:none;
+      padding:5px;
+    }
+
+    .nav{
+      position:fixed;
+      bottom:0;
+      left:0;
+      right:0;
+      background:#111;
+      display:flex;
+      justify-content:space-between;
+      padding:10px;
+    }
+
+    .nav button{
+      padding:10px;
+      border:none;
+      border-radius:8px;
+      background:#00dc64;
+      font-weight:bold;
+      cursor:pointer;
+    }
+
+  </style>
+
 </head>
 
-<body style="margin:0;background:black;color:white;font-family:Arial;text-align:center">
+<body>
 
-<!-- 🔥 FORCED UI -->
-<div style="background:red;padding:10px">
-  🔥 IF YOU SEE THIS = FILE IS WORKING
+<!-- TOP BAR -->
+<div class="topbar">
+  <a class="btn" href="home.html">🏠 Home</a>
+  <div id="title">Loading...</div>
+  <div class="btn" onclick="toggleMenu()">📖 Menu</div>
 </div>
 
-<div style="background:#00dc64;color:black;padding:10px;font-weight:bold">
-  🏠 HOME | 📖 MENU | ⬅ PREV | NEXT ➡
+<!-- CHAPTER MENU -->
+<div id="menu" class="chapters"></div>
+
+<!-- CONTENT -->
+<div class="content" id="content">Loading...</div>
+
+<!-- NAV -->
+<div class="nav">
+  <button onclick="prev()">⬅ Prev</button>
+  <button onclick="next()">Next ➡</button>
 </div>
-
-<h1>CHAPTER TEST</h1>
-
-<div id="info"></div>
 
 <script>
 
-document.getElementById("info").innerHTML = `
-  <p>Chapter loaded OK</p>
-  <p>If you see this → JS works</p>
-`;
+const params = new URLSearchParams(window.location.search);
+let id = Number(params.get("id") || 1);
 
-// test param
-const id = new URLSearchParams(window.location.search).get("id");
+/* ===== FAKE STORY INFO ===== */
+const story = {
+  title: "Demo Story",
+  chapters: [
+    {id:1, name:"Chapter 1"},
+    {id:2, name:"Chapter 2"},
+    {id:3, name:"Chapter 3"}
+  ]
+};
 
-console.log("chapter id =", id);
+/* TITLE */
+document.getElementById("title").innerText = story.title;
+
+/* MENU */
+document.getElementById("menu").innerHTML =
+  story.chapters.map(c =>
+    `<a href="read.html?id=${c.id}">${c.name}</a>`
+  ).join("");
+
+/* IMAGES */
+function loadChapter(chapId){
+
+  document.getElementById("content").innerHTML =
+    `
+    <h3>${story.chapters.find(c=>c.id==chapId)?.name || ""}</h3>
+    <img src="https://picsum.photos/800/1200?random=${chapId}1">
+    <img src="https://picsum.photos/800/1200?random=${chapId}2">
+    `;
+}
+
+loadChapter(id);
+
+/* MENU TOGGLE */
+function toggleMenu(){
+  const m = document.getElementById("menu");
+  m.style.display = m.style.display === "block" ? "none" : "block";
+}
+
+/* NEXT / PREV */
+function next(){
+  if(id < story.chapters.length){
+    id++;
+    window.location.href = "read.html?id=" + id;
+  }
+}
+
+function prev(){
+  if(id > 1){
+    id--;
+    window.location.href = "read.html?id=" + id;
+  }
+}
 
 </script>
 
