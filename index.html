@@ -16,7 +16,7 @@ style="position:fixed;inset:0;background:black;display:flex;justify-content:cent
 
     <h2>⚠️ 18+ CONTENT</h2>
 
-    <p>Bạn phải đủ 18+ để vào website</p>
+    <p>Bằng việc tiếp tục, bạn xác nhận rằng bạn đủ 18 tuổi trở lên và việc xem nội dung này hợp pháp tại khu vực của bạn.</p>
 
     <button onclick="enter()"
     style="width:100%;padding:10px;background:#00dc64;border:none">
@@ -99,7 +99,6 @@ window.login = async ()=>{
 
   await loginApp(email, pass);
 
-  // save local group info
   localStorage.setItem("email", email);
 
   window.location.href="home.html";
