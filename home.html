@@ -5,57 +5,68 @@
 
 <div style="background:#00dc64;color:black;padding:15px;display:flex;justify-content:space-between">
   DANMETOPIA
+  <button onclick="location.href='read.html'">NEW</button>
 </div>
 
-<div id="list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;padding:10px"></div>
+<div id="list"></div>
 
-<script>
+<script type="module">
 
-/* 🔥 SAFE LOAD (KHÔNG MẤT DATA CŨ) */
-let stories = JSON.parse(localStorage.getItem("stories") || "[]");
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  getDocs,
+  onSnapshot,
+  doc,
+  updateDoc,
+  increment
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-/* MIGRATE nếu chưa có owner */
-stories = stories.map(s=>{
-  if(!s.owner) s.owner = "system";
-  if(!s.likes) s.likes = 0;
-  if(!s.comments) s.comments = [];
-  if(!s.bookmarks) s.bookmarks = [];
-  return s;
+const firebaseConfig = {
+  apiKey: "AIzaSyCDQk9DlMNKwn_508fDMI_3IB_dgpgHujA",
+  authDomain: "danmetopia.firebaseapp.com",
+  projectId: "danmetopia",
+  storageBucket: "danmetopia.appspot.com",
+  messagingSenderId: "178240377870",
+  appId: "1:178240377870:web:d094b222ebabadccc5585f"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+window.db = db;
+
+/* REALTIME LOAD */
+const col = collection(db,"stories");
+
+onSnapshot(col,(snap)=>{
+
+  let html="";
+
+  snap.forEach(d=>{
+    const s=d.data();
+
+    html+=`
+      <div onclick="openStory('${d.id}')"
+        style="background:#1c1c1c;margin:10px;padding:10px;cursor:pointer">
+
+        <b>${s.title}</b><br>
+        <small>${s.genre}</small><br>
+        ❤️ ${s.likes || 0} | 👤 ${s.owner}
+
+      </div>
+    `;
+  });
+
+  document.getElementById("list").innerHTML=html;
+
 });
 
-localStorage.setItem("stories", JSON.stringify(stories));
-
-function render(){
-
-document.getElementById("list").innerHTML =
-stories.map(s=>`
-
-<div onclick="openR(${s.id})"
- style="background:#1c1c1c;border-radius:10px;overflow:hidden;cursor:pointer">
-
-<img src="https://picsum.photos/300/400?${s.id}"
- style="width:100%;height:220px;object-fit:cover">
-
-<div style="padding:10px">
-
-<b>${s.title}</b><br>
-<small>${s.genre}</small><br>
-
-<small>❤️ ${s.likes || 0}</small>
-
-</div>
-
-</div>
-
-`).join("");
-
-}
-
-render();
-
-function openR(id){
+window.openStory=(id)=>{
   location.href="read.html?id="+id;
-}
+};
 
 </script>
 
