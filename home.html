@@ -23,7 +23,6 @@ body{
   font-weight:bold;
 }
 
-/* LOGIN PANEL TRONG HOME */
 .loginBox{
   background:#1c1c1c;
   padding:15px;
@@ -53,7 +52,6 @@ button{
 .green{background:#00dc64;color:black;}
 .gray{background:#333;color:white;}
 
-/* LIST */
 .card{
   background:#1c1c1c;
   padding:15px;
@@ -73,7 +71,7 @@ button{
   <div id="userBox">Ẩn danh</div>
 </div>
 
-<!-- LOGIN INSIDE HOME -->
+<!-- LOGIN -->
 <div class="loginBox">
 
   <h3>🔐 Đăng nhập</h3>
@@ -83,22 +81,19 @@ button{
 
   <button class="green" onclick="login()">Đăng nhập</button>
 
-  <button class="gray" onclick="logout()">Đăng xuất</button>
-
 </div>
 
-<!-- STORIES -->
-<div id="list">
+<!-- LIST -->
+<div>
 
-  <div class="card">📖 Truyện 1 - Tu tiên</div>
-  <div class="card">📖 Truyện 2 - Huyền bí</div>
-  <div class="card">📖 Truyện 3 - Tình yêu cấm</div>
+  <div class="card">📖 Truyện 1</div>
+  <div class="card">📖 Truyện 2</div>
+  <div class="card">📖 Truyện 3</div>
 
 </div>
 
 <script>
 
-/* ================= LOAD USER ================= */
 let user = JSON.parse(localStorage.getItem("user") || "{}");
 
 function updateUI(){
@@ -111,7 +106,6 @@ function updateUI(){
   }
 }
 
-/* ================= LOGIN ================= */
 function login(){
 
   const email = document.getElementById("email").value;
@@ -122,7 +116,6 @@ function login(){
     return;
   }
 
-  // fake role (Firebase auth bên auth.js sẽ override nếu có)
   let role = "user";
 
   if(
@@ -139,14 +132,6 @@ function login(){
   updateUI();
 }
 
-/* ================= LOGOUT ================= */
-function logout(){
-  localStorage.removeItem("user");
-  user = {};
-  updateUI();
-}
-
-/* INIT */
 updateUI();
 
 </script>
