@@ -10,9 +10,8 @@ import {
   getFirestore,
   doc,
   setDoc,
-  getDoc,
-  collection,
   getDocs,
+  collection,
   query,
   where
 } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
@@ -38,25 +37,28 @@ onAuthStateChanged(auth, (user) => {
   window.currentUser = user || null;
 });
 
-/* ================= ROLE SYSTEM ================= */
+/* ================= ROLE SYSTEM (GLOBAL FIX) ================= */
 window.getRole = async (email) => {
 
   if (!email) return "guest";
 
-  // 👑 ADMIN
+  // 👑 ADMIN FIXED EMAILS
   if (
     email === "pydanmeii@gmail.com" ||
     email === "pepyl4298@gmail.com"
-  ) return "admin";
+  ) {
+    return "admin";
+  }
 
   // 📦 CHECK GROUP IN FIRESTORE
   const q = query(collection(db, "users"), where("email", "==", email));
   const snap = await getDocs(q);
 
   if (!snap.empty) {
-    return snap.docs[0].data().role || "user";
+    return snap.docs[0].data().role; // group or custom role
   }
 
+  // 👤 DEFAULT USER
   return "user";
 };
 
@@ -77,8 +79,8 @@ window.login = async (email, password) => {
 
     window.location.href = "home.html";
 
-  } catch (err) {
-    alert("Sai tài khoản hoặc mật khẩu");
+  } catch (e) {
+    alert("Sai email hoặc mật khẩu");
   }
 };
 
@@ -96,8 +98,8 @@ window.registerGroup = async (email, password, groupName) => {
 
     alert("Tạo nhóm dịch thành công");
 
-  } catch (err) {
-    alert("Lỗi tạo group");
+  } catch (e) {
+    alert("Lỗi tạo nhóm");
   }
 };
 
@@ -108,13 +110,13 @@ window.getDisplayName = () => {
 
   if (!data.email) return "Ẩn danh";
 
-  if (data.role === "group") {
-    const group = localStorage.getItem("groupName");
-    return group ? `${data.email} (${group})` : data.email;
+  if (data.role === "admin") {
+    return "👑 " + data.email;
   }
 
-  if (data.role === "admin") {
-    return `👑 ${data.email}`;
+  if (data.role === "group") {
+    const g = localStorage.getItem("groupName");
+    return g ? `${data.email} (${g})` : data.email;
   }
 
   return data.email;
