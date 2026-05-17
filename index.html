@@ -7,7 +7,7 @@
 
 <body style="margin:0;background:#0f0f0f;color:white;font-family:Arial;display:flex;justify-content:center;align-items:center;height:100vh">
 
-<!-- ⚠️ WARNING -->
+<!-- WARNING -->
 <div id="warning" style="background:#1c1c1c;padding:25px;border-radius:12px;width:350px;text-align:center">
 
   <h2>⚠️ CẢNH BÁO 18+</h2>
@@ -17,7 +17,8 @@
     Bạn xác nhận đủ 18 tuổi để tiếp tục.
   </p>
 
-  <button onclick="enter()" style="width:100%;padding:10px;margin-top:10px;background:#00dc64;border:none;border-radius:8px;font-weight:bold">
+  <button onclick="enter()"
+    style="width:100%;padding:10px;margin-top:10px;background:#00dc64;border:none;border-radius:8px;font-weight:bold">
     Tôi đồng ý
   </button>
 
@@ -45,22 +46,41 @@
 const today = new Date().toDateString();
 
 /* =========================
-   1. WARNING 1 LẦN / NGÀY
+   FIX BACK BUTTON (QUAN TRỌNG)
+   → chặn quay lại trang cũ
 ========================= */
-if(localStorage.getItem("lastVisit") === today){
-  document.getElementById("warning").style.display = "none";
-  document.getElementById("loginBox").style.display = "block";
-}
+history.pushState(null, null, location.href);
+window.onpopstate = function () {
+  history.go(1);
+};
 
+/* =========================
+   CHECK AUTO STATE KHI LOAD
+========================= */
+window.onload = function(){
+
+  // nếu đã vào hôm nay → bỏ qua warning
+  if(localStorage.getItem("loginDay") === today){
+    document.getElementById("warning").style.display = "none";
+    document.getElementById("loginBox").style.display = "block";
+  }
+
+};
+
+/* =========================
+   ENTER WARNING
+========================= */
 function enter(){
+
   document.getElementById("warning").style.display = "none";
   document.getElementById("loginBox").style.display = "block";
 
-  localStorage.setItem("lastVisit", today);
+  localStorage.setItem("loginDay", today);
+
 }
 
 /* =========================
-   LOGIN SYSTEM (USER + ADMIN)
+   LOGIN
 ========================= */
 function login(){
 
