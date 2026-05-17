@@ -8,6 +8,8 @@
     body{
       margin:0;
       background:black;
+      color:white;
+      font-family:Arial;
       text-align:center;
     }
 
@@ -16,53 +18,135 @@
       display:block;
     }
 
-    .back{
+    .topbar{
       position:fixed;
-      top:10px;
-      left:10px;
+      top:0;
+      left:0;
+      right:0;
       background:#00dc64;
+      display:flex;
+      justify-content:space-between;
+      padding:10px;
+      z-index:999;
       color:black;
+      font-weight:bold;
+    }
+
+    .btn{
+      background:black;
+      color:white;
+      padding:5px 10px;
+      border-radius:8px;
+      cursor:pointer;
+      text-decoration:none;
+    }
+
+    .info{
+      padding-top:60px;
+      padding-bottom:10px;
+    }
+
+    .nav{
+      position:fixed;
+      bottom:0;
+      left:0;
+      right:0;
+      background:#111;
+      display:flex;
+      justify-content:space-between;
+      padding:10px;
+    }
+
+    .nav button{
+      padding:10px;
+      border:none;
+      border-radius:8px;
+      background:#00dc64;
+      font-weight:bold;
+      cursor:pointer;
+    }
+
+    .chapters{
+      margin-top:10px;
+      background:#1c1c1c;
       padding:10px;
       border-radius:10px;
-      text-decoration:none;
-      font-family:Arial;
-      z-index:100;
+      display:inline-block;
     }
+
+    .chapters a{
+      display:block;
+      color:white;
+      padding:5px;
+      text-decoration:none;
+    }
+
   </style>
 
 </head>
 
 <body>
 
-<a class="back" href="index.html">← Back</a>
+<div class="topbar">
+  <a class="btn" href="home.html">🏠 Home</a>
+  <div id="title">Loading...</div>
+  <a class="btn" href="#" onclick="toggleChapters()">📖 Mục lục</a>
+</div>
+
+<div class="info">
+  <h2 id="storyTitle">Story</h2>
+  <div id="chapList" class="chapters" style="display:none"></div>
+</div>
 
 <div id="content">Loading...</div>
+
+<div class="nav">
+  <button onclick="prevChap()">⬅ Prev</button>
+  <button onclick="nextChap()">Next ➡</button>
+</div>
 
 <script>
 
 const params = new URLSearchParams(window.location.search);
+const chapterId = Number(params.get("id") || 1);
 
-const chapterId = params.get("chapter");
+/* fake data */
+const chapters = [
+  {id:1,name:"Chapter 1"},
+  {id:2,name:"Chapter 2"},
+  {id:3,name:"Chapter 3"}
+];
 
-// ⚠️ DÙNG BACKEND THAY VÌ LOCAL FILE
-fetch(`http://localhost:3000/api/read/1/${chapterId}`)
-  .then(res => res.json())
-  .then(imgs => {
+document.getElementById("chapList").innerHTML =
+  chapters.map(c=>`
+    <a href="read.html?id=${c.id}">${c.name}</a>
+  `).join("");
 
-    if(!imgs.length){
-      document.getElementById("content").innerHTML =
-        "❌ Không có ảnh chapter";
-      return;
-    }
+document.getElementById("title").innerText = "Chapter " + chapterId;
 
-    document.getElementById("content").innerHTML =
-      imgs.map(src => `<img src="${src}">`).join("");
+/* fake images */
+const images = [
+  "https://picsum.photos/800/1200?random=" + chapterId + "1",
+  "https://picsum.photos/800/1200?random=" + chapterId + "2"
+];
 
-  })
-  .catch(err => {
-    document.getElementById("content").innerHTML =
-      "❌ Lỗi load API";
-  });
+document.getElementById("content").innerHTML =
+  images.map(img=>`<img src="${img}">`).join("");
+
+function toggleChapters(){
+  const box = document.getElementById("chapList");
+  box.style.display = box.style.display === "none" ? "block" : "none";
+}
+
+function prevChap(){
+  if(chapterId > 1){
+    window.location.href = "read.html?id=" + (chapterId - 1);
+  }
+}
+
+function nextChap(){
+  window.location.href = "read.html?id=" + (chapterId + 1);
+}
 
 </script>
 
