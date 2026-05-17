@@ -1,34 +1,244 @@
 <!DOCTYPE html>
 <html>
 
-<body style="background:black;color:white;font-family:Arial;text-align:center">
+<head>
+  <title>Story Reader</title>
 
-<h2>STORY</h2>
+  <style>
+    body{
+      margin:0;
+      background:black;
+      color:white;
+      font-family:Arial;
+    }
 
-<div id="chapters">Loading...</div>
+    /* TOP BAR */
+    .topbar{
+      position:fixed;
+      top:0;
+      left:0;
+      right:0;
+      height:50px;
+      background:#00dc64;
+      color:black;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      padding:0 10px;
+      font-weight:bold;
+      z-index:9999;
+    }
+
+    .btn{
+      background:black;
+      color:white;
+      padding:5px 10px;
+      border-radius:8px;
+      cursor:pointer;
+      text-decoration:none;
+      font-size:13px;
+    }
+
+    /* INFO */
+    .info{
+      margin-top:60px;
+      padding:15px;
+      background:#111;
+      border-bottom:1px solid #333;
+    }
+
+    .title{
+      font-size:22px;
+      color:#00dc64;
+      font-weight:bold;
+    }
+
+    .meta{
+      font-size:13px;
+      color:#ccc;
+      line-height:1.6;
+    }
+
+    .tags span{
+      display:inline-block;
+      background:#00dc64;
+      color:black;
+      padding:3px 8px;
+      margin:3px;
+      border-radius:10px;
+      font-size:12px;
+    }
+
+    /* CHAPTER LIST */
+    .chapters{
+      padding:10px;
+    }
+
+    .chap{
+      background:#222;
+      padding:10px;
+      margin:8px 0;
+      cursor:pointer;
+      border-radius:8px;
+    }
+
+    .chap:hover{
+      background:#333;
+    }
+
+    /* READER */
+    .reader{
+      display:none;
+      padding-bottom:80px;
+    }
+
+    img{
+      width:100%;
+      display:block;
+    }
+
+    /* MENU */
+    .menu{
+      display:none;
+      position:fixed;
+      top:50px;
+      right:10px;
+      background:#1c1c1c;
+      padding:10px;
+      border-radius:10px;
+      z-index:9999;
+    }
+
+    .menu a{
+      display:block;
+      color:white;
+      text-decoration:none;
+      padding:5px;
+    }
+
+    /* NAV */
+    .nav{
+      position:fixed;
+      bottom:0;
+      left:0;
+      right:0;
+      background:#111;
+      display:flex;
+      justify-content:space-between;
+      padding:10px;
+      z-index:9999;
+    }
+
+    .nav button{
+      background:#00dc64;
+      border:none;
+      padding:10px;
+      border-radius:8px;
+      font-weight:bold;
+    }
+
+  </style>
+
+</head>
+
+<body>
+
+<!-- TOP -->
+<div class="topbar">
+  <a class="btn" href="home.html">🏠 HOME</a>
+  <div id="chapterTitle">STORY</div>
+  <div class="btn" onclick="toggleMenu()">📖 MENU</div>
+</div>
+
+<!-- INFO -->
+<div class="info">
+  <div class="title">NEKO MATA</div>
+
+  <div class="meta">
+    <b>Tên khác:</b> Neko Cat Story<br>
+    <b>Tác giả:</b> Unknown<br>
+    <b>Thể loại:</b> Yaoi, Romance<br>
+    <b>Nhóm dịch:</b> DANMETOPIA<br>
+    <b>Tình trạng:</b> Đang tiến hành<br>
+    <b>Số chương:</b> 3
+  </div>
+
+  <div class="tags">
+    <span>18+</span>
+    <span>Drama</span>
+    <span>BL</span>
+  </div>
+</div>
+
+<!-- CHAPTER LIST -->
+<div id="chapterList" class="chapters"></div>
+
+<!-- READER -->
+<div id="reader" class="reader"></div>
+
+<!-- MENU -->
+<div id="menu" class="menu"></div>
+
+<!-- NAV -->
+<div class="nav">
+  <button onclick="prev()">⬅ Prev</button>
+  <button onclick="next()">Next ➡</button>
+</div>
 
 <script>
 
-const role = localStorage.getItem("role");
-if(!role){
-  window.location.href = "index.html";
-}
+let current = 1;
 
 const chapters = [
   {id:1,name:"Chapter 1"},
-  {id:2,name:"Chapter 2"}
+  {id:2,name:"Chapter 2"},
+  {id:3,name:"Chapter 3"}
 ];
 
-document.getElementById("chapters").innerHTML =
+/* MENU */
+document.getElementById("menu").innerHTML =
+  chapters.map(c=>`<a onclick="openChap(${c.id})">${c.name}</a>`).join("");
+
+/* LIST */
+document.getElementById("chapterList").innerHTML =
   chapters.map(c=>`
-    <div onclick="openChapter(${c.id})"
-      style="padding:10px;margin:10px;background:#222;cursor:pointer">
+    <div class="chap" onclick="openChap(${c.id})">
       ${c.name}
     </div>
   `).join("");
 
-function openChapter(id){
-  window.location.href = "read.html?id="+id;
+function openChap(id){
+  current = id;
+
+  document.getElementById("chapterList").style.display = "none";
+  document.getElementById("reader").style.display = "block";
+
+  document.getElementById("chapterTitle").innerText =
+    "Chapter " + id;
+
+  document.getElementById("reader").innerHTML = `
+    <img src="https://picsum.photos/800/1200?random=${id}1">
+    <img src="https://picsum.photos/800/1200?random=${id}2">
+  `;
+}
+
+/* MENU TOGGLE */
+function toggleMenu(){
+  const m = document.getElementById("menu");
+  m.style.display = m.style.display === "block" ? "none" : "block";
+}
+
+/* NAV */
+function next(){
+  if(current < chapters.length){
+    openChap(current + 1);
+  }
+}
+
+function prev(){
+  if(current > 1){
+    openChap(current - 1);
+  }
 }
 
 </script>
