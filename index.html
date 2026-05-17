@@ -1,3 +1,22 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>DANMETOPIA LOGIN</title>
+</head>
+
+<body style="background:#111;color:white;font-family:Arial;text-align:center;padding-top:80px">
+
+<h2>WARNING 18+</h2>
+
+<p>Nội dung người lớn</p>
+
+<input id="pass" type="password" placeholder="password">
+<br><br>
+<button onclick="login()">ENTER</button>
+
+<p id="error" style="color:red"></p>
+
 <script>
 
 function login(){
@@ -5,25 +24,22 @@ function login(){
   const pass = document.getElementById("pass").value;
 
   if(pass === "1234"){
-
-    localStorage.setItem("role", "user");
-
+    localStorage.setItem("role","user");
     window.location.href = "home.html";
-
   }
 
   else if(pass === "pydanmetopia"){
-
-    localStorage.setItem("role", "admin");
-
+    localStorage.setItem("role","admin");
     window.location.href = "home.html";
-
   }
 
   else {
-    document.getElementById("error").innerText = "Sai mật khẩu!";
+    document.getElementById("error").innerText = "Sai mật khẩu";
   }
 
 }
 
 </script>
+
+</body>
+</html>
