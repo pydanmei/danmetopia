@@ -13,23 +13,37 @@ body{
   font-family:Arial;
 }
 
-.topbar{
-  background:#00dc64;
-  color:black;
-  padding:15px;
+/* ===== WARNING ===== */
+#warning{
+  position:fixed;
+  inset:0;
+  background:black;
   display:flex;
-  justify-content:space-between;
+  justify-content:center;
   align-items:center;
-  font-weight:bold;
+  z-index:999;
 }
 
-.loginBox{
+.box{
   background:#1c1c1c;
-  padding:15px;
-  margin:10px;
-  border-radius:10px;
+  padding:20px;
+  width:340px;
+  border-radius:12px;
+  text-align:center;
 }
 
+/* ===== LOGIN ===== */
+#login{
+  display:none;
+  position:fixed;
+  inset:0;
+  justify-content:center;
+  align-items:center;
+  background:#0f0f0f;
+  z-index:998;
+}
+
+/* INPUT */
 input{
   width:100%;
   padding:10px;
@@ -40,6 +54,7 @@ input{
   color:white;
 }
 
+/* BUTTON */
 button{
   width:100%;
   padding:10px;
@@ -47,17 +62,35 @@ button{
   border:none;
   border-radius:8px;
   cursor:pointer;
+  font-weight:bold;
 }
 
 .green{background:#00dc64;color:black;}
-.gray{background:#333;color:white;}
+.red{background:#ff4444;color:white;}
+
+/* ===== HOME ===== */
+#home{
+  display:none;
+}
+
+.topbar{
+  background:#00dc64;
+  color:black;
+  padding:15px;
+  display:flex;
+  justify-content:space-between;
+  font-weight:bold;
+}
+
+.container{
+  padding:15px;
+}
 
 .card{
   background:#1c1c1c;
   padding:15px;
-  margin:10px;
+  margin-top:10px;
   border-radius:10px;
-  cursor:pointer;
 }
 </style>
 
@@ -65,74 +98,151 @@ button{
 
 <body>
 
-<!-- TOP -->
-<div class="topbar">
-  <div>🏠 DANMETOPIA HOME</div>
-  <div id="userBox">Ẩn danh</div>
+<!-- ================= WARNING ================= -->
+<div id="warning">
+  <div class="box">
+    <h2>⚠️ CẢNH BÁO 18+</h2>
+    <p>Trang truyện người lớn. Xác nhận đủ tuổi bằng việc tiếp tục.</p>
+
+    <button class="green" onclick="enter()">TIẾP TỤC</button>
+    <button class="red" onclick="leave()">THOÁT</button>
+  </div>
 </div>
 
-<!-- LOGIN -->
-<div class="loginBox">
+<!-- ================= LOGIN ================= -->
+<div id="login">
 
-  <h3>🔐 Đăng nhập</h3>
+  <div class="box">
 
-  <input id="email" placeholder="Email">
-  <input id="pass" type="password" placeholder="Mật khẩu (danmei)">
+    <h2>DANMETOPIA</h2>
+    <p>Nền tảng đọc truyện</p>
 
-  <button class="green" onclick="login()">Đăng nhập</button>
+    <!-- 🔥 REQUIRED PASSWORD -->
+    <input id="mainPass" type="password" placeholder="Mật khẩu (danmei)">
 
+    <hr>
+
+    <!-- OPTIONAL LOGIN -->
+    <input id="email" placeholder="Email / Tên đăng nhập (không bắt buộc)">
+    <input id="pass" type="password" placeholder="Mật khẩu tài khoản (nếu có)">
+
+    <button class="green" onclick="login()">VÀO WEB</button>
+
+    <p id="msg" style="color:red"></p>
+
+  </div>
 </div>
 
-<!-- LIST -->
-<div>
+<!-- ================= HOME ================= -->
+<div id="home">
 
-  <div class="card">📖 Truyện 1</div>
-  <div class="card">📖 Truyện 2</div>
-  <div class="card">📖 Truyện 3</div>
+  <div class="topbar">
+    <div>🏠 DANMETOPIA - TRANG CHỦ</div>
+    <div id="userBox">Ẩn danh</div>
+  </div>
+
+  <div class="container">
+
+    <h3>📚 Danh sách truyện</h3>
+
+    <div class="card">📖 Truyện 1</div>
+    <div class="card">📖 Truyện 2</div>
+    <div class="card">📖 Truyện 3</div>
+
+  </div>
 
 </div>
 
 <script>
 
-let user = JSON.parse(localStorage.getItem("user") || "{}");
+/* ================= STATE ================= */
+let user = {
+  email:null,
+  role:"guest"
+};
 
-function updateUI(){
-
-  if(user.email){
-    document.getElementById("userBox").innerText =
-      `${user.email} (${user.role})`;
-  }else{
-    document.getElementById("userBox").innerText = "Ẩn danh";
-  }
+/* ================= ENTER ================= */
+function enter(){
+  document.getElementById("warning").style.display="none";
+  document.getElementById("login").style.display="flex";
 }
 
-function login(){
+/* ================= EXIT ================= */
+function leave(){
+  document.body.innerHTML = "<h2 style='color:white;text-align:center;margin-top:100px'>Đã thoát</h2>";
+}
 
-  const email = document.getElementById("email").value;
-  const pass = document.getElementById("pass").value;
+/* ================= ROLE CHECK ================= */
+function getRole(email){
 
-  if(pass !== "danmei"){
-    alert("Sai mật khẩu");
-    return;
-  }
-
-  let role = "user";
+  if(!email) return "user";
 
   if(
     email === "pydanmeii@gmail.com" ||
     email === "pepyl4298@gmail.com"
-  ){
-    role = "admin";
+  ) return "admin";
+
+  if(email.includes("@group")) return "group";
+
+  return "user";
+}
+
+/* ================= LOGIN ================= */
+function login(){
+
+  const mainPass = document.getElementById("mainPass").value;
+
+  if(mainPass !== "danmei"){
+    document.getElementById("msg").innerText = "Sai mật khẩu chính";
+    return;
   }
 
-  user = { email, role };
+  const email = document.getElementById("email").value;
+
+  // 🔥 CASE 1: ANON
+  if(!email){
+    user = { email:null, role:"guest" };
+  }
+
+  // 🔥 CASE 2: LOGIN USER
+  else{
+    user = {
+      email: email,
+      role: getRole(email)
+    };
+  }
 
   localStorage.setItem("user", JSON.stringify(user));
+
+  showHome();
+}
+
+/* ================= HOME ================= */
+function showHome(){
+
+  document.getElementById("warning").style.display="none";
+  document.getElementById("login").style.display="none";
+  document.getElementById("home").style.display="block";
 
   updateUI();
 }
 
-updateUI();
+/* ================= UI ================= */
+function updateUI(){
+
+  if(!user.email){
+    document.getElementById("userBox").innerText = "Ẩn danh";
+  }else{
+    document.getElementById("userBox").innerText =
+      user.email + " (" + user.role + ")";
+  }
+}
+
+/* ================= INIT ================= */
+const saved = localStorage.getItem("user");
+if(saved){
+  user = JSON.parse(saved);
+}
 
 </script>
 
