@@ -2,113 +2,39 @@
 <html>
 
 <head>
-  <title>DANMETOPIA</title>
-
-  <style>
-
-    body{
-      margin:0;
-      background:#0f0f0f;
-      font-family:Arial;
-      color:white;
-    }
-
-    .topbar{
-      background:#00dc64;
-      padding:15px;
-      font-size:28px;
-      font-weight:bold;
-      color:black;
-      position:sticky;
-      top:0;
-    }
-
-    .grid{
-      display:grid;
-      grid-template-columns:repeat(auto-fill,minmax(200px,1fr));
-      gap:20px;
-      padding:20px;
-    }
-
-    .card{
-      background:#1c1c1c;
-      border-radius:15px;
-      overflow:hidden;
-      cursor:pointer;
-      transition:0.2s;
-    }
-
-    .card:hover{
-      transform:scale(1.03);
-    }
-
-    .cover{
-      width:100%;
-      height:280px;
-      object-fit:cover;
-    }
-
-    .info{
-      padding:10px;
-    }
-
-    .genre{
-      display:inline-block;
-      background:#00dc64;
-      color:black;
-      padding:5px 10px;
-      border-radius:20px;
-      font-size:12px;
-      margin-top:5px;
-    }
-
-  </style>
+  <title>HOME</title>
 </head>
 
-<body>
+<body style="background:#111;color:white;font-family:Arial">
 
-<div class="topbar">
-DANMETOPIA
-</div>
+<h2>HOME</h2>
 
-<div id="list" class="grid">
-Loading...
-</div>
+<div id="list">Loading...</div>
 
 <script>
 
-fetch("http://localhost:3000/api/stories")
-  .then(res => res.json())
-  .then(data => {
+// check login
+const role = localStorage.getItem("role");
+if(!role){
+  window.location.href = "index.html";
+}
 
-    document.getElementById("list").innerHTML =
-      data.map(s => `
+// fake data (KHÔNG FETCH để tránh lỗi trắng)
+const data = [
+  {id:1,title:"Neko Mata",genre:"shounen ai"},
+  {id:2,title:"Chó Mực",genre:"yaoi"}
+];
 
-        <div class="card" onclick="openStory(${s.id})">
-
-          <img class="cover"
-            src="${
-              s.id == 1
-              ? 'images/covers/nekomata.jpg'
-              : 'images/covers/chomuc.jpg'
-            }">
-
-          <div class="info">
-
-            <h2>${s.title}</h2>
-
-            <div class="genre">${s.genre}</div>
-
-          </div>
-
-        </div>
-
-      `).join("");
-
-  });
+document.getElementById("list").innerHTML =
+  data.map(s=>`
+    <div onclick="openStory(${s.id})"
+      style="padding:10px;margin:10px;background:#222;cursor:pointer">
+      ${s.title} - ${s.genre}
+    </div>
+  `).join("");
 
 function openStory(id){
-  window.location.href = "story.html?id=" + id;
+  window.location.href = "story.html?id="+id;
 }
 
 </script>
