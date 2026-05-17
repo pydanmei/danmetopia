@@ -5,8 +5,14 @@
   <title>READ</title>
 
   <style>
-    body{margin:0;background:black;color:white;font-family:Arial}
+    body{
+      margin:0;
+      background:black;
+      color:white;
+      font-family:Arial;
+    }
 
+    /* TOP */
     .topbar{
       position:fixed;
       top:0;left:0;right:0;
@@ -14,6 +20,7 @@
       color:black;
       display:flex;
       justify-content:space-between;
+      align-items:center;
       padding:10px;
       font-weight:bold;
       z-index:999;
@@ -28,10 +35,41 @@
       font-size:13px;
     }
 
+    /* PROFILE BOX (🔥 FIXED HERE) */
+    .info{
+      margin-top:60px;
+      background:#111;
+      padding:15px;
+      border-bottom:1px solid #222;
+    }
+
+    .title{
+      font-size:20px;
+      color:#00dc64;
+      font-weight:bold;
+    }
+
+    .meta{
+      font-size:12px;
+      color:#aaa;
+      line-height:1.6;
+    }
+
+    .tags span{
+      display:inline-block;
+      background:#00dc64;
+      color:black;
+      padding:3px 8px;
+      margin:3px;
+      border-radius:10px;
+      font-size:11px;
+    }
+
+    /* MENU */
     .menu{
       position:fixed;
-      right:10px;
       top:50px;
+      right:10px;
       background:#1c1c1c;
       padding:10px;
       border-radius:10px;
@@ -44,14 +82,20 @@
       cursor:pointer;
     }
 
-    .info{
-      margin-top:60px;
-      background:#111;
+    /* CHAPTER TITLE */
+    .chapterTitle{
+      text-align:center;
       padding:10px;
+      color:#aaa;
     }
 
-    img{width:100%;display:block}
+    /* WEBTOON IMAGES */
+    img{
+      width:100%;
+      display:block;
+    }
 
+    /* NAV */
     .nav{
       position:fixed;
       bottom:0;
@@ -69,6 +113,7 @@
       border:none;
       padding:10px;
       border-radius:8px;
+      font-weight:bold;
     }
 
   </style>
@@ -77,21 +122,46 @@
 
 <body>
 
+<!-- TOP -->
 <div class="topbar">
-  <div onclick="home()" class="btn">HOME</div>
+  <div class="btn" onclick="home()">🏠 Home</div>
   <div id="title">READ</div>
-  <div onclick="toggle()" class="btn">MENU</div>
+  <div class="btn" onclick="toggle()">☰ Menu</div>
 </div>
 
+<!-- 🔥 PROFILE INFO (RESTORED FULL) -->
+<div class="info">
+
+  <div class="title">Neko Mata</div>
+
+  <div class="meta">
+    <b>Tên gốc:</b> Neko Mata Original<br>
+    <b>Tên khác:</b> Neko Cat Story<br>
+    <b>Tác giả:</b> Unknown<br>
+    <b>Thể loại:</b> Romance · Drama · BL<br>
+    <b>Nhóm dịch:</b> DANMETOPIA<br>
+    <b>Tình trạng:</b> Đang tiến hành<br>
+    <b>Số chương:</b> 3
+  </div>
+
+  <div class="tags">
+    <span>18+</span>
+    <span>Drama</span>
+    <span>Romance</span>
+  </div>
+
+</div>
+
+<!-- MENU -->
 <div class="menu" id="menu"></div>
 
-<div class="info">
-  <b>Neko Mata</b><br>
-  <small id="roleText"></small>
-</div>
+<!-- CHAPTER TITLE -->
+<div class="chapterTitle" id="chapterTitle"></div>
 
+<!-- CONTENT -->
 <div id="pages"></div>
 
+<!-- NAV -->
 <div class="nav">
   <button onclick="prev()">⬅ Prev</button>
   <button onclick="next()">Next ➡</button>
@@ -99,19 +169,26 @@
 
 <script>
 
-let id = Number(new URLSearchParams(location.search).get("id")||1);
+let id = Number(new URLSearchParams(location.search).get("id") || 1);
 
+/* ROLE */
 const role = localStorage.getItem("role");
-document.getElementById("roleText").innerText = "Role: " + role;
 
-/* chapters */
+/* CHAPTERS */
 const chapters = [
   {id:1,name:"Chapter 1"},
   {id:2,name:"Chapter 2"},
   {id:3,name:"Chapter 3"}
 ];
 
-/* FIX MENU CLICK */
+/* TITLE */
+document.getElementById("title").innerText =
+  chapters.find(c=>c.id==id).name;
+
+document.getElementById("chapterTitle").innerText =
+  "Chapter " + id;
+
+/* MENU FIX CLICK */
 document.getElementById("menu").innerHTML =
   chapters.map(c=>`
     <div onclick="go(${c.id})">${c.name}</div>
@@ -121,23 +198,21 @@ function go(cid){
   location.href="read.html?id="+cid;
 }
 
+/* MENU TOGGLE */
 function toggle(){
   const m=document.getElementById("menu");
   m.style.display = m.style.display==="block"?"none":"block";
 }
 
-/* WEBTOON */
-function load(){
-  let html="";
-  for(let i=1;i<=6;i++){
-    html+=`<img src="https://picsum.photos/800/1200?${id}${i}">`;
-  }
-  document.getElementById("pages").innerHTML=html;
+/* WEBTOON SCROLL */
+let html="";
+for(let i=1;i<=6;i++){
+  html+=`<img src="https://picsum.photos/800/1200?${id}${i}">`;
 }
 
-load();
+document.getElementById("pages").innerHTML=html;
 
-/* NAV FIX */
+/* NAV */
 function next(){
   if(id<3) location.href="read.html?id="+(id+1);
 }
