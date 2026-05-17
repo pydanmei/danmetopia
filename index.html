@@ -2,71 +2,20 @@
 <html>
 
 <head>
-  <title>DANMETOPIA LOGIN</title>
-
-  <style>
-    body{
-      margin:0;
-      background:#111;
-      font-family:Arial;
-      color:white;
-      display:flex;
-      justify-content:center;
-      align-items:center;
-      height:100vh;
-    }
-
-    .box{
-      background:#1c1c1c;
-      padding:20px;
-      border-radius:12px;
-      width:320px;
-      text-align:center;
-    }
-
-    input{
-      width:100%;
-      padding:10px;
-      margin-top:10px;
-      border-radius:8px;
-      border:none;
-    }
-
-    button{
-      width:100%;
-      margin-top:10px;
-      padding:10px;
-      border:none;
-      border-radius:8px;
-      background:#00dc64;
-      font-weight:bold;
-      cursor:pointer;
-    }
-
-    .error{
-      color:red;
-      margin-top:10px;
-    }
-
-  </style>
-
+  <title>LOGIN</title>
 </head>
 
-<body>
+<body style="background:#111;color:white;font-family:Arial;display:flex;justify-content:center;align-items:center;height:100vh">
 
-<div class="box">
+<div style="background:#1c1c1c;padding:20px;border-radius:10px;width:300px">
 
-  <h2>18+ WARNING</h2>
+<h2>LOGIN</h2>
 
-  <p style="font-size:12px;color:#aaa">
-    Adult content website
-  </p>
+<input id="pass" type="password" placeholder="password" style="width:100%;padding:10px"><br><br>
 
-  <input id="pass" type="password" placeholder="Password">
+<button onclick="login()" style="width:100%;padding:10px;background:#00dc64;border:none">ENTER</button>
 
-  <button onclick="login()">ENTER</button>
-
-  <div class="error" id="err"></div>
+<p id="err" style="color:red"></p>
 
 </div>
 
@@ -74,29 +23,23 @@
 
 function login(){
 
-  const pass = document.getElementById("pass").value;
+  const p = document.getElementById("pass").value;
 
-  // ADMIN
-  if(pass === "pydanmetopia"){
+  if(p === "pydanmetopia"){
     localStorage.setItem("role","admin");
   }
-
-  // GROUP
-  else if(pass === "group123"){
+  else if(p === "group123"){
     localStorage.setItem("role","group");
   }
-
-  // USER
-  else if(pass === "1234"){
+  else if(p === "1234"){
     localStorage.setItem("role","user");
   }
-
   else{
-    document.getElementById("err").innerText = "Sai mật khẩu";
+    document.getElementById("err").innerText="Sai mật khẩu";
     return;
   }
 
-  window.location.href = "home.html";
+  location.href="home.html";
 }
 
 </script>
