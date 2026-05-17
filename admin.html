@@ -6,117 +6,121 @@
 
   <style>
     body{
+      margin:0;
       background:#0f0f0f;
       color:white;
       font-family:Arial;
-      padding:20px;
-    }
-
-    input, button{
-      padding:10px;
-      margin:5px;
-      width:300px;
-      display:block;
-    }
-
-    button{
-      background:#00dc64;
-      border:none;
-      cursor:pointer;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      height:100vh;
     }
 
     .box{
       background:#1c1c1c;
-      padding:15px;
-      margin:10px 0;
-      border-radius:10px;
+      padding:25px;
+      border-radius:12px;
+      width:300px;
+      text-align:center;
     }
+
+    input{
+      width:100%;
+      padding:10px;
+      margin-top:10px;
+      border:none;
+      border-radius:8px;
+    }
+
+    button{
+      width:100%;
+      padding:10px;
+      margin-top:10px;
+      border:none;
+      border-radius:8px;
+      background:#00dc64;
+      font-weight:bold;
+      cursor:pointer;
+    }
+
+    .hidden{
+      display:none;
+    }
+
+    .error{
+      color:red;
+      margin-top:10px;
+    }
+
+    .panel{
+      padding:20px;
+    }
+
   </style>
 </head>
 
 <body>
 
-<h1>ADMIN PANEL</h1>
+<!-- LOGIN -->
+<div class="box" id="loginBox">
 
-<!-- STORY -->
-<div class="box">
-  <h3>Thêm truyện</h3>
-  <input id="title" placeholder="Tên truyện">
-  <input id="genre" placeholder="Thể loại">
-  <button onclick="addStory()">Thêm truyện</button>
+  <h2>ADMIN LOGIN</h2>
+
+  <input type="password" id="pass" placeholder="Password">
+
+  <button onclick="login()">ENTER</button>
+
+  <div class="error" id="error"></div>
+
 </div>
 
-<!-- CHAPTER -->
-<div class="box">
-  <h3>Thêm chapter</h3>
-  <input id="storyId" placeholder="Story ID">
-  <input id="chapterTitle" placeholder="Tên chapter">
-  <button onclick="addChapter()">Thêm chapter</button>
-</div>
+<!-- ADMIN PANEL -->
+<div class="panel hidden" id="panel">
 
-<!-- UPLOAD -->
-<div class="box">
-  <h3>Upload ảnh chapter</h3>
-  <input id="uStoryId" placeholder="Story ID">
-  <input id="uChapterId" placeholder="Chapter ID">
-  <input type="file" id="files" multiple>
-  <button onclick="upload()">Upload</button>
+  <h2>ADMIN PANEL</h2>
+
+  <p>✔ Bạn đã đăng nhập</p>
+
+  <button onclick="goUpload()">Upload truyện</button>
+
+  <button onclick="logout()">Đăng xuất</button>
+
 </div>
 
 <script>
 
-/* ADD STORY */
-function addStory(){
+const ADMIN_PASS = "admin123";
 
-  fetch("http://localhost:3000/api/story",{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({
-      title:document.getElementById("title").value,
-      genre:document.getElementById("genre").value
-    })
-  })
+function login(){
 
-  .then(res=>res.json())
-  .then(()=>alert("Đã thêm truyện"));
-}
+  const pass = document.getElementById("pass").value;
 
-/* ADD CHAPTER */
-function addChapter(){
+  if(pass === ADMIN_PASS){
 
-  const storyId = document.getElementById("storyId").value;
+    document.getElementById("loginBox").classList.add("hidden");
+    document.getElementById("panel").classList.remove("hidden");
 
-  fetch(`http://localhost:3000/api/chapter/${storyId}`,{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({
-      title:document.getElementById("chapterTitle").value
-    })
-  })
+    localStorage.setItem("admin", "true");
 
-  .then(res=>res.json())
-  .then(()=>alert("Đã thêm chapter"));
-}
-
-/* UPLOAD IMAGES */
-function upload(){
-
-  const storyId = document.getElementById("uStoryId").value;
-  const chapterId = document.getElementById("uChapterId").value;
-  const files = document.getElementById("files").files;
-
-  const formData = new FormData();
-
-  for(let i=0;i<files.length;i++){
-    formData.append("images", files[i]);
+  } else {
+    document.getElementById("error").innerText = "Sai mật khẩu!";
   }
 
-  fetch(`http://localhost:3000/api/upload/${storyId}/${chapterId}`,{
-    method:"POST",
-    body:formData
-  })
-  .then(()=>alert("Upload xong"));
+}
 
+function logout(){
+  localStorage.removeItem("admin");
+  location.reload();
+}
+
+function goUpload(){
+  window.location.href = "upload.html";
+}
+
+// auto login nếu đã đăng nhập
+if(localStorage.getItem("admin") === "true"){
+  document.getElementById("loginBox").classList.add("hidden");
+  document.getElementById("panel").classList.remove("hidden");
 }
 
 </script>
