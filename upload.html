@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Upload Chapter</title>
+</head>
+
+<body style="background:#0f0f0f;color:white;font-family:Arial;padding:20px">
+
+<h1>UPLOAD CHAPTER</h1>
+
+<input type="number" id="storyId" placeholder="Story ID">
+<input type="number" id="chapterId" placeholder="Chapter ID">
+
+<br><br>
+
+<input type="file" id="files" multiple>
+
+<br><br>
+
+<button onclick="upload()">Upload</button>
+
+<p id="status"></p>
+
+<script>
+
+function upload(){
+
+  const storyId = document.getElementById("storyId").value;
+  const chapterId = document.getElementById("chapterId").value;
+  const files = document.getElementById("files").files;
+
+  const formData = new FormData();
+
+  for(let i=0;i<files.length;i++){
+    formData.append("images", files[i]);
+  }
+
+  fetch(`http://localhost:3000/api/upload/${storyId}/${chapterId}`, {
+    method: "POST",
+    body: formData
+  })
+  .then(res => res.json())
+  .then(data => {
+    document.getElementById("status").innerText =
+      "Upload thành công!";
+  });
+
+}
+
+</script>
+
+</body>
+</html>

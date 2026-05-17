@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Read Chapter</title>
+
+  <style>
+    body{
+      margin:0;
+      background:black;
+      text-align:center;
+    }
+
+    img{
+      width:100%;
+      display:block;
+    }
+
+    .back{
+      position:fixed;
+      top:10px;
+      left:10px;
+      background:#00dc64;
+      color:black;
+      padding:10px;
+      border-radius:10px;
+      text-decoration:none;
+      font-family:Arial;
+      z-index:100;
+    }
+  </style>
+
+</head>
+
+<body>
+
+<a class="back" href="index.html">← Back</a>
+
+<div id="content">Loading...</div>
+
+<script>
+
+const params = new URLSearchParams(window.location.search);
+
+const chapterId = params.get("chapter");
+
+// ⚠️ DÙNG BACKEND THAY VÌ LOCAL FILE
+fetch(`http://localhost:3000/api/read/1/${chapterId}`)
+  .then(res => res.json())
+  .then(imgs => {
+
+    if(!imgs.length){
+      document.getElementById("content").innerHTML =
+        "❌ Không có ảnh chapter";
+      return;
+    }
+
+    document.getElementById("content").innerHTML =
+      imgs.map(src => `<img src="${src}">`).join("");
+
+  })
+  .catch(err => {
+    document.getElementById("content").innerHTML =
+      "❌ Lỗi load API";
+  });
+
+</script>
+
+</body>
+</html>

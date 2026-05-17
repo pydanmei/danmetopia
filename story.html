@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Story</title>
+
+  <style>
+    body{
+      background:#0f0f0f;
+      color:white;
+      font-family:Arial;
+      padding:20px;
+    }
+
+    .chapter{
+      background:#1c1c1c;
+      padding:12px;
+      margin-top:10px;
+      border-radius:10px;
+      cursor:pointer;
+    }
+
+    .back{
+      color:#00dc64;
+      text-decoration:none;
+    }
+  </style>
+</head>
+
+<body>
+
+<a class="back" href="index.html">
+← Back
+</a>
+
+<h1 id="title">
+Loading...
+</h1>
+
+<p id="genre"></p>
+
+<h2>Chapters</h2>
+
+<div id="chapters"></div>
+
+<script>
+
+const params = new URLSearchParams(window.location.search);
+
+const id = params.get("id");
+
+/* =========================
+   LOAD STORY
+========================= */
+
+fetch("http://localhost:3000/api/stories")
+  .then(res => res.json())
+  .then(data => {
+
+    const story = data.find(s => s.id == id);
+
+    document.getElementById("title").innerText =
+      story.title;
+
+    document.getElementById("genre").innerText =
+      story.genre;
+
+  });
+
+/* =========================
+   LOAD CHAPTERS
+========================= */
+
+fetch("http://localhost:3000/api/chapters/" + id)
+  .then(res => res.json())
+  .then(data => {
+
+    document.getElementById("chapters").innerHTML =
+      data.map(c => `
+        <div class="chapter"
+          onclick="openChapter(${c.id})">
+
+          ${c.title}
+
+        </div>
+      `).join("");
+
+  });
+
+/* =========================
+   OPEN CHAPTER
+========================= */
+
+function openChapter(chapterId){
+
+  window.location.href =
+    "read.html?chapter=" + chapterId;
+
+}
+
+</script>
+
+</body>
+</html>
