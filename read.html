@@ -9,100 +9,139 @@
   <button onclick="toggle()">MENU</button>
 </div>
 
-<div id="menu" style="display:none;position:fixed;right:10px;top:50px;background:#1c1c1c;padding:10px"></div>
+<div id="info" style="padding:10px;background:#111"></div>
 
-<div id="info" style="padding:15px;background:#111;margin-top:40px"></div>
+<!-- LIKE + BOOKMARK -->
+<div style="padding:10px">
+  <button onclick="like()">❤️ Like</button>
+  <button onclick="bookmark()">🔖 Bookmark</button>
+</div>
+
+<!-- UPLOAD CHAPTER IMAGES (ADMIN/GROUP) -->
+<div id="uploadBox" style="display:none;padding:10px;background:#1c1c1c">
+  <h3>Upload Chapter Images</h3>
+  <input type="file" multiple onchange="uploadImages(event)">
+</div>
 
 <div id="pages"></div>
 
-<div style="position:fixed;bottom:0;left:0;right:0;background:#111;display:flex">
-  <button onclick="prev()" style="flex:1">⬅</button>
-  <button onclick="next()" style="flex:1">➡</button>
+<!-- COMMENT -->
+<div style="padding:10px;background:#111">
+  <h3>Comments</h3>
+
+  <input id="cmt" placeholder="comment..." style="width:100%;padding:8px">
+  <button onclick="addComment()" style="margin-top:5px">Send</button>
+
+  <div id="comments"></div>
 </div>
 
 <script>
 
 let id = Number(new URLSearchParams(location.search).get("id"));
 
-const role = localStorage.getItem("role");
-const myGroup = localStorage.getItem("group");
-
-/* LOAD STORY */
 let stories = JSON.parse(localStorage.getItem("stories") || "[]");
 
-let data = stories.find(s => s.id == id);
+let story = stories.find(s=>s.id==id);
 
-/* fallback */
-if(!data){
-  data = {
+/* SAFE INIT */
+if(!story){
+  story={
+    id,
     title:"Demo",
-    alt:"Demo Alt",
-    author:"Unknown",
     genre:"Test",
-    chapters:3,
-    tags:["18+"],
-    owner:"system"
+    owner:"system",
+    likes:0,
+    comments:[],
+    bookmarks:[],
+    images:[]
   };
 }
 
-document.getElementById("title").innerText = data.title;
+document.getElementById("title").innerText = story.title;
+
+/* INIT ARRAYS */
+story.likes ||= 0;
+story.comments ||= [];
+story.bookmarks ||= [];
+story.images ||= [];
+
+/* SAVE BACK */
+function save(){
+  localStorage.setItem("stories", JSON.stringify(stories));
+}
 
 /* INFO */
-function renderInfo(){
-
 document.getElementById("info").innerHTML=`
-  <h2>${data.title}</h2>
-  <b>Tên khác:</b> ${data.alt}<br>
-  <b>Tác giả:</b> ${data.author}<br>
-  <b>Thể loại:</b> ${data.genre}<br>
-  <b>Số chương:</b> ${data.chapters}<br>
-  <b>Owner:</b> ${data.owner}</b><br>
-
-  <div>${data.tags.map(t=>`<span style="background:#00dc64;color:black;padding:3px 8px;margin:3px;display:inline-block">${t}</span>`).join("")}</div>
+<h2>${story.title}</h2>
+<b>Owner:</b> ${story.owner}<br>
+<b>Likes:</b> ${story.likes}
 `;
 
+/* LIKE */
+function like(){
+  story.likes++;
+  save();
+  location.reload();
 }
 
-renderInfo();
-
-/* PERMISSION RULE */
-const canEdit =
-  role === "admin" ||
-  (role === "group" && data.owner === myGroup);
-
-/* MENU */
-let chapters = [1,2,3];
-
-document.getElementById("menu").innerHTML =
-chapters.map(c=>`<div onclick="go(${c})">Chapter ${c}</div>`).join("");
-
-function toggle(){
-  const m=document.getElementById("menu");
-  m.style.display = m.style.display==="block"?"none":"block";
+/* BOOKMARK */
+function bookmark(){
+  let user = "me";
+  story.bookmarks.push(user);
+  save();
+  alert("bookmarked!");
 }
 
-function go(cid){
-  location.href="read.html?id="+cid;
+/* COMMENTS */
+function addComment(){
+  story.comments.push(cmt.value);
+  save();
+  renderComments();
 }
 
-/* WEBTOON */
-function load(){
+function renderComments(){
+  document.getElementById("comments").innerHTML =
+  story.comments.map(c=>`<div style="padding:5px;border-bottom:1px solid #333">${c}</div>`).join("");
+}
+
+renderComments();
+
+/* CHAPTER IMAGES */
+function renderImages(){
   let html="";
-  for(let i=1;i<=6;i++){
-    html+=`<img src="https://picsum.photos/800/1200?${id}${i}">`;
+
+  if(story.images.length==0){
+    for(let i=1;i<=5;i++){
+      html+=`<img src="https://picsum.photos/800/1200?${id}${i}">`;
+    }
+  }else{
+    html = story.images.map(img=>`<img src="${img}">`).join("");
   }
+
   document.getElementById("pages").innerHTML=html;
 }
 
-load();
+renderImages();
 
-/* NAV */
-function next(){
-  location.href="read.html?id="+(id+1);
+/* UPLOAD IMAGES (GROUP/ADMIN ONLY) */
+const role = localStorage.getItem("role");
+
+if(role==="admin" || role==="group"){
+  document.getElementById("uploadBox").style.display="block";
 }
 
-function prev(){
-  location.href="read.html?id="+(id-1);
+function uploadImages(e){
+  const files = [...e.target.files];
+
+  files.forEach(f=>{
+    const reader = new FileReader();
+    reader.onload = function(){
+      story.images.push(reader.result);
+      save();
+      renderImages();
+    };
+    reader.readAsDataURL(f);
+  });
 }
 
 </script>
