@@ -2,58 +2,111 @@
 <html>
 
 <head>
-  <title>ADMIN DASHBOARD</title>
+  <title>DANMETOPIA ADMIN</title>
   <meta charset="utf-8">
 </head>
 
 <body style="margin:0;background:#0f0f0f;color:white;font-family:Arial">
 
-<!-- TOP BAR -->
+<!-- TOP -->
 <div style="background:#00dc64;color:black;padding:15px;display:flex;justify-content:space-between">
-  <b>ADMIN DASHBOARD</b>
-  <button onclick="location.href='home.html'">HOME</button>
+  <b>DANMETOPIA ADMIN</b>
+
+  <div>
+    <button onclick="location.href='home.html'">HOME</button>
+  </div>
 </div>
 
-<!-- LIST -->
-<div id="list" style="padding:10px"></div>
+<!-- UPLOAD STORY -->
+<div style="padding:15px;background:#111">
 
-<!-- EDIT MODAL -->
-<div id="modal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:#000000cc">
-  <div style="background:#1c1c1c;width:90%;max-width:500px;margin:50px auto;padding:15px;border-radius:10px">
+<h2>UPLOAD STORY</h2>
 
-    <h3>Edit Story</h3>
+<input id="title" placeholder="Title"
+style="width:100%;padding:10px;margin-top:5px">
 
-    <input id="title" placeholder="Title" style="width:100%;padding:8px;margin:5px 0">
-    <input id="alt" placeholder="Alt name" style="width:100%;padding:8px;margin:5px 0">
-    <input id="author" placeholder="Author" style="width:100%;padding:8px;margin:5px 0">
-    <input id="genre" placeholder="Genre" style="width:100%;padding:8px;margin:5px 0">
-    <input id="owner" placeholder="Owner (group)" style="width:100%;padding:8px;margin:5px 0">
-    <input id="tags" placeholder="Tags (comma)" style="width:100%;padding:8px;margin:5px 0">
+<input id="alt" placeholder="Alt name"
+style="width:100%;padding:10px;margin-top:5px">
 
-    <button onclick="saveEdit()" style="width:100%;padding:10px;background:#00dc64;border:none;margin-top:10px">
-      SAVE
-    </button>
+<input id="author" placeholder="Author"
+style="width:100%;padding:10px;margin-top:5px">
 
-    <button onclick="closeModal()" style="width:100%;padding:10px;margin-top:5px">
-      CLOSE
-    </button>
+<input id="genre" placeholder="Genre"
+style="width:100%;padding:10px;margin-top:5px">
 
-  </div>
+<input id="tags" placeholder="Tags comma"
+style="width:100%;padding:10px;margin-top:5px">
+
+<h3>Cover Image</h3>
+
+<input type="file" id="cover">
+
+<button onclick="uploadStory()"
+style="width:100%;padding:12px;background:#00dc64;border:none;margin-top:10px;font-weight:bold">
+UPLOAD STORY
+</button>
+
+</div>
+
+<!-- STORY TABLE -->
+<div style="padding:15px">
+
+<h2>STORIES</h2>
+
+<div id="table"></div>
+
+</div>
+
+<!-- CHAPTER MODAL -->
+<div id="chapterModal"
+style="display:none;position:fixed;inset:0;background:#000000cc">
+
+<div style="background:#1c1c1c;width:90%;max-width:500px;margin:50px auto;padding:15px;border-radius:10px">
+
+<h2>UPLOAD CHAPTER</h2>
+
+<input id="chapterTitle" placeholder="Chapter title"
+style="width:100%;padding:10px">
+
+<input type="file" id="chapterImages" multiple
+style="margin-top:10px">
+
+<button onclick="uploadChapter()"
+style="width:100%;padding:12px;background:#00dc64;border:none;margin-top:10px">
+UPLOAD CHAPTER
+</button>
+
+<button onclick="closeChapter()"
+style="width:100%;padding:12px;margin-top:5px">
+CLOSE
+</button>
+
+</div>
 </div>
 
 <script type="module">
 
 /* ================= FIREBASE ================= */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
+
 import {
   getFirestore,
   collection,
-  getDocs,
-  doc,
+  addDoc,
+  onSnapshot,
   updateDoc,
-  deleteDoc
+  deleteDoc,
+  doc
 } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
 
+import {
+  getStorage,
+  ref,
+  uploadBytes,
+  getDownloadURL
+} from "https://www.gstatic.com/firebasejs/12.13.0/firebase-storage.js";
+
+/* CONFIG */
 const firebaseConfig = {
   apiKey: "AIzaSyCDQk9DlMNKwn_508fDMI_3IB_dgpgHujA",
   authDomain: "danmetopia.firebaseapp.com",
@@ -64,101 +117,206 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
+
 const db = getFirestore(app);
+const storage = getStorage(app);
 
-/* ================= ROLE CHECK ================= */
+/* ================= ROLE ================= */
 const role = localStorage.getItem("role");
+const group = localStorage.getItem("group") || "groupA";
 
-if(role !== "admin"){
-  document.body.innerHTML = "<h2 style='color:white;text-align:center;margin-top:100px'>NO PERMISSION</h2>";
+if(role !== "admin" && role !== "editor"){
+  document.body.innerHTML = "<h2 style='text-align:center;margin-top:100px'>NO PERMISSION</h2>";
 }
 
-/* ================= LOAD STORIES ================= */
-let currentId = null;
+/* ================= UPLOAD STORY ================= */
+window.uploadStory = async ()=>{
 
-async function load(){
+  let coverUrl = "";
 
-  const snap = await getDocs(collection(db,"stories"));
+  const coverFile = document.getElementById("cover").files[0];
 
-  let html = "";
+  if(coverFile){
 
-  snap.forEach(d=>{
-    const s = d.data();
+    const coverRef = ref(storage, "covers/" + Date.now());
 
-    html += `
-      <div style="background:#1c1c1c;margin:10px;padding:10px;border-radius:10px">
+    await uploadBytes(coverRef, coverFile);
 
-        <b>${s.title}</b><br>
-        <small>${s.genre}</small><br>
-        👤 ${s.owner}<br>
+    coverUrl = await getDownloadURL(coverRef);
+  }
 
-        <button onclick="edit('${d.id}','${escapeStr(s.title)}','${escapeStr(s.alt||"")}','${escapeStr(s.author||"")}','${escapeStr(s.genre)}','${escapeStr(s.owner)}','${(s.tags||[]).join(",")}')">
-          EDIT
-        </button>
+  await addDoc(collection(db,"stories"),{
 
-        <button onclick="del('${d.id}')" style="background:red;color:white">
-          DELETE
-        </button>
-
-      </div>
-    `;
-  });
-
-  document.getElementById("list").innerHTML = html;
-}
-
-load();
-
-/* ================= EDIT ================= */
-window.edit = (id,title,alt,author,genre,owner,tags)=>{
-
-  currentId = id;
-
-  document.getElementById("title").value = title;
-  document.getElementById("alt").value = alt;
-  document.getElementById("author").value = author;
-  document.getElementById("genre").value = genre;
-  document.getElementById("owner").value = owner;
-  document.getElementById("tags").value = tags;
-
-  document.getElementById("modal").style.display="block";
-}
-
-/* ================= SAVE EDIT ================= */
-window.saveEdit = async ()=>{
-
-  const ref = doc(db,"stories",currentId);
-
-  await updateDoc(ref,{
     title: title.value,
     alt: alt.value,
     author: author.value,
     genre: genre.value,
-    owner: owner.value,
-    tags: tags.value.split(",")
+    tags: tags.value.split(","),
+
+    cover: coverUrl,
+
+    owner: group,
+
+    status: role === "admin" ? "approved" : "pending",
+
+    likes:0,
+    comments:[],
+    bookmarks:[],
+    chapters:[]
+
   });
 
-  closeModal();
-  load();
+  alert("STORY UPLOADED");
+}
+
+/* ================= STORY TABLE ================= */
+onSnapshot(collection(db,"stories"), (snap)=>{
+
+  let html = "";
+
+  snap.forEach(d=>{
+
+    const s = d.data();
+
+    html += `
+
+      <div style="background:#1c1c1c;padding:10px;margin-top:10px;border-radius:10px">
+
+        <div style="display:flex;gap:10px">
+
+          <img src="${s.cover || 'https://picsum.photos/200/300'}"
+          style="width:90px;height:120px;object-fit:cover;border-radius:8px">
+
+          <div>
+
+            <h3>${s.title}</h3>
+
+            <small>${s.genre}</small><br>
+
+            👤 ${s.owner}<br>
+
+            📌 ${s.status}<br>
+
+            📚 Chapters: ${(s.chapters || []).length}
+
+          </div>
+
+        </div>
+
+        <div style="margin-top:10px">
+
+          <button onclick="approve('${d.id}')">
+            APPROVE
+          </button>
+
+          <button onclick="openChapter('${d.id}')">
+            ADD CHAPTER
+          </button>
+
+          <button onclick="del('${d.id}')"
+          style="background:red;color:white">
+            DELETE
+          </button>
+
+        </div>
+
+      </div>
+
+    `;
+  });
+
+  document.getElementById("table").innerHTML = html;
+
+});
+
+/* ================= APPROVE ================= */
+window.approve = async (id)=>{
+
+  await updateDoc(doc(db,"stories",id),{
+    status:"approved"
+  });
+
+  alert("APPROVED");
 }
 
 /* ================= DELETE ================= */
 window.del = async (id)=>{
 
-  if(confirm("Delete this story?")){
+  if(confirm("DELETE STORY?")){
+
     await deleteDoc(doc(db,"stories",id));
-    load();
+
   }
 }
 
-/* ================= MODAL ================= */
-window.closeModal = ()=>{
-  document.getElementById("modal").style.display="none";
+/* ================= CHAPTER ================= */
+let currentStory = null;
+
+window.openChapter = (id)=>{
+
+  currentStory = id;
+
+  document.getElementById("chapterModal").style.display = "block";
 }
 
-/* escape helper */
-function escapeStr(str){
-  return (str||"").replaceAll("'","\\'");
+window.closeChapter = ()=>{
+
+  document.getElementById("chapterModal").style.display = "none";
+}
+
+/* ================= UPLOAD CHAPTER ================= */
+window.uploadChapter = async ()=>{
+
+  const files = [...document.getElementById("chapterImages").files];
+
+  const imageUrls = [];
+
+  for(const file of files){
+
+    const imageRef = ref(storage,
+      "chapters/" + Date.now() + "_" + file.name);
+
+    await uploadBytes(imageRef, file);
+
+    const url = await getDownloadURL(imageRef);
+
+    imageUrls.push(url);
+  }
+
+  const chapterData = {
+
+    title: chapterTitle.value,
+
+    images: imageUrls
+
+  };
+
+  const storyRef = doc(db,"stories",currentStory);
+
+  const snapshot = await fetchStory(currentStory);
+
+  const oldChapters = snapshot.chapters || [];
+
+  oldChapters.push(chapterData);
+
+  await updateDoc(storyRef,{
+    chapters: oldChapters
+  });
+
+  alert("CHAPTER UPLOADED");
+
+  closeChapter();
+}
+
+/* ================= FETCH STORY ================= */
+async function fetchStory(id){
+
+  const { getDoc } =
+    await import("https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js");
+
+  const snap = await getDoc(doc(db,"stories",id));
+
+  return snap.data();
 }
 
 </script>
