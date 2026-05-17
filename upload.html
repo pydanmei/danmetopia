@@ -5,24 +5,36 @@
   <title>Upload</title>
 </head>
 
-<body>
+<body style="font-family:Arial;background:#111;color:white;text-align:center;padding-top:50px">
 
 <h2>UPLOAD PAGE</h2>
 
+<p id="status">Checking permission...</p>
+
 <script>
 
-// 🔐 CHECK ROLE (KHÔNG PHẢI ADMIN THÌ CHẶN)
-const role = localStorage.getItem("role");
+window.onload = function(){
 
-if(!role){
-  alert("Bạn chưa đăng nhập!");
-  window.location.href = "index.html";
-}
+  const role = localStorage.getItem("role");
 
-if(role !== "admin"){
-  alert("Bạn không có quyền vào trang upload!");
-  window.location.href = "home.html";
-}
+  // chưa login
+  if(!role){
+    alert("Bạn chưa đăng nhập!");
+    window.location.href = "index.html";
+    return;
+  }
+
+  // user thường bị chặn upload
+  if(role !== "admin"){
+    alert("Bạn không có quyền upload!");
+    window.location.href = "home.html";
+    return;
+  }
+
+  // admin OK
+  document.getElementById("status").innerText = "Welcome Admin ✔";
+
+};
 
 </script>
 
