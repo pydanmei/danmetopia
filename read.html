@@ -1,69 +1,42 @@
 <!DOCTYPE html>
 <html>
 
-<head>
-  <title>READ</title>
-  <meta charset="utf-8">
-</head>
-
 <body style="margin:0;background:black;color:white;font-family:Arial">
 
-<!-- TOP BAR -->
 <div style="background:#00dc64;color:black;padding:10px;display:flex;justify-content:space-between">
   <button onclick="location.href='home.html'">HOME</button>
-  <div id="title">LOADING...</div>
-  <button onclick="toggleMenu()">MENU</button>
+  <div id="title"></div>
 </div>
 
-<!-- INFO -->
-<div id="info" style="padding:10px;background:#111"></div>
+<div id="info" style="padding:10px"></div>
 
-<!-- ACTIONS -->
+<button onclick="like()">❤️ Like</button>
+<button onclick="approve()" id="approveBtn" style="display:none">✔ Approve</button>
+
+<!-- RECOMMEND -->
 <div style="padding:10px">
-  <button onclick="like()">❤️ Like</button>
-  <button onclick="bookmark()">🔖 Bookmark</button>
-</div>
-
-<!-- UPLOAD CHAPTER IMAGES -->
-<div id="uploadBox" style="display:none;padding:10px;background:#1c1c1c">
-  <h3>Upload Chapter Images</h3>
-  <input type="file" multiple onchange="uploadImages(event)">
-</div>
-
-<!-- CHAPTER IMAGES -->
-<div id="pages"></div>
-
-<!-- COMMENTS -->
-<div style="padding:10px;background:#111">
-  <h3>Comments</h3>
-
-  <input id="cmt" placeholder="comment..." style="width:100%;padding:8px">
-  <button onclick="addComment()">Send</button>
-
-  <div id="commentList"></div>
+  <h3>🔥 Recommended same genre</h3>
+  <div id="recommend"></div>
 </div>
 
 <script type="module">
 
-/* ================= FIREBASE ================= */
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
+import {
+  initializeApp
+} from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
+
 import {
   getFirestore,
   doc,
   getDoc,
   updateDoc,
   increment,
-  arrayUnion
+  collection,
+  query,
+  where,
+  getDocs
 } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
 
-import {
-  getStorage,
-  ref,
-  uploadBytes,
-  getDownloadURL
-} from "https://www.gstatic.com/firebasejs/12.13.0/firebase-storage.js";
-
-/* CONFIG */
 const firebaseConfig = {
   apiKey: "AIzaSyCDQk9DlMNKwn_508fDMI_3IB_dgpgHujA",
   authDomain: "danmetopia.firebaseapp.com",
@@ -75,135 +48,87 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-const storage = getStorage(app);
 
-/* ================= USER ================= */
-const role = localStorage.getItem("role") || "user";
-const group = localStorage.getItem("group") || "groupA";
+/* ================= ROLE ================= */
+const role = localStorage.getItem("role");
 
-/* ================= STORY ID ================= */
+/* ================= ID ================= */
 const id = new URLSearchParams(location.search).get("id");
-const refDoc = doc(db,"stories",id);
+const ref = doc(db,"stories",id);
 
-let storyData = null;
+let story=null;
 
 /* ================= LOAD STORY ================= */
 async function load(){
 
-  const snap = await getDoc(refDoc);
-  storyData = snap.data();
+  const snap = await getDoc(ref);
+  story = snap.data();
 
-  if(!storyData){
-    document.body.innerHTML = "NOT FOUND";
-    return;
-  }
-
-  document.getElementById("title").innerText = storyData.title;
+  document.getElementById("title").innerText = story.title;
 
   document.getElementById("info").innerHTML = `
-    <h2>${storyData.title}</h2>
-    <b>Genre:</b> ${storyData.genre}<br>
-    <b>Owner:</b> ${storyData.owner}<br>
-    <b>Likes:</b> ${storyData.likes || 0}
+    <h2>${story.title}</h2>
+    <p>${story.genre}</p>
+    <b>Status:</b> ${story.status}
   `;
 
-  renderComments(storyData.comments || []);
-  renderImages(storyData.images || []);
+  if(role==="admin" || role==="editor"){
+    document.getElementById("approveBtn").style.display="block";
+  }
 
-  checkPermission();
+  loadRecommend();
 }
 
 load();
 
-/* ================= PERMISSION ================= */
-function checkPermission(){
-
-  const canEdit =
-    role === "admin" ||
-    (role === "group" && storyData.owner === group);
-
-  if(canEdit){
-    document.getElementById("uploadBox").style.display = "block";
-  }
-}
-
 /* ================= LIKE ================= */
 window.like = async ()=>{
-  await updateDoc(refDoc,{
+  await updateDoc(ref,{
     likes: increment(1)
   });
-  load();
 }
 
-/* ================= BOOKMARK ================= */
-window.bookmark = async ()=>{
-  await updateDoc(refDoc,{
-    bookmarks: arrayUnion("me")
-  });
-  alert("bookmarked");
-}
+/* ================= APPROVE SYSTEM ================= */
+window.approve = async ()=>{
 
-/* ================= COMMENT ================= */
-window.addComment = async ()=>{
-  const text = document.getElementById("cmt").value;
-
-  if(!text) return;
-
-  await updateDoc(refDoc,{
-    comments: arrayUnion(text)
+  await updateDoc(ref,{
+    status:"approved"
   });
 
-  document.getElementById("cmt").value = "";
-  load();
+  alert("APPROVED");
 }
 
-/* ================= RENDER COMMENTS ================= */
-function renderComments(list){
+/* ================= RECOMMEND SYSTEM ================= */
+async function loadRecommend(){
 
-  document.getElementById("commentList").innerHTML =
-    list.map(c=>`
-      <div style="padding:5px;border-bottom:1px solid #333">
-        ${c}
-      </div>
-    `).join("");
+  if(!story) return;
 
-}
+  const q = query(
+    collection(db,"stories"),
+    where("genre","==",story.genre)
+  );
 
-/* ================= CHAPTER IMAGES ================= */
-function renderImages(list){
+  const snap = await getDocs(q);
 
   let html="";
 
-  if(!list || list.length===0){
-    html = "<p style='padding:10px'>No images yet</p>";
-  } else {
-    html = list.map(img=>`
-      <img src="${img}" style="width:100%;display:block">
-    `).join("");
-  }
+  snap.forEach(d=>{
+    if(d.id === id) return;
 
-  document.getElementById("pages").innerHTML = html;
-}
+    const s = d.data();
 
-/* ================= UPLOAD IMAGES ================= */
-window.uploadImages = async (e)=>{
+    html += `
+      <div onclick="location.href='read.html?id=${d.id}'"
+        style="background:#1c1c1c;margin:5px;padding:10px">
 
-  const files = [...e.target.files];
+        ${s.title}<br>
+        <small>${s.genre}</small>
 
-  for(const f of files){
+      </div>
+    `;
+  });
 
-    const storageRef = ref(storage, "chapters/" + Date.now() + "_" + f.name);
-
-    await uploadBytes(storageRef, f);
-
-    const url = await getDownloadURL(storageRef);
-
-    await updateDoc(refDoc,{
-      images: arrayUnion(url)
-    });
-  }
-
-  load();
+  document.getElementById("recommend").innerHTML = html;
 }
 
 </script>
