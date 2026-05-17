@@ -10,7 +10,7 @@
 
 <!-- ⚠️ WARNING -->
 <div id="warning"
-style="position:fixed;inset:0;background:black;display:flex;justify-content:center;align-items:center">
+style="position:fixed;inset:0;background:black;display:flex;justify-content:center;align-items:center;z-index:999">
 
   <div style="background:#1c1c1c;padding:20px;border-radius:10px;width:320px;text-align:center">
 
@@ -33,11 +33,15 @@ style="position:fixed;inset:0;background:black;display:flex;justify-content:cent
 </div>
 
 <!-- LOGIN -->
-<div id="login" style="display:none;justify-content:center;align-items:center;height:100vh">
+<div id="login"
+style="display:none;justify-content:center;align-items:center;height:100vh">
 
   <div style="background:#1c1c1c;padding:20px;border-radius:10px;width:320px">
 
     <h2>LOGIN SYSTEM</h2>
+
+    <input id="email" placeholder="Email (optional)"
+    style="width:100%;padding:10px;margin-top:5px">
 
     <input id="pass" type="password" placeholder="Password"
     style="width:100%;padding:10px;margin-top:5px">
@@ -49,10 +53,7 @@ style="position:fixed;inset:0;background:black;display:flex;justify-content:cent
 
     <hr>
 
-    <h3>REGISTER GROUP (UPLOAD ACCESS)</h3>
-
-    <input id="email" placeholder="Email"
-    style="width:100%;padding:10px;margin-top:5px">
+    <h3>REGISTER GROUP</h3>
 
     <input id="groupName" placeholder="Group name"
     style="width:100%;padding:10px;margin-top:5px">
@@ -71,72 +72,54 @@ style="position:fixed;inset:0;background:black;display:flex;justify-content:cent
 
 </div>
 
-<script>
+<script type="module">
+
+import { loginApp } from "./auth.js";
 
 /* ================= WARNING ================= */
-function enter(){
+window.enter = ()=>{
   document.getElementById("warning").style.display="none";
   document.getElementById("login").style.display="flex";
 }
 
-function leave(){
+window.leave = ()=>{
   document.body.innerHTML="<h2 style='color:white;text-align:center;margin-top:100px'>EXIT</h2>";
 }
 
 /* ================= LOGIN ================= */
-function login(){
+window.login = async ()=>{
 
+  const email = document.getElementById("email").value || "user@danmei.com";
   const pass = document.getElementById("pass").value;
 
-  // ADMIN
-  if(pass === "pydanmetopia"){
-    setUser("admin","admin","Admin");
+  if(pass !== "danmei"){
+    document.getElementById("msg").innerText="Wrong password";
     return;
   }
 
-  // GROUP LOGIN (basic demo password)
-  if(pass === "group123"){
-    const group = localStorage.getItem("groupName") || "groupA";
-    setUser("group", group, group);
-    return;
-  }
+  await loginApp(email, pass);
 
-  // USER / ANONYMOUS
-  if(pass === "1234"){
-    setUser("user","anonymous","Anonymous");
-    return;
-  }
+  // save local group info
+  localStorage.setItem("email", email);
 
-  document.getElementById("msg").innerText="Wrong password";
+  window.location.href="home.html";
 }
 
 /* ================= REGISTER GROUP ================= */
-function registerGroup(){
+window.registerGroup = ()=>{
 
-  const email = document.getElementById("email").value;
   const groupName = document.getElementById("groupName").value;
   const displayName = document.getElementById("displayName").value;
 
-  if(!email || !groupName){
-    document.getElementById("msg").innerText="Fill all fields";
+  if(!groupName){
+    document.getElementById("msg").innerText="Fill group name";
     return;
   }
 
   localStorage.setItem("groupName", groupName);
   localStorage.setItem("displayName", displayName);
 
-  document.getElementById("msg").innerText="Group registered! Now login";
-
-}
-
-/* ================= USER SYSTEM ================= */
-function setUser(role, group, name){
-
-  localStorage.setItem("role",role);
-  localStorage.setItem("group",group);
-  localStorage.setItem("name",name);
-
-  window.location.href="home.html";
+  document.getElementById("msg").innerText="Group saved. Now login!";
 }
 
 </script>
