@@ -2,127 +2,163 @@
 <html>
 
 <head>
-  <title>ADMIN DANMETOPIA</title>
-
-  <style>
-    body{
-      margin:0;
-      background:#0f0f0f;
-      color:white;
-      font-family:Arial;
-      display:flex;
-      justify-content:center;
-      align-items:center;
-      height:100vh;
-    }
-
-    .box{
-      background:#1c1c1c;
-      padding:25px;
-      border-radius:12px;
-      width:300px;
-      text-align:center;
-    }
-
-    input{
-      width:100%;
-      padding:10px;
-      margin-top:10px;
-      border:none;
-      border-radius:8px;
-    }
-
-    button{
-      width:100%;
-      padding:10px;
-      margin-top:10px;
-      border:none;
-      border-radius:8px;
-      background:#00dc64;
-      font-weight:bold;
-      cursor:pointer;
-    }
-
-    .hidden{
-      display:none;
-    }
-
-    .error{
-      color:red;
-      margin-top:10px;
-    }
-
-    .panel{
-      padding:20px;
-    }
-
-  </style>
+  <title>ADMIN DASHBOARD</title>
+  <meta charset="utf-8">
 </head>
 
-<body>
+<body style="margin:0;background:#0f0f0f;color:white;font-family:Arial">
 
-<!-- LOGIN -->
-<div class="box" id="loginBox">
-
-  <h2>ADMIN LOGIN</h2>
-
-  <input type="password" id="pass" placeholder="Password">
-
-  <button onclick="login()">ENTER</button>
-<input id="user" placeholder="username">
-<input id="pass" type="password" placeholder="password">
-<button onclick="login()">Login</button>
-  <div class="error" id="error"></div>
- 
+<!-- TOP BAR -->
+<div style="background:#00dc64;color:black;padding:15px;display:flex;justify-content:space-between">
+  <b>ADMIN DASHBOARD</b>
+  <button onclick="location.href='home.html'">HOME</button>
 </div>
 
-<!-- ADMIN PANEL -->
-<div class="panel hidden" id="panel">
+<!-- LIST -->
+<div id="list" style="padding:10px"></div>
 
-  <h2>ADMIN PANEL</h2>
+<!-- EDIT MODAL -->
+<div id="modal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:#000000cc">
+  <div style="background:#1c1c1c;width:90%;max-width:500px;margin:50px auto;padding:15px;border-radius:10px">
 
-  <p>✔ Bạn đã đăng nhập</p>
+    <h3>Edit Story</h3>
 
-  <button onclick="goUpload()">Upload truyện</button>
+    <input id="title" placeholder="Title" style="width:100%;padding:8px;margin:5px 0">
+    <input id="alt" placeholder="Alt name" style="width:100%;padding:8px;margin:5px 0">
+    <input id="author" placeholder="Author" style="width:100%;padding:8px;margin:5px 0">
+    <input id="genre" placeholder="Genre" style="width:100%;padding:8px;margin:5px 0">
+    <input id="owner" placeholder="Owner (group)" style="width:100%;padding:8px;margin:5px 0">
+    <input id="tags" placeholder="Tags (comma)" style="width:100%;padding:8px;margin:5px 0">
 
-  <button onclick="logout()">Đăng xuất</button>
+    <button onclick="saveEdit()" style="width:100%;padding:10px;background:#00dc64;border:none;margin-top:10px">
+      SAVE
+    </button>
 
+    <button onclick="closeModal()" style="width:100%;padding:10px;margin-top:5px">
+      CLOSE
+    </button>
+
+  </div>
 </div>
 
-<script>
+<script type="module">
 
-const ADMIN_PASS = "pydanmetopia";
+/* ================= FIREBASE ================= */
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
+import {
+  getFirestore,
+  collection,
+  getDocs,
+  doc,
+  updateDoc,
+  deleteDoc
+} from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
 
-function login(){
+const firebaseConfig = {
+  apiKey: "AIzaSyCDQk9DlMNKwn_508fDMI_3IB_dgpgHujA",
+  authDomain: "danmetopia.firebaseapp.com",
+  projectId: "danmetopia",
+  storageBucket: "danmetopia.appspot.com",
+  messagingSenderId: "178240377870",
+  appId: "1:178240377870:web:d094b222ebabadccc5585f"
+};
 
-  const pass = document.getElementById("pass").value;
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
-  if(pass === ADMIN_PASS){
+/* ================= ROLE CHECK ================= */
+const role = localStorage.getItem("role");
 
-    document.getElementById("loginBox").classList.add("hidden");
-    document.getElementById("panel").classList.remove("hidden");
+if(role !== "admin"){
+  document.body.innerHTML = "<h2 style='color:white;text-align:center;margin-top:100px'>NO PERMISSION</h2>";
+}
 
-    localStorage.setItem("admin", "true");
+/* ================= LOAD STORIES ================= */
+let currentId = null;
 
-  } else {
-    document.getElementById("error").innerText = "Sai mật khẩu!";
+async function load(){
+
+  const snap = await getDocs(collection(db,"stories"));
+
+  let html = "";
+
+  snap.forEach(d=>{
+    const s = d.data();
+
+    html += `
+      <div style="background:#1c1c1c;margin:10px;padding:10px;border-radius:10px">
+
+        <b>${s.title}</b><br>
+        <small>${s.genre}</small><br>
+        👤 ${s.owner}<br>
+
+        <button onclick="edit('${d.id}','${escapeStr(s.title)}','${escapeStr(s.alt||"")}','${escapeStr(s.author||"")}','${escapeStr(s.genre)}','${escapeStr(s.owner)}','${(s.tags||[]).join(",")}')">
+          EDIT
+        </button>
+
+        <button onclick="del('${d.id}')" style="background:red;color:white">
+          DELETE
+        </button>
+
+      </div>
+    `;
+  });
+
+  document.getElementById("list").innerHTML = html;
+}
+
+load();
+
+/* ================= EDIT ================= */
+window.edit = (id,title,alt,author,genre,owner,tags)=>{
+
+  currentId = id;
+
+  document.getElementById("title").value = title;
+  document.getElementById("alt").value = alt;
+  document.getElementById("author").value = author;
+  document.getElementById("genre").value = genre;
+  document.getElementById("owner").value = owner;
+  document.getElementById("tags").value = tags;
+
+  document.getElementById("modal").style.display="block";
+}
+
+/* ================= SAVE EDIT ================= */
+window.saveEdit = async ()=>{
+
+  const ref = doc(db,"stories",currentId);
+
+  await updateDoc(ref,{
+    title: title.value,
+    alt: alt.value,
+    author: author.value,
+    genre: genre.value,
+    owner: owner.value,
+    tags: tags.value.split(",")
+  });
+
+  closeModal();
+  load();
+}
+
+/* ================= DELETE ================= */
+window.del = async (id)=>{
+
+  if(confirm("Delete this story?")){
+    await deleteDoc(doc(db,"stories",id));
+    load();
   }
-
 }
 
-function logout(){
-  localStorage.removeItem("admin");
-  location.reload();
+/* ================= MODAL ================= */
+window.closeModal = ()=>{
+  document.getElementById("modal").style.display="none";
 }
 
-function goUpload(){
-  window.location.href = "upload.html";
-}
-
-// auto login nếu đã đăng nhập
-if(localStorage.getItem("admin") === "true"){
-  document.getElementById("loginBox").classList.add("hidden");
-  document.getElementById("panel").classList.remove("hidden");
+/* escape helper */
+function escapeStr(str){
+  return (str||"").replaceAll("'","\\'");
 }
 
 </script>
