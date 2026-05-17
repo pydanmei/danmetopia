@@ -6,73 +6,137 @@
   <meta charset="utf-8">
 </head>
 
-<body style="background:#111;color:white;font-family:Arial;display:flex;justify-content:center;align-items:center;height:100vh">
+<body style="margin:0;background:#0f0f0f;color:white;font-family:Arial">
 
-<div style="background:#1c1c1c;padding:20px;border-radius:10px;width:320px">
+<!-- ⚠️ WARNING -->
+<div id="warning"
+style="position:fixed;inset:0;background:black;display:flex;justify-content:center;align-items:center">
 
-<h2 style="text-align:center">LOGIN</h2>
+  <div style="background:#1c1c1c;padding:20px;border-radius:10px;width:320px;text-align:center">
 
-<input id="pass" type="password" placeholder="Password"
-  style="width:100%;padding:10px;margin-bottom:10px">
+    <h2>⚠️ 18+ CONTENT</h2>
 
-<input id="group" placeholder="Group name (nếu là nhóm dịch)"
-  style="width:100%;padding:10px;margin-bottom:10px">
+    <p>Bạn phải đủ 18+ để vào website</p>
 
-<button onclick="login()"
-  style="width:100%;padding:10px;background:#00dc64;border:none;font-weight:bold">
-ENTER
-</button>
+    <button onclick="enter()"
+    style="width:100%;padding:10px;background:#00dc64;border:none">
+      ENTER
+    </button>
 
-<p id="err" style="color:red;text-align:center"></p>
+    <button onclick="leave()"
+    style="width:100%;padding:10px;margin-top:5px">
+      EXIT
+    </button>
+
+  </div>
+
+</div>
+
+<!-- LOGIN -->
+<div id="login" style="display:none;justify-content:center;align-items:center;height:100vh">
+
+  <div style="background:#1c1c1c;padding:20px;border-radius:10px;width:320px">
+
+    <h2>LOGIN SYSTEM</h2>
+
+    <input id="pass" type="password" placeholder="Password"
+    style="width:100%;padding:10px;margin-top:5px">
+
+    <button onclick="login()"
+    style="width:100%;padding:10px;background:#00dc64;border:none;margin-top:10px">
+      LOGIN
+    </button>
+
+    <hr>
+
+    <h3>REGISTER GROUP (UPLOAD ACCESS)</h3>
+
+    <input id="email" placeholder="Email"
+    style="width:100%;padding:10px;margin-top:5px">
+
+    <input id="groupName" placeholder="Group name"
+    style="width:100%;padding:10px;margin-top:5px">
+
+    <input id="displayName" placeholder="Display name"
+    style="width:100%;padding:10px;margin-top:5px">
+
+    <button onclick="registerGroup()"
+    style="width:100%;padding:10px;background:#ffcc00;border:none;margin-top:10px">
+      REGISTER GROUP
+    </button>
+
+    <p id="msg" style="color:red"></p>
+
+  </div>
 
 </div>
 
 <script>
 
-/* ================= LOGIN SYSTEM ================= */
+/* ================= WARNING ================= */
+function enter(){
+  document.getElementById("warning").style.display="none";
+  document.getElementById("login").style.display="flex";
+}
 
+function leave(){
+  document.body.innerHTML="<h2 style='color:white;text-align:center;margin-top:100px'>EXIT</h2>";
+}
+
+/* ================= LOGIN ================= */
 function login(){
 
   const pass = document.getElementById("pass").value;
-  const group = document.getElementById("group").value;
 
-  /* ADMIN */
+  // ADMIN
   if(pass === "pydanmetopia"){
-    localStorage.setItem("role","admin");
-    localStorage.setItem("group","admin");
-    location.href="home.html";
+    setUser("admin","admin","Admin");
     return;
   }
 
-  /* GROUP */
+  // GROUP LOGIN (basic demo password)
   if(pass === "group123"){
-    localStorage.setItem("role","group");
-    localStorage.setItem("group", group || "groupA");
-    location.href="home.html";
+    const group = localStorage.getItem("groupName") || "groupA";
+    setUser("group", group, group);
     return;
   }
 
-  /* USER */
+  // USER / ANONYMOUS
   if(pass === "1234"){
-    localStorage.setItem("role","user");
-    localStorage.setItem("group","user");
-    location.href="home.html";
+    setUser("user","anonymous","Anonymous");
     return;
   }
 
-  document.getElementById("err").innerText = "Sai mật khẩu";
+  document.getElementById("msg").innerText="Wrong password";
+}
+
+/* ================= REGISTER GROUP ================= */
+function registerGroup(){
+
+  const email = document.getElementById("email").value;
+  const groupName = document.getElementById("groupName").value;
+  const displayName = document.getElementById("displayName").value;
+
+  if(!email || !groupName){
+    document.getElementById("msg").innerText="Fill all fields";
+    return;
+  }
+
+  localStorage.setItem("groupName", groupName);
+  localStorage.setItem("displayName", displayName);
+
+  document.getElementById("msg").innerText="Group registered! Now login";
 
 }
 
-/* ================= AUTO REDIRECT ================= */
-window.onload = ()=>{
+/* ================= USER SYSTEM ================= */
+function setUser(role, group, name){
 
-  const role = localStorage.getItem("role");
+  localStorage.setItem("role",role);
+  localStorage.setItem("group",group);
+  localStorage.setItem("name",name);
 
-  if(role){
-    location.href="home.html";
-  }
-
+  window.location.href="home.html";
 }
 
 </script>
