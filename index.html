@@ -27,7 +27,7 @@ body{
 .box{
   background:#1c1c1c;
   padding:20px;
-  width:340px;
+  width:320px;
   border-radius:12px;
   text-align:center;
 }
@@ -44,7 +44,6 @@ button{
 
 .green{background:#00dc64;color:black;}
 .red{background:#ff4444;color:white;}
-.yellow{background:#ffcc00;color:black;}
 
 /* ===== LOGIN ===== */
 #login{
@@ -54,30 +53,35 @@ button{
   align-items:center;
 }
 
-input{
-  width:100%;
-  padding:10px;
-  margin-top:8px;
-  border:none;
-  border-radius:8px;
-  background:#2a2a2a;
-  color:white;
+/* ===== HOME ===== */
+#home{
+  display:none;
 }
 
-hr{
-  border:0;
-  border-top:1px solid #333;
-  margin:15px 0;
-}
-
-.title{
-  font-size:18px;
+.topbar{
+  background:#00dc64;
+  color:black;
+  padding:15px;
   font-weight:bold;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
 }
 
-.sub{
-  font-size:12px;
-  color:#aaa;
+.container{
+  padding:15px;
+}
+
+.card{
+  background:#1c1c1c;
+  padding:15px;
+  margin-top:10px;
+  border-radius:10px;
+  cursor:pointer;
+}
+
+.card:hover{
+  background:#2a2a2a;
 }
 </style>
 
@@ -85,46 +89,49 @@ hr{
 
 <body>
 
-<!-- ⚠️ WARNING -->
+<!-- WARNING -->
 <div id="warning">
   <div class="box">
-
     <h2>⚠️ CẢNH BÁO 18+</h2>
 
-    <p style="font-size:14px;line-height:1.5">
-      Trang có nội dung 18+<br>
-      Bạn xác nhận đủ tuổi để tiếp tục
-    </p>
+    <p>Trang có nội dung người lớn</p>
+    Xác nhận đủ tuổi khi tiếp tục.
 
-    <button class="green" onclick="enter()">TRUY CẬP</button>
+    <button class="green" onclick="enter()">TIẾP TỤC</button>
     <button class="red" onclick="leave()">THOÁT</button>
-
   </div>
 </div>
 
 <!-- LOGIN -->
 <div id="login">
-
   <div class="box">
 
-    <div class="title">DANMETOPIA</div>
-    <div class="sub">Nền tảng đọc truyện</div>
+    <h2>DANMETOPIA</h2>
+    <p>Nền tảng đọc truyện</p>
 
-    <input id="email" placeholder="Email (không bắt buộc)">
-    <input id="pass" type="password" placeholder="Mật khẩu: danmei">
+    <input id="pass" type="password" placeholder="Mật khẩu">
 
-    <button class="green" onclick="login()">ĐĂNG NHẬP</button>
-
-    <hr>
-
-    <div class="title">NHÓM DỊCH</div>
-
-    <input id="groupName" placeholder="Tên nhóm dịch">
-    <input id="displayName" placeholder="Tên hiển thị">
-
-    <button class="yellow" onclick="registerGroup()">TẠO NHÓM</button>
+    <button class="green" onclick="login()">TRUY CẬP</button>
 
     <p id="msg" style="color:red"></p>
+
+  </div>
+</div>
+
+<!-- HOME -->
+<div id="home">
+
+  <div class="topbar">
+    <span>🏠 DANMETOPIA HOME</span>
+    <button style="width:auto;padding:8px" onclick="logout()">Đăng xuất</button>
+  </div>
+
+  <div class="container">
+    <h3>📚 Danh sách truyện</h3>
+
+    <div class="card" onclick="goRead(1)">📖 Truyện 1 - Hành trình tu tiên</div>
+    <div class="card" onclick="goRead(2)">📖 Truyện 2 - Tình yêu cấm</div>
+    <div class="card" onclick="goRead(3)">📖 Truyện 3 - Dị giới phiêu lưu</div>
 
   </div>
 
@@ -132,7 +139,7 @@ hr{
 
 <script>
 
-/* ================= WARNING ================= */
+/* ===== WARNING ===== */
 function enter(){
   document.getElementById("warning").style.display="none";
   document.getElementById("login").style.display="flex";
@@ -142,10 +149,9 @@ function leave(){
   document.body.innerHTML="<h2 style='color:white;text-align:center;margin-top:100px'>Đã thoát</h2>";
 }
 
-/* ================= LOGIN ================= */
+/* ===== LOGIN ===== */
 function login(){
 
-  const email = document.getElementById("email").value || "user@danmei.com";
   const pass = document.getElementById("pass").value;
 
   if(pass !== "danmei"){
@@ -153,34 +159,32 @@ function login(){
     return;
   }
 
-  // USER DATA RESTORE
-  localStorage.setItem("email", email);
-  localStorage.setItem("role", "user");
+  localStorage.setItem("auth","ok");
 
-  // nếu là admin (tuỳ bạn chỉnh)
-  if(email === "admin@danmei.com"){
-    localStorage.setItem("role","admin");
-  }
-
-  window.location.href="home.html";
+  showHome();
 }
 
-/* ================= GROUP ================= */
-function registerGroup(){
+/* ===== HOME ===== */
+function showHome(){
+  document.getElementById("warning").style.display="none";
+  document.getElementById("login").style.display="none";
+  document.getElementById("home").style.display="block";
+}
 
-  const groupName = document.getElementById("groupName").value;
-  const displayName = document.getElementById("displayName").value;
+/* ===== READ ===== */
+function goRead(id){
+  window.location.href="read.html?id="+id;
+}
 
-  if(!groupName){
-    document.getElementById("msg").innerText="Nhập tên nhóm";
-    return;
-  }
+/* ===== LOGOUT ===== */
+function logout(){
+  localStorage.removeItem("auth");
+  location.reload();
+}
 
-  localStorage.setItem("groupName", groupName);
-  localStorage.setItem("displayName", displayName);
-  localStorage.setItem("role", "group");
-
-  document.getElementById("msg").innerText="Tạo nhóm thành công!";
+/* ===== AUTO LOGIN ===== */
+if(localStorage.getItem("auth") === "ok"){
+  showHome();
 }
 
 </script>
