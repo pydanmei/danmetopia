@@ -33,12 +33,12 @@
       color:white;
       padding:6px 10px;
       border-radius:8px;
-      text-decoration:none;
       cursor:pointer;
       font-size:13px;
+      text-decoration:none;
     }
 
-    /* INFO BOX */
+    /* INFO */
     .info{
       margin-top:60px;
       background:#111;
@@ -80,6 +80,43 @@
       display:block;
     }
 
+    /* BOTTOM NAV */
+    .nav{
+      position:fixed;
+      bottom:0;
+      left:0;
+      right:0;
+      background:#111;
+      display:flex;
+      justify-content:space-between;
+      padding:10px;
+      z-index:999;
+    }
+
+    .nav button{
+      background:#00dc64;
+      border:none;
+      padding:10px;
+      border-radius:8px;
+      font-weight:bold;
+      cursor:pointer;
+    }
+
+    /* BACK TO TOP */
+    .topBtn{
+      position:fixed;
+      right:15px;
+      bottom:70px;
+      background:#00dc64;
+      color:black;
+      border:none;
+      padding:10px;
+      border-radius:50%;
+      font-weight:bold;
+      cursor:pointer;
+      z-index:999;
+    }
+
   </style>
 
 </head>
@@ -96,7 +133,7 @@
 <!-- INFO -->
 <div class="info">
 
-  <h2 id="storyTitle">Neko Mata</h2>
+  <h2>Neko Mata</h2>
 
   <div class="meta">
     <b>Tác giả:</b> Unknown<br>
@@ -119,32 +156,55 @@
 <!-- PAGES -->
 <div class="pages" id="pages"></div>
 
+<!-- TOP BUTTON -->
+<button class="topBtn" onclick="goTop()">↑</button>
+
+<!-- NAV -->
+<div class="nav">
+  <button onclick="prev()">⬅ Prev</button>
+  <button onclick="next()">Next ➡</button>
+</div>
+
 <script>
 
-const id = new URLSearchParams(location.search).get("id") || 1;
+let id = Number(new URLSearchParams(location.search).get("id") || 1);
 
-/* FAKE CHAPTER DATA */
 const chapters = {
   1: "Chapter 1",
   2: "Chapter 2",
   3: "Chapter 3"
 };
 
-/* TITLE */
 document.getElementById("title").innerText = chapters[id];
 document.getElementById("chapterTitle").innerText = chapters[id];
 
-/* IMAGES (WEBTOON STYLE SCROLL) */
-const pageCount = 5;
-
+/* SCROLL IMAGE */
 let html = "";
-for(let i = 1; i <= pageCount; i++){
+for(let i = 1; i <= 6; i++){
   html += `
     <img src="https://picsum.photos/800/1200?random=${id}${i}">
   `;
 }
 
 document.getElementById("pages").innerHTML = html;
+
+/* NAV */
+function next(){
+  if(id < 3){
+    window.location.href = "read.html?id=" + (id+1);
+  }
+}
+
+function prev(){
+  if(id > 1){
+    window.location.href = "read.html?id=" + (id-1);
+  }
+}
+
+/* BACK TO TOP */
+function goTop(){
+  window.scrollTo({top:0, behavior:"smooth"});
+}
 
 </script>
 
