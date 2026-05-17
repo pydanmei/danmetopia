@@ -1,3 +1,4 @@
+<script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
 import {
   getAuth,
@@ -6,6 +7,20 @@ import {
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js";
 
+import {
+  getFirestore,
+  doc,
+  setDoc,
+  getDoc,
+  collection,
+  addDoc,
+  getDocs,
+  updateDoc,
+  query,
+  where
+} from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
+
+/* ===== FIREBASE CONFIG ===== */
 const firebaseConfig = {
   apiKey: "AIzaSyCDQk9DlMNKwn_508fDMI_3IB_dgpgHujA",
   authDomain: "danmetopia.firebaseapp.com",
@@ -17,31 +32,59 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
+const db = getFirestore(app);
 
+/* ================= ROLE SYSTEM ================= */
+async function getRole(email){
+
+  if(email === "pydanmeii@gmail.com") return "admin";
+
+  const q = query(collection(db,"users"), where("email","==",email));
+  const snap = await getDocs(q);
+
+  if(!snap.empty){
+    return snap.docs[0].data().role;
+  }
+
+  return "user";
+}
 /* ================= LOGIN SYSTEM ================= */
-window.loginApp = async (email, pass) => {
+window.loginApp = async (pass) => {
 
   if (pass !== "danmei") {
     alert("Sai mật khẩu");
     return;
-  }
+};
+/* ================= LOGIN ================= */
+window.login = async (email, pass)=>{
 
-  try {
-    await createUserWithEmailAndPassword(auth, email, pass);
-  } catch (e) {
-    // user đã tồn tại → bỏ qua
-  }
+  const userCred = await signInWithEmailAndPassword(auth, email, pass);
 
-  await signInWithEmailAndPassword(auth, email, pass);
+  const role = await getRole(email);
 
+  localStorage.setItem("user", JSON.stringify({
+    email,
+    role
+  }));
+
+  alert("Đăng nhập: " + role);
+
+  window.location.href = "home.html";
 };
 
-/* ================= USER STATE ================= */
-window.currentUser = null;
+/* ================= REGISTER GROUP ================= */
+window.registerGroup = async (email, password, groupName)=>{
 
-onAuthStateChanged(auth, (user) => {
-  window.currentUser = user;
-});
+  const userCred = await createUserWithEmailAndPassword(auth, email, password);
+
+  await setDoc(doc(db,"users",userCred.user.uid),{
+    email,
+    role:"group",
+    groupName
+  });
+
+  alert("Tạo group thành công");
+};
 
 /* ================= ROLE SYSTEM ================= */
 window.getRole = () => {
