@@ -13,7 +13,6 @@
       font-family:Arial;
     }
 
-    /* ===== WARNING ===== */
     #warning{
       position:fixed;
       inset:0;
@@ -43,10 +42,8 @@
     }
 
     .green{background:#00dc64;color:black;}
-    .yellow{background:#ffcc00;color:black;}
     .red{background:#ff4444;color:white;}
 
-    /* ===== LOGIN ===== */
     #login{
       display:none;
       height:100vh;
@@ -70,7 +67,6 @@
       margin:15px 0;
     }
 
-    /* ===== TOP UI STYLE ===== */
     .title{
       font-size:20px;
       font-weight:bold;
@@ -92,6 +88,7 @@
 <div id="warning">
   <div class="box">
     <h2>⚠️ CẢNH BÁO 18+</h2>
+
     <p style="font-size:14px;line-height:1.5">
       Đây là trang truyện có nội dung 18+.<br>
       Bạn xác nhận đủ 18 tuổi khi tiếp tục.
@@ -108,7 +105,7 @@
   <div class="box">
 
     <div class="title">DANMETOPIA</div>
-    <div class="sub">Nền tảng đọc truyện namxnam</div>
+    <div class="sub">Nền tảng đọc truyện</div>
 
     <input id="email" placeholder="Email (không bắt buộc)">
     <input id="pass" type="password" placeholder="Mật khẩu (danmei)">
@@ -118,12 +115,13 @@
     <hr>
 
     <div class="title">ĐĂNG KÝ NHÓM DỊCH</div>
-    <div class="sub">Dùng để đăng truyện và chỉnh sửa</div>
 
     <input id="groupName" placeholder="Tên nhóm dịch">
     <input id="displayName" placeholder="Tên hiển thị">
 
-    <button class="yellow" onclick="registerGroup()">TẠO NHÓM</button>
+    <button onclick="registerGroup()" style="background:#ffcc00;">
+      TẠO NHÓM
+    </button>
 
     <p id="msg" style="color:red"></p>
 
@@ -136,27 +134,14 @@
 import { loginApp } from "./auth.js";
 
 /* ================= WARNING ================= */
-<script>
-document.addEventListener("DOMContentLoaded", ()=>{
-
-  const warning = document.getElementById("warning");
-  const login = document.getElementById("login");
-
-  // mặc định: chỉ hiện warning
-  warning.style.display = "flex";
-  login.style.display = "none";
-
-});
-
-function enter(){
-  document.getElementById("warning").style.display = "none";
-  document.getElementById("login").style.display = "flex";
+window.enter = ()=>{
+  document.getElementById("warning").style.display="none";
+  document.getElementById("login").style.display="flex";
 }
 
-function leave(){
-  document.body.innerHTML = "<h2 style='color:white;text-align:center;margin-top:100px'>Đã thoát</h2>";
+window.leave = ()=>{
+  document.body.innerHTML="<h2 style='color:white;text-align:center;margin-top:100px'>Đã thoát</h2>";
 }
-</script>
 
 /* ================= LOGIN ================= */
 window.login = async ()=>{
