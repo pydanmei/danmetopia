@@ -7,15 +7,10 @@
 
 <h2>LOGIN</h2>
 
-<input id="pass" placeholder="password" type="password" style="width:100%;padding:10px"><br><br>
+<input id="pass" type="password" placeholder="password" style="width:100%;padding:10px"><br><br>
+<input id="group" placeholder="group (nếu có)" style="width:100%;padding:10px"><br><br>
 
-<input id="group" placeholder="group name (nếu là group)" style="width:100%;padding:10px"><br><br>
-
-<button onclick="login()" style="width:100%;padding:10px;background:#00dc64;border:none">
-ENTER
-</button>
-
-<p id="err" style="color:red"></p>
+<button onclick="login()" style="width:100%;padding:10px;background:#00dc64;border:none">ENTER</button>
 
 </div>
 
@@ -23,25 +18,18 @@ ENTER
 
 function login(){
 
-  const p = document.getElementById("pass").value;
-  const g = document.getElementById("group").value;
+  const p = pass.value;
+  const g = group.value;
 
   if(p === "pydanmetopia"){
     localStorage.setItem("role","admin");
   }
-
   else if(p === "group123"){
     localStorage.setItem("role","group");
     localStorage.setItem("group", g || "groupA");
   }
-
   else if(p === "1234"){
     localStorage.setItem("role","user");
-  }
-
-  else{
-    document.getElementById("err").innerText="Sai mật khẩu";
-    return;
   }
 
   location.href="home.html";
