@@ -6,214 +6,254 @@
 <title>DANMETOPIA</title>
 
 <style>
-/* ================= RESET ================= */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+body{
+  margin:0;
+  font-family:Arial;
+  background:#0f0f0f;
+  color:white;
 }
 
-body {
-  margin: 0;
-  background: #0f0f0f;
-  color: white;
-  font-family: 'Segoe UI', Arial, sans-serif;
+#warning, #loginPage, #nicknamePage{
+  position:fixed;
+  inset:0;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  background:rgba(0,0,0,0.9);
 }
 
-/* ================= WARNING ================= */
-#warning {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.95);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 9999;
+.box{
+  background:#1c1c1c;
+  padding:25px;
+  width:380px;
+  border-radius:15px;
+  text-align:center;
 }
 
-#warning .box {
-  background: #1c1c1c;
-  width: 400px;
-  padding: 30px;
-  border-radius: 20px;
-  text-align: center;
-  border: 2px solid #e94560;
+input{
+  width:100%;
+  padding:10px;
+  margin-top:10px;
+  border:none;
+  border-radius:8px;
+  background:#2a2a2a;
+  color:white;
 }
 
-#warning button {
-  margin-top: 10px;
-  padding: 12px;
-  width: 100%;
-  border: none;
-  border-radius: 10px;
-  cursor: pointer;
+button{
+  width:100%;
+  margin-top:10px;
+  padding:10px;
+  border:none;
+  border-radius:8px;
+  cursor:pointer;
 }
 
-.green { background:#00dc64; color:black; }
-.red { background:#ff4444; color:white; }
+.green{background:#00dc64;color:black;}
+.red{background:#ff4444;color:white;}
 
-/* ================= LOGIN ================= */
-#loginPage {
-  display: none;
-  position: fixed;
-  inset: 0;
-  justify-content: center;
-  align-items: center;
-  background: #111;
+#home{
+  display:none;
+  padding:20px;
 }
 
-#loginPage .box {
-  background: #1c1c1c;
-  width: 380px;
-  padding: 25px;
-  border-radius: 20px;
-  text-align: center;
-}
-
-#loginPage input {
-  width: 100%;
-  padding: 10px;
-  margin-top: 10px;
-  background: #2a2a2a;
-  border: none;
-  color: white;
-  border-radius: 8px;
-}
-
-/* ================= HOME ================= */
-#home {
-  display: none;
-  padding: 20px;
-}
-
-.topbar {
-  background: #00dc64;
-  color: black;
-  padding: 15px;
-  display: flex;
-  justify-content: space-between;
-  font-weight: bold;
+.topbar{
+  background:#00dc64;
+  color:black;
+  padding:15px;
+  display:flex;
+  justify-content:space-between;
 }
 </style>
 </head>
 
 <body>
 
-<!-- ================= WARNING ================= -->
+<!-- WARNING -->
 <div id="warning">
   <div class="box">
-    <h2>⚠️ CẢNH BÁO 18+</h2>
-    <p>Trang web này có thể chứa nội dung dành cho người trưởng thành (18+).<br>
-      Bằng việc tiếp tục, bạn xác nhận rằng bạn đủ 18 tuổi trở lên và việc xem nội dung này hợp pháp tại khu vực của bạn.
-    </p>
-
+    <h2>⚠️ CẢNH BÁO 18+ ⚠️</h2>
+     <p>Bằng việc tiếp tục, bạn xác nhận rằng bạn đủ 18 tuổi trở lên và việc xem nội dung này hợp pháp tại khu vực của bạn.</p>
     <button class="green" onclick="enter()">TIẾP TỤC</button>
     <button class="red" onclick="leave()">THOÁT</button>
   </div>
 </div>
 
-<!-- ================= LOGIN ================= -->
-<div id="loginPage">
+<!-- LOGIN -->
+<div id="loginPage" style="display:none">
   <div class="box">
-    <h1>DANMETOPIA</h1>
+    <h2>DANMETOPIA</h2>
     <p>Nền tảng đọc truyện</p>
 
     <input id="mainPass" type="password" placeholder="Mật khẩu chính (danmei)">
-    <input id="email" placeholder="Email (không bắt buộc)">
-    <input id="password" type="password" placeholder="Mật khẩu tài khoản (nếu có)">
-    <input id="nickname" placeholder="Tên hiển thị (nếu tạo mới)">
+    <input id="email" type="email" placeholder="Email">
+    <input id="password" type="password" placeholder="Mật khẩu">
 
     <button class="green" onclick="login()">TRUY CẬP</button>
-    <p id="msg" style="color:red"></p>
+    <p id="msg"></p>
   </div>
 </div>
 
-<!-- ================= HOME ================= -->
+<!-- NICKNAME STEP (CHỈ SAU VERIFY) -->
+<div id="nicknamePage" style="display:none">
+  <div class="box">
+    <h2>🎉 XÁC NHẬN HOÀN TẤT</h2>
+    <p>Tạo nickname (chỉ 1 lần)</p>
+
+    <input id="nickname" placeholder="Nickname">
+
+    <button class="green" onclick="saveNickname()">HOÀN TẤT</button>
+  </div>
+</div>
+
+<!-- HOME -->
 <div id="home">
   <div class="topbar">
-    <span>🏠 DANMETOPIA HOME</span>
+    <span>DANMETOPIA</span>
     <button onclick="logout()">Đăng xuất</button>
   </div>
-
-  <h3>📚 Trang chủ truyện</h3>
 </div>
 
-<script>
-/* ================= ROLE SYSTEM ================= */
+<script type="module">
 
-const ADMIN_EMAILS = [
-  "pydanmeii@gmail.com",
-  "pepyl4298@gmail.com"
-];
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
+import {
+  getAuth,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  sendEmailVerification,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js";
 
-function getUser() {
-  return JSON.parse(localStorage.getItem("user") || "{}");
-}
+import {
+  getFirestore,
+  doc,
+  setDoc,
+  getDoc,
+  query,
+  collection,
+  where,
+  getDocs
+} from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
 
-/* ================= WARNING ================= */
-function enter() {
-  document.getElementById("warning").style.display = "none";
-  document.getElementById("loginPage").style.display = "flex";
-}
+/* FIREBASE */
+const app = initializeApp({
+  apiKey: "AIzaSyCDQk9DlMNKwn_508fDMI_3IB_dgpgHujA",
+  authDomain: "danmetopia.firebaseapp.com",
+  projectId: "danmetopia"
+});
 
-function leave() {
-  document.body.innerHTML = "<h2 style='color:white;text-align:center;margin-top:100px'>Đã thoát</h2>";
-}
+const auth = getAuth(app);
+const db = getFirestore(app);
 
-/* ================= LOGIN ================= */
-function login() {
-  const mainPass = document.getElementById("mainPass").value;
-  const email = document.getElementById("email").value;
-  const nickname = document.getElementById("nickname").value;
+const ADMIN = ["pydanmeii@gmail.com","pepyl4298@gmail.com"];
 
-  if (mainPass !== "danmei") {
-    document.getElementById("msg").innerText = "Sai mật khẩu chính";
+let currentUser = null;
+
+/* UI */
+window.enter = () => {
+  warning.style.display="none";
+  loginPage.style.display="flex";
+};
+
+window.leave = () => {
+  document.body.innerHTML="ĐÃ THOÁT";
+};
+
+/* LOGIN / REGISTER */
+window.login = async () => {
+
+  const mainPass = mainPass.value;
+  const email = email.value;
+  const pass = password.value;
+
+  if(mainPass !== "danmei"){
+    msg.innerText="Sai mật khẩu chính";
     return;
   }
 
-  let role = "guest";
-  let displayName = "Ẩn danh";
+  try{
 
-  if (email) {
-    if (ADMIN_EMAILS.includes(email)) {
-      role = "admin";
-      displayName = "ADMIN - " + (nickname || email);
-    } else {
-      role = "user";
-      displayName = nickname || email.split("@")[0];
+    const cred = await createUserWithEmailAndPassword(auth,email,pass);
+
+    await sendEmailVerification(cred.user);
+
+    alert("📩 Check email để xác nhận tài khoản");
+
+    localStorage.setItem("tempUID",cred.user.uid);
+    loginPage.style.display="none";
+
+  }catch(e){
+
+    try{
+      const cred = await signInWithEmailAndPassword(auth,email,pass);
+
+      if(!cred.user.emailVerified){
+        alert("⚠️ Vui lòng verify email trước");
+        return;
+      }
+
+      currentUser = cred.user;
+
+      const data = await getDoc(doc(db,"users",cred.user.uid));
+
+      if(!data.exists() || !data.data().nickname){
+        loginPage.style.display="none";
+        nicknamePage.style.display="flex";
+        return;
+      }
+
+      showHome();
+
+    }catch(err){
+      msg.innerText = err.message;
     }
   }
+};
 
-  localStorage.setItem("user", JSON.stringify({
-    email,
-    role,
-    displayName
-  }));
+/* SAVE NICKNAME (CHỈ 1 LẦN) */
+window.saveNickname = async () => {
 
+  const nick = document.getElementById("nickname").value;
+
+  const uid = currentUser.uid;
+
+  const q = await getDocs(query(collection(db,"users"),where("nickname","==",nick)));
+
+  if(!q.empty){
+    alert("Nickname đã tồn tại");
+    return;
+  }
+
+  await setDoc(doc(db,"users",uid),{
+    email:currentUser.email,
+    nickname:nick,
+    role:ADMIN.includes(currentUser.email) ? "admin" : "user",
+    group:false
+  });
+
+  nicknamePage.style.display="none";
   showHome();
+};
+
+/* HOME */
+function showHome(){
+  home.style.display="block";
 }
 
-/* ================= HOME ================= */
-function showHome() {
-  document.getElementById("warning").style.display = "none";
-  document.getElementById("loginPage").style.display = "none";
-  document.getElementById("home").style.display = "block";
-
-  const user = getUser();
-
-  console.log("LOGIN:", user);
-}
-
-/* ================= LOGOUT ================= */
-function logout() {
-  localStorage.removeItem("user");
+/* LOGOUT */
+window.logout = () => {
+  localStorage.clear();
   location.reload();
-}
+};
 
-/* ================= AUTO LOGIN ================= */
-if (getUser().role) {
-  showHome();
-}
+/* AUTO CHECK */
+onAuthStateChanged(auth,(u)=>{
+  if(u && u.emailVerified){
+    currentUser=u;
+  }
+});
+
 </script>
 
 </body>
