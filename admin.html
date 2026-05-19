@@ -1,325 +1,174 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="vi">
 <head>
-  <title>DANMETOPIA ADMIN</title>
-  <meta charset="utf-8">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DANMETOPIA ADMIN</title>
+<link rel="stylesheet" href="style.css">
+<style>
+body{
+  background:#0f0f0f;
+  color:white;
+}
+.topbar{
+  background:#00dc64;
+  color:black;
+  padding:15px;
+  font-weight:bold;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+.container{
+  padding:15px;
+}
+.panel{
+  background:#1c1c1c;
+  padding:15px;
+  border-radius:12px;
+  margin-top:15px;
+}
+.story{
+  background:#2a2a2a;
+  padding:15px;
+  border-radius:10px;
+  margin-top:10px;
+}
+button{
+  padding:10px;
+  border:none;
+  border-radius:8px;
+  cursor:pointer;
+  margin-top:10px;
+  font-weight:bold;
+}
+.green{
+  background:#00dc64;
+  color:black;
+}
+.red{
+  background:#ff4444;
+  color:white;
+}
+.yellow{
+  background:#ffcc00;
+  color:black;
+}
+input,textarea{
+  width:100%;
+  padding:10px;
+  margin-top:10px;
+  border:none;
+  border-radius:8px;
+  background:#111;
+  color:white;
+  box-sizing:border-box;
+}
+textarea{
+  height:100px;
+  resize:none;
+}
+.group-item{
+  background:#333;
+  padding:10px;
+  margin:5px 0;
+  border-radius:8px;
+}
+</style>
 </head>
-
-<body style="margin:0;background:#0f0f0f;color:white;font-family:Arial">
-
-<!-- TOP -->
-<div style="background:#00dc64;color:black;padding:15px;display:flex;justify-content:space-between">
-  <b>DANMETOPIA ADMIN</b>
-
-  <div>
-    <button onclick="location.href='home.html'">HOME</button>
+<body>
+<div class="topbar">
+  <div>👑 DANMETOPIA ADMIN</div>
+  <button class="red" onclick="logout()">Đăng xuất</button>
+</div>
+<div class="container">
+  <!-- Groups management -->
+  <div class="panel">
+    <h2>📚 QUẢN LÝ NHÓM DỊCH</h2>
+    <div id="groupList"></div>
+  </div>
+  
+  <!-- Duyệt truyện -->
+  <div class="panel">
+    <h2>📚 DUYỆT TRUYỆN</h2>
+    <div id="approvalList"></div>
+  </div>
+  
+  <!-- Quản lý truyện -->
+  <div class="panel">
+    <h2>🛠 QUẢN LÝ TRUYỆN</h2>
+    <div id="storyList"></div>
+  </div>
+  
+  <!-- Upload chapter -->
+  <div class="panel">
+    <h2>📤 THÊM CHAPTER</h2>
+    <input id="chapterStoryId" placeholder="Story ID">
+    <input id="chapterTitle" placeholder="Tên chapter">
+    <textarea id="chapterPages" placeholder="Mỗi dòng là 1 link ảnh"></textarea>
+    <button class="green" onclick="uploadChapter()">ĐĂNG CHAPTER</button>
   </div>
 </div>
 
-<!-- UPLOAD STORY -->
-<div style="padding:15px;background:#111">
-
-<h2>UPLOAD STORY</h2>
-
-<input id="title" placeholder="Title"
-style="width:100%;padding:10px;margin-top:5px">
-
-<input id="alt" placeholder="Alt name"
-style="width:100%;padding:10px;margin-top:5px">
-
-<input id="author" placeholder="Author"
-style="width:100%;padding:10px;margin-top:5px">
-
-<input id="genre" placeholder="Genre"
-style="width:100%;padding:10px;margin-top:5px">
-
-<input id="tags" placeholder="Tags comma"
-style="width:100%;padding:10px;margin-top:5px">
-
-<h3>Cover Image</h3>
-
-<input type="file" id="cover">
-
-<button onclick="uploadStory()"
-style="width:100%;padding:12px;background:#00dc64;border:none;margin-top:10px;font-weight:bold">
-UPLOAD STORY
-</button>
-
-</div>
-
-<!-- STORY TABLE -->
-<div style="padding:15px">
-
-<h2>STORIES</h2>
-
-<div id="table"></div>
-
-</div>
-
-<!-- CHAPTER MODAL -->
-<div id="chapterModal"
-style="display:none;position:fixed;inset:0;background:#000000cc">
-
-<div style="background:#1c1c1c;width:90%;max-width:500px;margin:50px auto;padding:15px;border-radius:10px">
-
-<h2>UPLOAD CHAPTER</h2>
-
-<input id="chapterTitle" placeholder="Chapter title"
-style="width:100%;padding:10px">
-
-<input type="file" id="chapterImages" multiple
-style="margin-top:10px">
-
-<button onclick="uploadChapter()"
-style="width:100%;padding:12px;background:#00dc64;border:none;margin-top:10px">
-UPLOAD CHAPTER
-</button>
-
-<button onclick="closeChapter()"
-style="width:100%;padding:12px;margin-top:5px">
-CLOSE
-</button>
-
-</div>
-</div>
-
 <script type="module">
+import { getStories, updateStory, deleteStory, addChapter, getPendingStories } from "./db.js";
+import { db, getAllGroups } from "./auth.js";
+import { doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
 
-/* ================= FIREBASE ================= */
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
+const user = JSON.parse(localStorage.getItem("user") || "{}");
 
-import {
-  getFirestore,
-  collection,
-  addDoc,
-  onSnapshot,
-  updateDoc,
-  deleteDoc,
-  doc
-} from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
-
-import {
-  getStorage,
-  ref,
-  uploadBytes,
-  getDownloadURL
-} from "https://www.gstatic.com/firebasejs/12.13.0/firebase-storage.js";
-
-/* CONFIG */
-const firebaseConfig = {
-  apiKey: "AIzaSyCDQk9DlMNKwn_508fDMI_3IB_dgpgHujA",
-  authDomain: "danmetopia.firebaseapp.com",
-  projectId: "danmetopia",
-  storageBucket: "danmetopia.appspot.com",
-  messagingSenderId: "178240377870",
-  appId: "1:178240377870:web:d094b222ebabadccc5585f"
-};
-
-const app = initializeApp(firebaseConfig);
-
-const db = getFirestore(app);
-const storage = getStorage(app);
-
-/* ================= ROLE ================= */
-const role = localStorage.getItem("role");
-const group = localStorage.getItem("group") || "groupA";
-
-if(role !== "admin" && role !== "editor"){
-  document.body.innerHTML = "<h2 style='text-align:center;margin-top:100px'>NO PERMISSION</h2>";
+if (user.role !== "admin") {
+  document.body.innerHTML = `<div style="display:flex;justify-content:center;align-items:center;height:100vh;font-size:30px;">❌ KHÔNG CÓ QUYỀN</div>`;
+  throw new Error("Not admin");
 }
 
-/* ================= UPLOAD STORY ================= */
-window.uploadStory = async ()=>{
-
-  let coverUrl = "";
-
-  const coverFile = document.getElementById("cover").files[0];
-
-  if(coverFile){
-
-    const coverRef = ref(storage, "covers/" + Date.now());
-
-    await uploadBytes(coverRef, coverFile);
-
-    coverUrl = await getDownloadURL(coverRef);
-  }
-
-  await addDoc(collection(db,"stories"),{
-
-    title: title.value,
-    alt: alt.value,
-    author: author.value,
-    genre: genre.value,
-    tags: tags.value.split(","),
-
-    cover: coverUrl,
-
-    owner: group,
-
-    status: role === "admin" ? "approved" : "pending",
-
-    likes:0,
-    comments:[],
-    bookmarks:[],
-    chapters:[]
-
-  });
-
-  alert("STORY UPLOADED");
+async function load() {
+  const stories = await getStories();
+  const pending = await getPendingStories();
+  renderApproval(pending);
+  renderStories(stories);
+  loadGroups();
 }
 
-/* ================= STORY TABLE ================= */
-onSnapshot(collection(db,"stories"), (snap)=>{
-
-  let html = "";
-
-  snap.forEach(d=>{
-
-    const s = d.data();
-
-    html += `
-
-      <div style="background:#1c1c1c;padding:10px;margin-top:10px;border-radius:10px">
-
-        <div style="display:flex;gap:10px">
-
-          <img src="${s.cover || 'https://picsum.photos/200/300'}"
-          style="width:90px;height:120px;object-fit:cover;border-radius:8px">
-
-          <div>
-
-            <h3>${s.title}</h3>
-
-            <small>${s.genre}</small><br>
-
-            👤 ${s.owner}<br>
-
-            📌 ${s.status}<br>
-
-            📚 Chapters: ${(s.chapters || []).length}
-
-          </div>
-
-        </div>
-
-        <div style="margin-top:10px">
-
-          <button onclick="approve('${d.id}')">
-            APPROVE
-          </button>
-
-          <button onclick="openChapter('${d.id}')">
-            ADD CHAPTER
-          </button>
-
-          <button onclick="del('${d.id}')"
-          style="background:red;color:white">
-            DELETE
-          </button>
-
-        </div>
-
+function renderApproval(stories) {
+  const list = document.getElementById("approvalList");
+  list.innerHTML = "";
+  stories.forEach(story => {
+    if (story.approved) return;
+    list.innerHTML += `
+      <div class="story">
+        <h3>${escapeHtml(story.title)}</h3>
+        <p>📚 Nhóm: ${story.groupName || "Cá nhân"}</p>
+        <p>👤 Người đăng: ${story.ownerNickname || "Không rõ"}</p>
+        <button class="green" onclick="approve('${story.id}')">DUYỆT</button>
+        <button class="red" onclick="removeStory('${story.id}')">XÓA</button>
       </div>
-
     `;
   });
+}
 
-  document.getElementById("table").innerHTML = html;
-
-});
-
-/* ================= APPROVE ================= */
-window.approve = async (id)=>{
-
-  await updateDoc(doc(db,"stories",id),{
-    status:"approved"
+function renderStories(stories) {
+  const list = document.getElementById("storyList");
+  list.innerHTML = "";
+  stories.forEach(story => {
+    list.innerHTML += `
+      <div class="story">
+        <h3>${escapeHtml(story.title)}</h3>
+        <p>📚 ${story.groupName || "Cá nhân"}</p>
+        <p>✅ ${story.approved ? "Đã duyệt" : "Chờ duyệt"}</p>
+        <input id="title-${story.id}" value="${escapeHtml(story.title)}" placeholder="Tên truyện">
+        <textarea id="desc-${story.id}" placeholder="Mô tả">${escapeHtml(story.desc || "")}</textarea>
+        <button class="yellow" onclick="editStory('${story.id}')">CẬP NHẬT</button>
+        <button class="red" onclick="removeStory('${story.id}')">XÓA</button>
+      </div>
+    `;
   });
-
-  alert("APPROVED");
 }
 
-/* ================= DELETE ================= */
-window.del = async (id)=>{
-
-  if(confirm("DELETE STORY?")){
-
-    await deleteDoc(doc(db,"stories",id));
-
-  }
-}
-
-/* ================= CHAPTER ================= */
-let currentStory = null;
-
-window.openChapter = (id)=>{
-
-  currentStory = id;
-
-  document.getElementById("chapterModal").style.display = "block";
-}
-
-window.closeChapter = ()=>{
-
-  document.getElementById("chapterModal").style.display = "none";
-}
-
-/* ================= UPLOAD CHAPTER ================= */
-window.uploadChapter = async ()=>{
-
-  const files = [...document.getElementById("chapterImages").files];
-
-  const imageUrls = [];
-
-  for(const file of files){
-
-    const imageRef = ref(storage,
-      "chapters/" + Date.now() + "_" + file.name);
-
-    await uploadBytes(imageRef, file);
-
-    const url = await getDownloadURL(imageRef);
-
-    imageUrls.push(url);
-  }
-
-  const chapterData = {
-
-    title: chapterTitle.value,
-
-    images: imageUrls
-
-  };
-
-  const storyRef = doc(db,"stories",currentStory);
-
-  const snapshot = await fetchStory(currentStory);
-
-  const oldChapters = snapshot.chapters || [];
-
-  oldChapters.push(chapterData);
-
-  await updateDoc(storyRef,{
-    chapters: oldChapters
-  });
-
-  alert("CHAPTER UPLOADED");
-
-  closeChapter();
-}
-
-/* ================= FETCH STORY ================= */
-async function fetchStory(id){
-
-  const { getDoc } =
-    await import("https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js");
-
-  const snap = await getDoc(doc(db,"stories",id));
-
-  return snap.data();
-}
-
-</script>
-
-</body>
-</html>
+async function loadGroups() {
+  const groups = await getAllGroups();
+  const groupList = document.getElementById("groupList");
+  groupList.innerHTML = "";
+  groups.forEach(group => {
+    groupList.innerHTML += `
+      <div class="group
