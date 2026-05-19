@@ -1,5 +1,6 @@
-// auth.js - Hệ thống phân quyền chuẩn (admin | user | guest)
-// moderator và group là đặc quyền (privilege), không phải role
+// auth.js - Hệ thống phân quyền chuẩn
+// Role: admin | user | guest
+// Privilege: moderator (boolean), groupId (string | null)
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import {
@@ -43,7 +44,7 @@ export const auth = getAuth(app);
 export const db = getDatabase(app);
 export const storage = getStorage(app);
 
-// ==================== DANH SÁCH ADMIN CỐ ĐỊNH ====================
+// ==================== DANH SÁCH ADMIN CỐ ĐỊNH (KHÔNG THỂ XÓA) ====================
 export const ADMIN_EMAILS = [
   "pydanmeii@gmail.com",
   "pepyl4298@gmail.com",
@@ -52,6 +53,25 @@ export const ADMIN_EMAILS = [
 
 // ==================== MẬT KHẨU CHÍNH ====================
 export const MAIN_PASSWORD = "danmei";
+
+// ==================== GUEST NAME COUNTER ====================
+const GUEST_COUNTER_KEY = "guest_counter";
+
+function getNextGuestNumber() {
+  let counter = localStorage.getItem(GUEST_COUNTER_KEY);
+  if (!counter) {
+    counter = 1;
+  } else {
+    counter = parseInt(counter) + 1;
+  }
+  localStorage.setItem(GUEST_COUNTER_KEY, counter.toString());
+  return counter;
+}
+
+export function generateRandomGuestName() {
+  const number = getNextGuestNumber();
+  return `Hủ nằm vùng ${number}`;
+}
 
 // ==================== OTP FUNCTIONS ====================
 export function generateOTP() {
@@ -103,10 +123,16 @@ export async function getUserGroup(uid) {
   return null;
 }
 
-// ==================== CẤP BẬC NGƯỜI DÙNG ====================
-// Role chỉ có 3 loại: "admin", "user", "guest"
-// Privilege: moderator (boolean), groupId (string | null)
+// ==================== KIỂM TRA ADMIN (KHÔNG THỂ XÓA) ====================
+export function isAdminUser(email) {
+  return ADMIN_EMAILS.includes(email);
+}
 
+export function isAdminByData(userData) {
+  return userData?.role === "admin";
+}
+
+// ==================== CẤP BẬC NGƯỜI DÙNG ====================
 export function getUserLevel(user) {
   if (!user) return -1;
   
@@ -116,8 +142,8 @@ export function getUserLevel(user) {
   // User có đặc quyền moderator
   if (user.role === "user" && user.privileges?.moderator === true) return 3;
   
-  // User có đặc quyền nhóm dịch
-  if (user.role === "user" && user.privileges?.groupId) return 2;
+  // User có đặc quyền nhóm dịch (kể cả admin cũng có thể có group)
+  if ((user.role === "user" || user.role === "admin") && user.privileges?.groupId) return 2;
   
   // User thường
   if (user.role === "user") return 1;
@@ -139,11 +165,6 @@ export function getUserLevelText(user) {
 }
 
 // ==================== TÊN HIỂN THỊ ====================
-export function generateRandomGuestName() {
-  const randomNum = Math.floor(Math.random() * 10000);
-  return `Hủ nằm vùng ${randomNum}`;
-}
-
 export async function getDisplayName(uid, email, userData) {
   if (!userData) {
     const data = await getUserData(uid);
@@ -159,23 +180,38 @@ export async function getDisplayName(uid, email, userData) {
   
   // Admin
   if (userData?.role === "admin") {
+    // Admin có thể có nhóm dịch
+    if (userData?.privileges?.groupId) {
+      const group = await getUserGroup(uid);
+      const groupName = group?.groupName || "Nhóm dịch";
+      return `${nickname} (Admin - ${groupName})`;
+    }
     return `${nickname} (Admin)`;
   }
   
   // Moderator user
-  if (userData?.privileges?.moderator === true) {
+  if (userData?.role === "user" && userData?.privileges?.moderator === true) {
+    if (userData?.privileges?.groupId) {
+      const group = await getUserGroup(uid);
+      const groupName = group?.groupName || "Nhóm dịch";
+      return `${nickname} (Quản lý - ${groupName})`;
+    }
     return `${nickname} (Quản lý)`;
   }
   
   // Group user
-  if (userData?.privileges?.groupId) {
+  if (userData?.role === "user" && userData?.privileges?.groupId) {
     const group = await getUserGroup(uid);
     const groupName = group?.groupName || "Nhóm dịch";
     return `${nickname} (${groupName})`;
   }
   
   // Normal user
-  return nickname;
+  if (userData?.role === "user") {
+    return nickname;
+  }
+  
+  return generateRandomGuestName();
 }
 
 // ==================== KIỂM TRA QUYỀN ====================
@@ -188,7 +224,7 @@ export function isModerator(userData) {
 }
 
 export function hasGroup(userData) {
-  return userData?.role === "user" && !!userData?.privileges?.groupId;
+  return !!userData?.privileges?.groupId;
 }
 
 export function isGuest(userData) {
@@ -200,11 +236,16 @@ export function canModerate(userData) {
   return isAdmin(userData) || isModerator(userData);
 }
 
-export function canDeleteStory(userData) {
-  return isAdmin(userData);
+export function canDeleteStory(userData, storyOwnerUid) {
+  // Admin có thể xóa mọi truyện
+  if (isAdmin(userData)) return true;
+  return false;
 }
 
-export function canDeleteUser(userData) {
+export function canDeleteUser(userData, targetUid, targetEmail) {
+  // Admin KHÔNG thể bị xóa
+  if (isAdminUser(targetEmail)) return false;
+  // Chỉ admin mới có thể xóa user
   return isAdmin(userData);
 }
 
@@ -213,13 +254,16 @@ export function canChangeRole(userData) {
 }
 
 export function canEditStory(userData, story) {
+  // Admin có thể sửa mọi truyện
   if (isAdmin(userData)) return true;
+  // Group user có thể sửa truyện của nhóm mình
   if (hasGroup(userData) && story?.groupId === userData?.privileges?.groupId) return true;
   return false;
 }
 
 export function canUpload(userData) {
-  return userData && userData?.role === "user";
+  // Admin và user đều có thể upload
+  return userData && (userData.role === "admin" || userData.role === "user");
 }
 
 export function canComment(userData) {
@@ -228,7 +272,7 @@ export function canComment(userData) {
 
 // ==================== TẠO USER MỚI ====================
 export async function createNewUser(uid, email, nickname) {
-  const isAdminEmail = ADMIN_EMAILS.includes(email);
+  const isAdminEmail = isAdminUser(email);
   
   await set(ref(db, `users/${uid}`), {
     email: email,
@@ -317,17 +361,33 @@ export async function deleteGroup(groupId) {
   // Xóa group
   await remove(ref(db, `groups/${groupId}`));
   
-  // Cập nhật tất cả user có groupId này
+  // Cập nhật tất cả user có groupId này (NHƯNG KHÔNG ẢNH HƯỞNG ĐẾN ADMIN)
   const usersRef = ref(db, 'users');
   const usersSnap = await get(usersRef);
   if (usersSnap.exists()) {
     const users = usersSnap.val();
     for (const uid in users) {
       if (users[uid]?.privileges?.groupId === groupId) {
+        // Admin vẫn giữ được groupId nếu muốn, nhưng group đã xóa thì set null
         await update(ref(db, `users/${uid}/privileges`), { groupId: null });
       }
     }
   }
+}
+
+// ==================== XÓA USER (CÓ KIỂM TRA ADMIN) ====================
+export async function deleteUser(uid, email) {
+  // KHÔNG cho phép xóa admin
+  if (isAdminUser(email)) {
+    throw new Error("Không thể xóa tài khoản Admin");
+  }
+  
+  // Xóa dữ liệu user
+  await remove(ref(db, `users/${uid}`));
+  
+  // Xóa auth user (cần admin tự làm trên Firebase Console hoặc dùng Admin SDK)
+  // Trong frontend chỉ xóa được dữ liệu Firestore/RTDB
+  return true;
 }
 
 // ==================== LOGIN ====================
@@ -375,16 +435,28 @@ export function saveGuestMode() {
   };
   localStorage.setItem("guestMode", "true");
   localStorage.setItem("userSession", JSON.stringify(guestData));
+  return guestName;
 }
 
 export function isGuestMode() {
   return localStorage.getItem("guestMode") === "true";
 }
 
+export function getCurrentSession() {
+  const session = localStorage.getItem("userSession");
+  if (!session) return null;
+  try {
+    return JSON.parse(session);
+  } catch {
+    return null;
+  }
+}
+
 export async function logout() {
   await signOut(auth);
   localStorage.removeItem("userSession");
   localStorage.removeItem("guestMode");
+  // Không reset guest counter khi logout
   window.location.href = "index.html";
 }
 
@@ -412,6 +484,7 @@ export function onAuthChange(callback) {
       };
       
       localStorage.setItem("userSession", JSON.stringify(sessionData));
+      localStorage.removeItem("guestMode");
       callback(sessionData);
     } else if (!localStorage.getItem("guestMode")) {
       localStorage.removeItem("userSession");
