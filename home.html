@@ -1,250 +1,350 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="vi">
 <head>
 <meta charset="utf-8">
-<title>DANMETOPIA - TRANG CHỦ</title>
-
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DANMETOPIA - Trang chủ</title>
+<link rel="stylesheet" href="style.css">
 <style>
-body{
-  margin:0;
-  background:#0f0f0f;
-  color:white;
-  font-family:Arial;
-}
-
-/* ===== WARNING ===== */
-#warning{
-  position:fixed;
-  inset:0;
-  background:black;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  z-index:999;
-}
-
-.box{
-  background:#1c1c1c;
-  padding:20px;
-  width:340px;
-  border-radius:12px;
-  text-align:center;
-}
-
-/* ===== LOGIN ===== */
-#login{
-  display:none;
-  position:fixed;
-  inset:0;
-  justify-content:center;
-  align-items:center;
-  background:#0f0f0f;
-  z-index:998;
-}
-
-/* INPUT */
-input{
-  width:100%;
-  padding:10px;
-  margin-top:8px;
-  border:none;
-  border-radius:8px;
-  background:#2a2a2a;
-  color:white;
-}
-
-/* BUTTON */
-button{
-  width:100%;
-  padding:10px;
-  margin-top:10px;
-  border:none;
-  border-radius:8px;
-  cursor:pointer;
-  font-weight:bold;
-}
-
-.green{background:#00dc64;color:black;}
-.red{background:#ff4444;color:white;}
-
-/* ===== HOME ===== */
-#home{
-  display:none;
-}
-
 .topbar{
   background:#00dc64;
   color:black;
   padding:15px;
   display:flex;
   justify-content:space-between;
-  font-weight:bold;
+  align-items:center;
+  position:sticky;
+  top:0;
+  z-index:99;
+  flex-wrap:wrap;
+  gap:10px;
 }
-
+.logo{
+  font-weight:bold;
+  font-size:22px;
+  cursor:pointer;
+}
+.userBox{
+  font-size:14px;
+  display:flex;
+  gap:15px;
+  align-items:center;
+  flex-wrap:wrap;
+}
 .container{
   padding:15px;
 }
-
+.storyGrid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(200px,1fr));
+  gap:15px;
+}
 .card{
   background:#1c1c1c;
-  padding:15px;
+  border-radius:12px;
+  overflow:hidden;
+  transition:0.2s;
+  cursor:pointer;
+}
+.card:hover{
+  transform:scale(1.02);
+}
+.cover{
+  width:100%;
+  height:280px;
+  object-fit:cover;
+  background:#222;
+}
+.info{
+  padding:12px;
+}
+.title{
+  font-weight:bold;
+  font-size:18px;
+  margin-bottom:5px;
+}
+.meta{
+  color:#aaa;
+  font-size:13px;
+  margin-top:5px;
+}
+.actions{
+  display:flex;
+  gap:5px;
   margin-top:10px;
-  border-radius:10px;
+}
+.smallBtn{
+  flex:1;
+  padding:8px;
+  border:none;
+  border-radius:8px;
+  cursor:pointer;
+  font-weight:bold;
+}
+.readBtn{
+  background:#00dc64;
+  color:black;
+}
+.likeBtn{
+  background:#ff4081;
+  color:white;
+}
+.adminPanel{
+  margin-bottom:20px;
+  background:#1c1c1c;
+  padding:15px;
+  border-radius:12px;
+}
+input,textarea{
+  width:100%;
+  padding:10px;
+  margin-top:10px;
+  background:#2a2a2a;
+  border:none;
+  border-radius:8px;
+  color:white;
+  box-sizing:border-box;
+}
+textarea{
+  resize:none;
+  height:100px;
+}
+.uploadBtn{
+  background:#00dc64;
+  color:black;
+  margin-top:10px;
+}
+.nav-link{
+  background:transparent;
+  border:1px solid #00dc64;
+  color:black;
+  padding:5px 12px;
+  border-radius:20px;
+  text-decoration:none;
+  font-size:13px;
+}
+.nav-link:hover{
+  background:#00dc64;
 }
 </style>
-
 </head>
-
 <body>
-
-<!-- ================= WARNING ================= -->
-<div id="warning">
-  <div class="box">
-    <h2>⚠️ CẢNH BÁO 18+</h2>
-    <p>Trang truyện người lớn. Xác nhận đủ tuổi bằng việc tiếp tục.</p>
-
-    <button class="green" onclick="enter()">TIẾP TỤC</button>
-    <button class="red" onclick="leave()">THOÁT</button>
+<div class="topbar">
+  <div class="logo" onclick="goHome()">📖 DANMETOPIA</div>
+  <div class="userBox" id="userBox">
+    <span id="userDisplay"></span>
+    <a href="history.html" class="nav-link">📜 Lịch sử</a>
+    <button class="smallBtn" onclick="logout()" style="background:#ff4444;color:white">Đăng xuất</button>
   </div>
 </div>
 
-<!-- ================= LOGIN ================= -->
-<div id="login">
-
-  <div class="box">
-
-    <h2>DANMETOPIA</h2>
-    <p>Nền tảng đọc truyện</p>
-
-    <!-- 🔥 REQUIRED PASSWORD -->
-    <input id="mainPass" type="password" placeholder="Mật khẩu">
-
-    <hr>
-
-    <!-- OPTIONAL LOGIN -->
-    <input id="email" placeholder="Email / Tên đăng nhập (không bắt buộc)">
-    <input id="pass" type="password" placeholder="Mật khẩu tài khoản (nếu có)">
-
-    <button class="green" onclick="login()">VÀO WEB</button>
-
-    <p id="msg" style="color:red"></p>
-
+<div class="container">
+  <!-- Upload panel cho admin và user có group -->
+  <div id="uploadPanel"></div>
+  
+  <!-- Tabs -->
+  <div style="display:flex; gap:10px; margin-bottom:15px;">
+    <button class="smallBtn" id="tabAll" onclick="switchTab('all')" style="background:#00dc64">📚 Tất cả</button>
+    <button class="smallBtn" id="tabMy" onclick="switchTab('my')" style="background:#333">📝 Truyện của nhóm</button>
+    <button class="smallBtn" id="tabPending" onclick="switchTab('pending')" style="background:#ffcc00;color:black">⏳ Chờ duyệt</button>
   </div>
+  
+  <div class="storyGrid" id="storyList"></div>
 </div>
 
-<!-- ================= HOME ================= -->
-<div id="home">
+<script type="module">
+import { getStories, getApprovedStories, getStoriesByGroup, getPendingStories, createStory, likeStory, updateStory } from "./db.js";
+import { getUserData, getUserGroup, logout } from "./auth.js";
 
-  <div class="topbar">
-    <div>🏠 DANMETOPIA - TRANG CHỦ</div>
-    <div id="userBox">Ẩn danh</div>
-  </div>
+const user = JSON.parse(localStorage.getItem("user") || "{}");
+let allStories = [];
+let currentTab = "all";
 
-  <div class="container">
+// Hiển thị user info
+async function displayUserInfo() {
+  const userDisplay = document.getElementById("userDisplay");
+  if (user.role === "guest") {
+    userDisplay.innerHTML = "👤 Ẩn danh (Guest)";
+  } else if (user.role === "admin") {
+    userDisplay.innerHTML = "👑 ADMIN - " + (user.displayName || user.email);
+  } else if (user.groupId) {
+    const group = await getUserGroup(user.uid);
+    userDisplay.innerHTML = `👤 ${user.nickname || user.email} 📚 (${group?.groupName || "Nhóm"})`;
+  } else {
+    userDisplay.innerHTML = `👤 ${user.nickname || user.email}`;
+  }
+}
 
-    <h3>📚 Danh sách truyện</h3>
+// Kiểm tra quyền upload (admin hoặc user có group)
+const canUpload = (user.role === "admin" || user.groupId);
+const isAdmin = (user.role === "admin");
 
-    <div class="card">📖 Truyện 1</div>
-    <div class="card">📖 Truyện 2</div>
-    <div class="card">📖 Truyện 3</div>
+// Upload panel
+const uploadPanel = document.getElementById("uploadPanel");
+if (canUpload) {
+  uploadPanel.innerHTML = `
+    <div class="adminPanel">
+      <h2>📤 ĐĂNG TRUYỆN MỚI</h2>
+      <input id="title" placeholder="Tên truyện *">
+      <input id="otherName" placeholder="Tên khác">
+      <input id="author" placeholder="Tác giả">
+      <input id="genres" placeholder="Thể loại">
+      <input id="tags" placeholder="Tags">
+      <input id="status" placeholder="Tình trạng">
+      <input id="cover" placeholder="Link ảnh bìa">
+      <textarea id="desc" placeholder="Mô tả truyện"></textarea>
+      <button class="smallBtn uploadBtn" onclick="uploadStory()">ĐĂNG TRUYỆN</button>
+    </div>
+  `;
+}
 
-  </div>
+// Load stories theo tab
+async function loadStories() {
+  let stories = [];
+  if (currentTab === "all") {
+    if (isAdmin) {
+      stories = await getStories();
+    } else {
+      stories = await getApprovedStories();
+    }
+  } else if (currentTab === "my" && user.groupId) {
+    stories = await getStoriesByGroup(user.groupId);
+  } else if (currentTab === "pending" && isAdmin) {
+    stories = await getPendingStories();
+  }
+  
+  allStories = stories;
+  renderStories();
+}
 
-</div>
+function renderStories() {
+  const list = document.getElementById("storyList");
+  list.innerHTML = "";
+  
+  allStories.forEach(story => {
+    // Guest/user không thấy truyện chưa duyệt (trừ admin và tab my)
+    if (!story.approved && !isAdmin && currentTab !== "my") return;
+    if (currentTab === "my" && story.groupId !== user.groupId && !isAdmin) return;
+    
+    list.innerHTML += `
+      <div class="card" onclick="openStory('${story.id}')">
+        <img class="cover" src="${story.cover || 'https://placehold.co/400x600?text=DANMETOPIA'}">
+        <div class="info">
+          <div class="title">${escapeHtml(story.title)}</div>
+          <div class="meta">📚 ${story.groupName || "Cá nhân"}</div>
+          <div class="meta">❤️ ${story.likes || 0} | 👁 ${story.views || 0}</div>
+          ${story.approved ? '<div class="meta">✅ Đã duyệt</div>' : '<div class="meta">⏳ Chờ duyệt</div>'}
+          <div class="actions">
+            <button class="smallBtn readBtn" onclick="event.stopPropagation(); openStory('${story.id}')">ĐỌC</button>
+            <button class="smallBtn likeBtn" onclick="event.stopPropagation(); like('${story.id}')">❤️</button>
+          </div>
+        </div>
+      </div>
+    `;
+  });
+}
 
-<script>
+function escapeHtml(str) {
+  if (!str) return "";
+  return str.replace(/[&<>]/g, function(m) {
+    if (m === "&") return "&amp;";
+    if (m === "<") return "&lt;";
+    if (m === ">") return "&gt;";
+    return m;
+  });
+}
 
-/* ================= STATE ================= */
-let user = {
-  email:null,
-  role:"guest"
+window.openStory = (id) => {
+  location.href = "read.html?id=" + id;
 };
 
-/* ================= ENTER ================= */
-function enter(){
-  document.getElementById("warning").style.display="none";
-  document.getElementById("login").style.display="flex";
-}
+window.like = async (id) => {
+  await likeStory(id);
+  loadStories();
+};
 
-/* ================= EXIT ================= */
-function leave(){
-  document.body.innerHTML = "<h2 style='color:white;text-align:center;margin-top:100px'>Đã thoát</h2>";
-}
-
-/* ================= ROLE CHECK ================= */
-function getRole(email){
-
-  if(!email) return "user";
-
-  if(
-    email === "pydanmeii@gmail.com" ||
-    email === "pepyl4298@gmail.com"
-  ) return "admin";
-
-  if(email.includes("@group")) return "group";
-
-  return "user";
-}
-
-/* ================= LOGIN ================= */
-function login(){
-
-  const mainPass = document.getElementById("mainPass").value;
-
-  if(mainPass !== "danmei"){
-    document.getElementById("msg").innerText = "Sai mật khẩu chính";
+window.uploadStory = async () => {
+  const title = document.getElementById("title").value;
+  if (!title) {
+    alert("Nhập tên truyện");
     return;
   }
-
-  const email = document.getElementById("email").value;
-
-  // 🔥 CASE 1: ANON
-  if(!email){
-    user = { email:null, role:"guest" };
+  
+  // Lấy thông tin group nếu có
+  let groupName = "Cá nhân";
+  let groupId = null;
+  if (user.groupId) {
+    const group = await getUserGroup(user.uid);
+    if (group) {
+      groupName = group.groupName;
+      groupId = user.groupId;
+    }
   }
+  
+  await createStory({
+    title: title,
+    otherName: document.getElementById("otherName").value,
+    author: document.getElementById("author").value,
+    genres: document.getElementById("genres").value,
+    tags: document.getElementById("tags").value,
+    status: document.getElementById("status").value,
+    desc: document.getElementById("desc").value,
+    cover: document.getElementById("cover").value,
+    ownerUid: user.uid || "",
+    ownerNickname: user.nickname || user.email,
+    groupName: groupName,
+    groupId: groupId,
+    approved: isAdmin ? true : false // Admin đăng tự duyệt
+  });
+  
+  alert(isAdmin ? "Đăng truyện thành công (đã duyệt)" : "Đã gửi truyện, chờ admin duyệt");
+  
+  // Clear form
+  document.getElementById("title").value = "";
+  document.getElementById("otherName").value = "";
+  document.getElementById("author").value = "";
+  document.getElementById("genres").value = "";
+  document.getElementById("tags").value = "";
+  document.getElementById("status").value = "";
+  document.getElementById("desc").value = "";
+  document.getElementById("cover").value = "";
+  
+  loadStories();
+};
 
-  // 🔥 CASE 2: LOGIN USER
-  else{
-    user = {
-      email: email,
-      role: getRole(email)
-    };
+window.switchTab = (tab) => {
+  currentTab = tab;
+  document.getElementById("tabAll").style.background = tab === "all" ? "#00dc64" : "#333";
+  document.getElementById("tabMy").style.background = tab === "my" ? "#00dc64" : "#333";
+  document.getElementById("tabPending").style.background = tab === "pending" ? "#00dc64" : "#333";
+  if (tab === "pending" && !isAdmin) {
+    alert("Chỉ admin mới xem được truyện chờ duyệt");
+    currentTab = "all";
+    document.getElementById("tabAll").style.background = "#00dc64";
+    document.getElementById("tabPending").style.background = "#333";
+    return;
   }
-
-  localStorage.setItem("user", JSON.stringify(user));
-
-  showHome();
-}
-
-/* ================= HOME ================= */
-function showHome(){
-
-  document.getElementById("warning").style.display="none";
-  document.getElementById("login").style.display="none";
-  document.getElementById("home").style.display="block";
-
-  updateUI();
-}
-
-/* ================= UI ================= */
-function updateUI(){
-
-  if(!user.email){
-    document.getElementById("userBox").innerText = "Ẩn danh";
-  }else{
-    document.getElementById("userBox").innerText =
-      user.email + " (" + user.role + ")";
+  if (tab === "my" && !user.groupId && !isAdmin) {
+    alert("Bạn chưa tham gia nhóm dịch nào");
+    currentTab = "all";
+    document.getElementById("tabAll").style.background = "#00dc64";
+    document.getElementById("tabMy").style.background = "#333";
+    return;
   }
-}
+  loadStories();
+};
 
-/* ================= INIT ================= */
-const saved = localStorage.getItem("user");
-if(saved){
-  user = JSON.parse(saved);
-}
+window.goHome = () => {
+  location.href = "home.html";
+};
 
+window.logout = () => {
+  logout();
+};
+
+// Khởi tạo
+displayUserInfo();
+loadStories();
 </script>
-
 </body>
 </html>
