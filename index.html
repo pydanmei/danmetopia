@@ -2,259 +2,1200 @@
 <html lang="vi">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>DANMETOPIA</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>DANMETOPIA - Đọc truyện tranh online</title>
+<meta name="description" content="Nền tảng đọc truyện tranh online miễn phí">
+<meta name="theme-color" content="#00dc64">
 
 <style>
-body{
-  margin:0;
-  font-family:Arial;
-  background:#0f0f0f;
-  color:white;
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
-#warning, #loginPage, #nicknamePage{
-  position:fixed;
-  inset:0;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  background:rgba(0,0,0,0.9);
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+  background: #0f0f0f;
+  color: #e0e0e0;
 }
 
-.box{
-  background:#1c1c1c;
-  padding:25px;
-  width:380px;
-  border-radius:15px;
-  text-align:center;
+/* ========== WARNING 18+ ========== */
+#warningOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.98);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10000;
 }
 
-input{
-  width:100%;
-  padding:10px;
-  margin-top:10px;
-  border:none;
-  border-radius:8px;
-  background:#2a2a2a;
-  color:white;
+.warning-box {
+  background: linear-gradient(135deg, #1a1a2e, #16213e);
+  max-width: 450px;
+  width: 90%;
+  padding: 35px 25px;
+  border-radius: 24px;
+  text-align: center;
+  border: 2px solid #e94560;
+  box-shadow: 0 0 40px rgba(233,69,96,0.3);
 }
 
-button{
-  width:100%;
-  margin-top:10px;
-  padding:10px;
-  border:none;
-  border-radius:8px;
-  cursor:pointer;
+.warning-box h2 {
+  color: #e94560;
+  font-size: 28px;
+  margin-bottom: 20px;
 }
 
-.green{background:#00dc64;color:black;}
-.red{background:#ff4444;color:white;}
-
-#home{
-  display:none;
-  padding:20px;
+.warning-box p {
+  color: #ccc;
+  line-height: 1.6;
+  margin-bottom: 25px;
 }
 
-.topbar{
-  background:#00dc64;
-  color:black;
-  padding:15px;
-  display:flex;
-  justify-content:space-between;
+.warning-box button {
+  padding: 12px 28px;
+  margin: 0 8px;
+  border: none;
+  border-radius: 40px;
+  font-weight: bold;
+  font-size: 16px;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.warning-box button:hover {
+  transform: scale(1.03);
+}
+
+.btn-green { background: #00dc64; color: black; }
+.btn-red { background: #ff4444; color: white; }
+
+/* ========== LOGIN PAGE ========== */
+#loginPage {
+  position: fixed;
+  inset: 0;
+  display: none;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(135deg, #0f0f0f, #1a1a2e);
+  z-index: 9999;
+}
+
+.login-box {
+  background: #1c1c1c;
+  width: 380px;
+  max-width: 90%;
+  padding: 35px 25px;
+  border-radius: 24px;
+  text-align: center;
+  border: 1px solid #333;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+}
+
+.login-box h2 {
+  color: #00dc64;
+  font-size: 32px;
+  margin-bottom: 8px;
+}
+
+.login-box p {
+  color: #aaa;
+  margin-bottom: 25px;
+}
+
+.login-box input {
+  width: 100%;
+  padding: 12px;
+  margin-top: 12px;
+  border: none;
+  border-radius: 12px;
+  background: #2a2a2a;
+  color: white;
+  font-size: 14px;
+}
+
+.login-box input:focus {
+  outline: 1px solid #00dc64;
+}
+
+.login-box button {
+  width: 100%;
+  padding: 12px;
+  margin-top: 20px;
+  border: none;
+  border-radius: 40px;
+  background: #00dc64;
+  color: black;
+  font-weight: bold;
+  font-size: 16px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.login-box button:hover {
+  background: #00b854;
+}
+
+#loginMsg {
+  color: #ff6666;
+  margin-top: 15px;
+  font-size: 13px;
+}
+
+/* ========== MAIN CONTAINER ========== */
+#mainContainer {
+  display: none;
+  min-height: 100vh;
+}
+
+.topbar {
+  background: #00dc64;
+  color: black;
+  padding: 12px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.logo {
+  font-size: 22px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.user-area {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.user-area button, .nav-btn {
+  background: rgba(0,0,0,0.2);
+  border: none;
+  padding: 6px 14px;
+  border-radius: 30px;
+  cursor: pointer;
+  font-weight: bold;
+  color: black;
+  transition: background 0.2s;
+}
+
+.user-area button:hover, .nav-btn:hover {
+  background: rgba(0,0,0,0.4);
+}
+
+.tabs {
+  display: flex;
+  gap: 10px;
+  padding: 15px 20px 0;
+  flex-wrap: wrap;
+}
+
+.tab-btn {
+  background: #2a2a2a;
+  border: none;
+  padding: 8px 20px;
+  border-radius: 30px;
+  cursor: pointer;
+  color: white;
+  font-weight: bold;
+  transition: 0.2s;
+}
+
+.tab-btn.active {
+  background: #00dc64;
+  color: black;
+}
+
+.upload-panel {
+  background: #1c1c1c;
+  margin: 15px 20px;
+  padding: 20px;
+  border-radius: 20px;
+}
+
+.upload-panel h3 {
+  margin-bottom: 15px;
+  color: #00dc64;
+}
+
+.upload-panel input, .upload-panel textarea, .upload-panel select {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 12px;
+  background: #2a2a2a;
+  border: none;
+  border-radius: 12px;
+  color: white;
+  font-size: 14px;
+}
+
+.upload-panel textarea {
+  height: 100px;
+  resize: vertical;
+}
+
+.manga-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 20px;
+  padding: 20px;
+}
+
+.manga-card {
+  background: #1c1c1c;
+  border-radius: 16px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.manga-card:hover {
+  transform: translateY(-5px);
+}
+
+.manga-cover {
+  width: 100%;
+  aspect-ratio: 2/3;
+  object-fit: cover;
+  background: #2a2a2a;
+}
+
+.manga-info {
+  padding: 12px;
+}
+
+.manga-title {
+  font-weight: bold;
+  font-size: 15px;
+  margin-bottom: 5px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.manga-meta {
+  font-size: 12px;
+  color: #aaa;
+  margin-top: 5px;
+}
+
+.manga-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.small-btn {
+  flex: 1;
+  padding: 6px;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 12px;
+}
+
+.read-btn { background: #00dc64; color: black; }
+.like-btn { background: #ff4081; color: white; }
+
+.search-bar {
+  padding: 15px 20px;
+}
+
+.search-bar input {
+  width: 100%;
+  padding: 12px 20px;
+  background: #1c1c1c;
+  border: 1px solid #333;
+  border-radius: 40px;
+  color: white;
+  font-size: 16px;
+}
+
+.filter-row {
+  display: flex;
+  gap: 10px;
+  padding: 0 20px 15px;
+  flex-wrap: wrap;
+}
+
+.filter-row select {
+  padding: 8px 15px;
+  background: #1c1c1c;
+  border: 1px solid #333;
+  border-radius: 30px;
+  color: white;
+}
+
+.modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.8);
+  justify-content: center;
+  align-items: center;
+  z-index: 10001;
+}
+
+.modal-content {
+  background: #1c1c1c;
+  width: 90%;
+  max-width: 400px;
+  padding: 25px;
+  border-radius: 24px;
+  position: relative;
+}
+
+.modal-content h3 {
+  margin-bottom: 20px;
+  color: #00dc64;
+}
+
+.modal-content input, .modal-content textarea {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 12px;
+  background: #2a2a2a;
+  border: none;
+  border-radius: 12px;
+  color: white;
+}
+
+.modal-content button {
+  width: 100%;
+  padding: 12px;
+  background: #00dc64;
+  border: none;
+  border-radius: 40px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.close-modal {
+  position: absolute;
+  top: 15px;
+  right: 20px;
+  font-size: 24px;
+  cursor: pointer;
+  color: #aaa;
+}
+
+.notification {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: #00dc64;
+  color: black;
+  padding: 12px 20px;
+  border-radius: 40px;
+  font-weight: bold;
+  z-index: 1000;
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+.reader-page {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.chapter-nav {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.chapter-nav button {
+  padding: 10px 20px;
+  background: #00dc64;
+  border: none;
+  border-radius: 30px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.chapter-list {
+  background: #1c1c1c;
+  border-radius: 16px;
+  margin-bottom: 20px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.chapter-item {
+  padding: 12px 20px;
+  border-bottom: 1px solid #333;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.chapter-item:hover {
+  background: #2a2a2a;
+}
+
+.reader-image {
+  width: 100%;
+  margin: 10px 0;
+  border-radius: 12px;
+}
+
+.comment-section {
+  margin-top: 30px;
+}
+
+.comment-list {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.comment-item {
+  background: #1c1c1c;
+  padding: 12px;
+  border-radius: 12px;
+  margin-bottom: 10px;
+}
+
+.comment-name {
+  font-weight: bold;
+  color: #00dc64;
+  margin-bottom: 5px;
+}
+
+@media (max-width: 600px) {
+  .manga-grid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 12px;
+  }
+  .topbar {
+    flex-direction: column;
+    text-align: center;
+  }
 }
 </style>
 </head>
-
 <body>
 
-<!-- WARNING -->
-<div id="warning">
-  <div class="box">
-    <h2>⚠️ CẢNH BÁO 18+ ⚠️</h2>
-     <p>Bằng việc tiếp tục, bạn xác nhận rằng bạn đủ 18 tuổi trở lên và việc xem nội dung này hợp pháp tại khu vực của bạn.</p>
-    <button class="green" onclick="enter()">TIẾP TỤC</button>
-    <button class="red" onclick="leave()">THOÁT</button>
+<!-- WARNING 18+ -->
+<div id="warningOverlay">
+  <div class="warning-box">
+    <h2>⚠️ CẢNH BÁO 18+</h2>
+    <p>Trang web này có thể chứa nội dung dành cho người trưởng thành (18+).<br><br>
+    Bằng việc tiếp tục, bạn xác nhận rằng bạn đủ 18 tuổi trở lên và việc xem nội dung này hợp pháp tại khu vực của bạn.</p>
+    <button class="btn-green" id="continueBtn">TIẾP TỤC</button>
+    <button class="btn-red" id="exitBtn">THOÁT</button>
   </div>
 </div>
 
-<!-- LOGIN -->
-<div id="loginPage" style="display:none">
-  <div class="box">
+<!-- LOGIN PAGE -->
+<div id="loginPage">
+  <div class="login-box">
     <h2>DANMETOPIA</h2>
     <p>Nền tảng đọc truyện</p>
 
     <input id="mainPass" type="password" placeholder="Mật khẩu chính">
-    <input id="email" type="email" placeholder="Email">
-    <input id="password" type="password" placeholder="Mật khẩu">
+    <input id="loginEmail" type="email" placeholder="Email">
+    <input id="loginPassword" type="password" placeholder="Mật khẩu">
 
-    <button class="green" onclick="login()">TRUY CẬP</button>
-    <p id="msg"></p>
+    <button id="doLoginBtn">TRUY CẬP</button>
+    <p id="loginMsg"></p>
   </div>
 </div>
 
-<!-- NICKNAME STEP (CHỈ SAU VERIFY) -->
-<div id="nicknamePage" style="display:none">
-  <div class="box">
+<!-- NICKNAME PAGE (CHỈ SAU VERIFY) - GIỮ NGUYÊN GIAO DIỆN CŨ -->
+<div id="nicknamePage" style="display:none; position:fixed; inset:0; justify-content:center; align-items:center; background:linear-gradient(135deg, #0f0f0f, #1a1a2e); z-index:10001;">
+  <div class="login-box" style="max-width:380px;">
     <h2>🎉 XÁC NHẬN HOÀN TẤT</h2>
-    <p>Tạo nickname (chỉ 1 lần)</p>
-
-    <input id="nickname" placeholder="Nickname">
-
-    <button class="green" onclick="saveNickname()">HOÀN TẤT</button>
+    <p>Tạo nickname (chỉ 1 lần duy nhất)</p>
+    <input id="nicknameInput" type="text" placeholder="Nickname của bạn">
+    <button id="saveNicknameBtn" style="width:100%; margin-top:15px; background:#00dc64; color:black; padding:12px; border:none; border-radius:40px; font-weight:bold; cursor:pointer;">HOÀN TẤT</button>
+    <p id="nicknameMsg" style="color:#ff6666; margin-top:15px;"></p>
   </div>
 </div>
 
-<!-- HOME -->
-<div id="home">
+<!-- MAIN CONTAINER -->
+<div id="mainContainer">
   <div class="topbar">
-    <span>DANMETOPIA</span>
-    <button onclick="logout()">Đăng xuất</button>
+    <div class="logo" onclick="showHome()">📖 DANMETOPIA</div>
+    <div class="user-area">
+      <span id="userDisplay">👤 Đang tải...</span>
+      <button id="logoutBtn" style="display:none">Đăng xuất</button>
+      <button id="createGroupBtn" style="display:none" class="nav-btn">➕ Tạo nhóm</button>
+    </div>
+  </div>
+
+  <div class="search-bar">
+    <input type="text" id="searchInput" placeholder="🔍 Tìm kiếm truyện...">
+  </div>
+
+  <div class="filter-row">
+    <select id="genreFilter">
+      <option value="">Tất cả thể loại</option>
+      <option>Hành động</option><option>Lãng mạn</option><option>Hài hước</option>
+      <option>Kinh dị</option><option>Fantasy</option><option>Đam mỹ</option>
+    </select>
+    <select id="sortFilter">
+      <option value="likes">🔥 Hot nhất</option>
+      <option value="newest">📅 Mới nhất</option>
+      <option value="views">👁 Xem nhiều</option>
+    </select>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="all">📚 Tất cả truyện</button>
+    <button class="tab-btn" data-tab="follows">⭐ Theo dõi</button>
+    <button class="tab-btn" data-tab="my">📝 Truyện của nhóm</button>
+    <button class="tab-btn" data-tab="pending">⏳ Chờ duyệt</button>
+  </div>
+
+  <div id="uploadPanel"></div>
+
+  <div class="manga-grid" id="mangaGrid">
+    <div style="text-align:center; padding:50px;">Đang tải truyện...</div>
+  </div>
+</div>
+
+<!-- GROUP MODAL -->
+<div id="groupModal" class="modal">
+  <div class="modal-content">
+    <span class="close-modal" onclick="closeModal('groupModal')">&times;</span>
+    <h3>📚 TẠO NHÓM DỊCH</h3>
+    <input type="text" id="groupNameInput" placeholder="Tên nhóm">
+    <textarea id="groupDescInput" placeholder="Mô tả nhóm (không bắt buộc)" rows="3"></textarea>
+    <button id="confirmGroupBtn">TẠO NHÓM</button>
+  </div>
+</div>
+
+<!-- READER MODAL -->
+<div id="readerModal" class="modal">
+  <div class="modal-content" style="max-width:95%; max-height:90vh; overflow-y:auto;">
+    <span class="close-modal" onclick="closeModal('readerModal')">&times;</span>
+    <div id="readerContent"></div>
   </div>
 </div>
 
 <script type="module">
-
+// ==================== FIREBASE IMPORTS ====================
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
 import {
-  getAuth,
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  sendEmailVerification,
-  onAuthStateChanged
+  getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword,
+  sendEmailVerification, onAuthStateChanged, signOut
 } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js";
-
 import {
-  getFirestore,
-  doc,
-  setDoc,
-  getDoc,
-  query,
-  collection,
-  where,
-  getDocs
+  getFirestore, doc, setDoc, getDoc, updateDoc, addDoc, deleteDoc,
+  collection, query, where, getDocs, orderBy, increment, serverTimestamp,
+  arrayUnion, arrayRemove
 } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
+import {
+  getStorage, ref, uploadBytes, getDownloadURL
+} from "https://www.gstatic.com/firebasejs/12.13.0/firebase-storage.js";
 
-/* FIREBASE */
-const app = initializeApp({
+// ==================== FIREBASE CONFIG ====================
+const firebaseConfig = {
   apiKey: "AIzaSyCDQk9DlMNKwn_508fDMI_3IB_dgpgHujA",
   authDomain: "danmetopia.firebaseapp.com",
-  projectId: "danmetopia"
-});
+  projectId: "danmetopia",
+  storageBucket: "danmetopia.appspot.com",
+  messagingSenderId: "178240377870",
+  appId: "1:178240377870:web:d094b222ebabadccc5585f"
+};
 
+const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+const storage = getStorage(app);
 
-const ADMIN = ["pydanmeii@gmail.com","pepyl4298@gmail.com"];
+// ==================== CONSTANTS ====================
+const ADMIN_EMAILS = ["pydanmeii@gmail.com", "pepyl4298@gmail.com"];
+const MAIN_PASSWORD = "danmei";
 
 let currentUser = null;
+let currentUserData = null;
+let allStories = [];
+let currentTab = "all";
+let userFollows = [];
 
-/* UI */
-window.enter = () => {
-  warning.style.display="none";
-  loginPage.style.display="flex";
-};
-
-window.leave = () => {
-  document.body.innerHTML="ĐÃ THOÁT";
-};
-
-/* LOGIN / REGISTER */
-window.login = async () => {
-
-  const mainPass = mainPass.value;
-  const email = email.value;
-  const pass = password.value;
-
-  if(mainPass !== "danmei"){
-    msg.innerText="Sai mật khẩu chính";
-    return;
-  }
-
-  try{
-
-    const cred = await createUserWithEmailAndPassword(auth,email,pass);
-
-    await sendEmailVerification(cred.user);
-
-    alert("📩 Check email để xác nhận tài khoản");
-
-    localStorage.setItem("tempUID",cred.user.uid);
-    loginPage.style.display="none";
-
-  }catch(e){
-
-    try{
-      const cred = await signInWithEmailAndPassword(auth,email,pass);
-
-      if(!cred.user.emailVerified){
-        alert("⚠️ Vui lòng verify email trước");
-        return;
-      }
-
-      currentUser = cred.user;
-
-      const data = await getDoc(doc(db,"users",cred.user.uid));
-
-      if(!data.exists() || !data.data().nickname){
-        loginPage.style.display="none";
-        nicknamePage.style.display="flex";
-        return;
-      }
-
-      showHome();
-
-    }catch(err){
-      msg.innerText = err.message;
-    }
-  }
-};
-
-/* SAVE NICKNAME (CHỈ 1 LẦN) */
-window.saveNickname = async () => {
-
-  const nick = document.getElementById("nickname").value;
-
-  const uid = currentUser.uid;
-
-  const q = await getDocs(query(collection(db,"users"),where("nickname","==",nick)));
-
-  if(!q.empty){
-    alert("Nickname đã tồn tại");
-    return;
-  }
-
-  await setDoc(doc(db,"users",uid),{
-    email:currentUser.email,
-    nickname:nick,
-    role:ADMIN.includes(currentUser.email) ? "admin" : "user",
-    group:false
-  });
-
-  nicknamePage.style.display="none";
-  showHome();
-};
-
-/* HOME */
-function showHome(){
-  home.style.display="block";
+// ==================== HELPER FUNCTIONS ====================
+function showNotification(msg, isError = false) {
+  const notif = document.createElement("div");
+  notif.className = "notification";
+  notif.style.background = isError ? "#ff4444" : "#00dc64";
+  notif.style.color = "black";
+  notif.innerText = msg;
+  document.body.appendChild(notif);
+  setTimeout(() => notif.remove(), 3000);
 }
 
-/* LOGOUT */
-window.logout = () => {
-  localStorage.clear();
-  location.reload();
+async function getUserData(uid) {
+  const snap = await getDoc(doc(db, "users", uid));
+  return snap.exists() ? snap.data() : null;
+}
+
+async function getUserGroup(uid) {
+  const userData = await getUserData(uid);
+  if (userData?.groupId) {
+    const groupSnap = await getDoc(doc(db, "groups", userData.groupId));
+    return groupSnap.exists() ? { id: groupSnap.id, ...groupSnap.data() } : null;
+  }
+  return null;
+}
+
+async function hasGroupRole(uid) {
+  const group = await getUserGroup(uid);
+  return group !== null;
+}
+
+async function getUserRole(uid, email) {
+  if (ADMIN_EMAILS.includes(email)) return "admin";
+  const hasGroup = await hasGroupRole(uid);
+  return hasGroup ? "group-user" : "user";
+}
+
+async function getDisplayName(uid, email, nickname) {
+  const group = await getUserGroup(uid);
+  if (group) return `${nickname} (${group.groupName})`;
+  return nickname || email?.split("@")[0] || "Ẩn danh";
+}
+
+async function loadUserData() {
+  if (!currentUser) return null;
+  const userData = await getUserData(currentUser.uid);
+  const role = await getUserRole(currentUser.uid, currentUser.email);
+  const group = await getUserGroup(currentUser.uid);
+  const displayName = await getDisplayName(currentUser.uid, currentUser.email, userData?.nickname);
+  
+  currentUserData = {
+    uid: currentUser.uid,
+    email: currentUser.email,
+    role: role,
+    nickname: userData?.nickname,
+    groupId: userData?.groupId || null,
+    groupName: group?.groupName,
+    displayName: displayName
+  };
+  
+  localStorage.setItem("userSession", JSON.stringify(currentUserData));
+  return currentUserData;
+}
+
+// ==================== STORIES CRUD ====================
+async function loadStories() {
+  const storiesSnap = await getDocs(collection(db, "stories"));
+  allStories = storiesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  filterAndRender();
+}
+
+async function createStory(data) {
+  return await addDoc(collection(db, "stories"), {
+    ...data,
+    likes: 0,
+    views: 0,
+    approved: currentUserData?.role === "admin",
+    createdAt: serverTimestamp()
+  });
+}
+
+async function updateStory(id, data) {
+  return await updateDoc(doc(db, "stories", id), data);
+}
+
+async function deleteStory(id) {
+  return await deleteDoc(doc(db, "stories", id));
+}
+
+async function likeStory(id) {
+  await updateDoc(doc(db, "stories", id), { likes: increment(1) });
+}
+
+// ==================== FOLLOW SYSTEM ====================
+async function loadFollows() {
+  if (!currentUser) return;
+  const userRef = doc(db, "users", currentUser.uid);
+  const snap = await getDoc(userRef);
+  if (snap.exists()) {
+    userFollows = snap.data().follows || [];
+  }
+}
+
+async function followStory(storyId) {
+  if (!currentUser) { showNotification("Đăng nhập để theo dõi", true); return false; }
+  const userRef = doc(db, "users", currentUser.uid);
+  await updateDoc(userRef, { follows: arrayUnion(storyId) });
+  userFollows.push(storyId);
+  showNotification("✅ Đã theo dõi truyện");
+  return true;
+}
+
+async function unfollowStory(storyId) {
+  const userRef = doc(db, "users", currentUser.uid);
+  await updateDoc(userRef, { follows: arrayRemove(storyId) });
+  userFollows = userFollows.filter(id => id !== storyId);
+  showNotification("Đã bỏ theo dõi");
+}
+
+function isFollowing(storyId) {
+  return userFollows.includes(storyId);
+}
+
+// ==================== RENDER FUNCTIONS ====================
+function filterAndRender() {
+  let filtered = [...allStories];
+  
+  if (currentTab === "follows" && currentUser) {
+    filtered = filtered.filter(s => userFollows.includes(s.id));
+  } else if (currentTab === "my" && currentUserData?.groupId) {
+    filtered = filtered.filter(s => s.groupId === currentUserData.groupId);
+  } else if (currentTab === "pending" && currentUserData?.role === "admin") {
+    filtered = filtered.filter(s => !s.approved);
+  } else if (currentUserData?.role !== "admin") {
+    filtered = filtered.filter(s => s.approved);
+  }
+  
+  const searchTerm = document.getElementById("searchInput")?.value.toLowerCase() || "";
+  if (searchTerm) {
+    filtered = filtered.filter(s => s.title?.toLowerCase().includes(searchTerm));
+  }
+  
+  const genre = document.getElementById("genreFilter")?.value;
+  if (genre) {
+    filtered = filtered.filter(s => s.genres?.includes(genre));
+  }
+  
+  const sortBy = document.getElementById("sortFilter")?.value;
+  if (sortBy === "likes") filtered.sort((a,b) => (b.likes||0) - (a.likes||0));
+  else if (sortBy === "views") filtered.sort((a,b) => (b.views||0) - (a.views||0));
+  else filtered.sort((a,b) => (b.createdAt?.seconds||0) - (a.createdAt?.seconds||0));
+  
+  renderMangaGrid(filtered);
+}
+
+function renderMangaGrid(stories) {
+  const grid = document.getElementById("mangaGrid");
+  if (!stories.length) {
+    grid.innerHTML = "<div style='text-align:center; padding:50px;'>📭 Không có truyện nào</div>";
+    return;
+  }
+  
+  grid.innerHTML = stories.map(story => `
+    <div class="manga-card" onclick="openReader('${story.id}')">
+      <img class="manga-cover" src="${story.cover || 'https://placehold.co/300x450?text=No+Cover'}" onerror="this.src='https://placehold.co/300x450?text=ERROR'">
+      <div class="manga-info">
+        <div class="manga-title">${escapeHtml(story.title)}</div>
+        <div class="manga-meta">📚 ${story.groupName || "Cá nhân"}</div>
+        <div class="manga-meta">❤️ ${story.likes || 0} | 👁 ${story.views || 0}</div>
+        ${!story.approved ? '<div class="manga-meta" style="color:#ffcc00;">⏳ Chờ duyệt</div>' : ''}
+        <div class="manga-actions">
+          <button class="small-btn read-btn" onclick="event.stopPropagation(); openReader('${story.id}')">📖 ĐỌC</button>
+          <button class="small-btn like-btn" onclick="event.stopPropagation(); handleLike('${story.id}')">❤️</button>
+          ${currentUser ? `<button class="small-btn" style="background:#ffcc00;" onclick="event.stopPropagation(); toggleFollow('${story.id}')">${isFollowing(story.id) ? '⭐ Đã follow' : '➕ Follow'}</button>` : ''}
+        </div>
+      </div>
+    </div>
+  `).join("");
+}
+
+function escapeHtml(str) {
+  if (!str) return "";
+  return str.replace(/[&<>]/g, m => m === "&" ? "&amp;" : m === "<" ? "&lt;" : "&gt;");
+}
+
+// ==================== UPLOAD PANEL ====================
+function renderUploadPanel() {
+  const panel = document.getElementById("uploadPanel");
+  const canUpload = currentUserData?.role === "admin" || currentUserData?.groupId;
+  
+  if (!canUpload) {
+    panel.innerHTML = "";
+    return;
+  }
+  
+  panel.innerHTML = `
+    <div class="upload-panel">
+      <h3>📤 ĐĂNG TRUYỆN MỚI</h3>
+      <input type="text" id="uploadTitle" placeholder="Tên truyện *">
+      <input type="text" id="uploadOtherName" placeholder="Tên khác">
+      <input type="text" id="uploadAuthor" placeholder="Tác giả">
+      <input type="text" id="uploadGenres" placeholder="Thể loại (cách nhau bằng dấu phẩy)">
+      <input type="text" id="uploadStatus" placeholder="Tình trạng (Đang ra / Hoàn thành)">
+      <input type="url" id="uploadCover" placeholder="Link ảnh bìa (URL)">
+      <textarea id="uploadDesc" placeholder="Mô tả truyện"></textarea>
+      <button class="btn-green" id="submitUploadBtn" style="margin-top:10px;">📤 ĐĂNG TRUYỆN</button>
+    </div>
+  `;
+  
+  document.getElementById("submitUploadBtn")?.addEventListener("click", async () => {
+    const title = document.getElementById("uploadTitle").value;
+    if (!title) { showNotification("Nhập tên truyện", true); return; }
+    
+    let groupName = "Cá nhân";
+    let groupId = null;
+    if (currentUserData?.groupId) {
+      const group = await getUserGroup(currentUserData.uid);
+      if (group) {
+        groupName = group.groupName;
+        groupId = currentUserData.groupId;
+      }
+    }
+    
+    await createStory({
+      title: title,
+      otherName: document.getElementById("uploadOtherName").value,
+      author: document.getElementById("uploadAuthor").value,
+      genres: document.getElementById("uploadGenres").value,
+      status: document.getElementById("uploadStatus").value,
+      desc: document.getElementById("uploadDesc").value,
+      cover: document.getElementById("uploadCover").value,
+      ownerUid: currentUserData.uid,
+      ownerNickname: currentUserData.nickname || currentUserData.email,
+      groupName: groupName,
+      groupId: groupId
+    });
+    
+    showNotification(currentUserData?.role === "admin" ? "Đã đăng truyện (đã duyệt)" : "Đã gửi truyện, chờ admin duyệt");
+    loadStories();
+    
+    ["uploadTitle","uploadOtherName","uploadAuthor","uploadGenres","uploadStatus","uploadCover","uploadDesc"].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = "";
+    });
+  });
+}
+
+// ==================== READER ====================
+window.openReader = async (storyId) => {
+  const story = allStories.find(s => s.id === storyId);
+  if (!story) return;
+  
+  await updateDoc(doc(db, "stories", storyId), { views: increment(1) });
+  
+  const chaptersSnap = await getDocs(query(collection(db, "chapters"), where("storyId", "==", storyId)));
+  const chapters = chaptersSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  
+  let currentChapterIndex = 0;
+  
+  const renderChapter = (index) => {
+    if (!chapters[index]) return;
+    const chap = chapters[index];
+    const readerDiv = document.getElementById("readerContent");
+    readerDiv.innerHTML = `
+      <div class="reader-page">
+        <div class="chapter-nav">
+          <button onclick="changeChapter(-1)">⬅️ Chapter trước</button>
+          <h3>${escapeHtml(chap.title)}</h3>
+          <button onclick="changeChapter(1)">Chapter sau ➡️</button>
+        </div>
+        <div class="chapter-list" id="chapterList">
+          ${chapters.map((c, i) => `<div class="chapter-item" onclick="changeChapterTo(${i})">${escapeHtml(c.title)}</div>`).join("")}
+        </div>
+        <div id="chapterImages">
+          ${chap.pages?.map(page => `<img class="reader-image" src="${page}" loading="lazy" onerror="this.src='https://placehold.co/800x1200?text=Image+Load+Error'">`).join("") || "<p>Không có ảnh</p>"}
+        </div>
+        <div class="comment-section">
+          <h4>💬 Bình luận</h4>
+          <textarea id="commentText" rows="3" style="width:100%; background:#2a2a2a; border:none; border-radius:12px; padding:12px; color:white;" placeholder="Nhập bình luận..."></textarea>
+          <button id="postCommentBtn" style="margin-top:10px; background:#00dc64; border:none; border-radius:30px; padding:10px 20px; cursor:pointer;">GỬI</button>
+          <div id="commentList" style="margin-top:20px;"></div>
+        </div>
+      </div>
+    `;
+    
+    loadComments(storyId);
+    
+    document.getElementById("postCommentBtn")?.addEventListener("click", () => postComment(storyId));
+    window.changeChapter = (delta) => {
+      const newIndex = currentChapterIndex + delta;
+      if (newIndex >= 0 && newIndex < chapters.length) {
+        currentChapterIndex = newIndex;
+        renderChapter(currentChapterIndex);
+      }
+    };
+    window.changeChapterTo = (index) => {
+      currentChapterIndex = index;
+      renderChapter(currentChapterIndex);
+    };
+  };
+  
+  renderChapter(0);
+  document.getElementById("readerModal").style.display = "flex";
 };
 
-/* AUTO CHECK */
-onAuthStateChanged(auth,(u)=>{
-  if(u && u.emailVerified){
-    currentUser=u;
+async function loadComments(storyId) {
+  const commentsSnap = await getDocs(query(collection(db, "comments"), where("storyId", "==", storyId), orderBy("createdAt", "desc")));
+  const comments = commentsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  const commentList = document.getElementById("commentList");
+  if (commentList) {
+    commentList.innerHTML = comments.map(c => `
+      <div class="comment-item">
+        <div class="comment-name">${escapeHtml(c.userName)}</div>
+        <div>${escapeHtml(c.text)}</div>
+        <div style="font-size:11px; color:#666;">${new Date(c.createdAt?.seconds*1000).toLocaleString()}</div>
+        ${currentUserData?.role === "admin" ? `<button onclick="deleteComment('${c.id}')" style="margin-top:5px; background:#ff4444; border:none; border-radius:10px; padding:4px 10px; cursor:pointer;">Xóa</button>` : ''}
+      </div>
+    `).join("");
+  }
+}
+
+async function postComment(storyId) {
+  if (!currentUser) { showNotification("Đăng nhập để bình luận", true); return; }
+  const text = document.getElementById("commentText")?.value;
+  if (!text) return;
+  
+  await addDoc(collection(db, "comments"), {
+    storyId: storyId,
+    text: text,
+    userId: currentUser.uid,
+    userName: currentUserData?.displayName || currentUserData?.nickname || currentUser.email,
+    createdAt: serverTimestamp()
+  });
+  document.getElementById("commentText").value = "";
+  loadComments(storyId);
+  showNotification("Đã gửi bình luận");
+}
+
+window.deleteComment = async (commentId) => {
+  if (currentUserData?.role === "admin") {
+    await deleteDoc(doc(db, "comments", commentId));
+    loadComments(document.querySelector("#commentList")?.parentElement?.parentElement?.dataset?.storyId);
+    showNotification("Đã xóa comment");
+  }
+};
+
+// ==================== AUTH FLOW ====================
+async function handleLogin() {
+  const mainPass = document.getElementById("mainPass").value;
+  const email = document.getElementById("loginEmail").value;
+  const password = document.getElementById("loginPassword").value;
+  const msg = document.getElementById("loginMsg");
+  
+  if (mainPass !== MAIN_PASSWORD) {
+    msg.innerText = "❌ Sai mật khẩu chính";
+    return;
+  }
+  
+  if (!email) {
+    localStorage.setItem("guestMode", "true");
+    document.getElementById("loginPage").style.display = "none";
+    document.getElementById("mainContainer").style.display = "block";
+    showNotification("👤 Đang ở chế độ khách");
+    initApp();
+    return;
+  }
+  
+  try {
+    let userCred;
+    try {
+      userCred = await signInWithEmailAndPassword(auth, email, password);
+    } catch (e) {
+      if (e.code === "auth/user-not-found") {
+        userCred = await createUserWithEmailAndPassword(auth, email, password);
+        await sendEmailVerification(userCred.user);
+        showNotification("📩 Đã gửi email xác nhận! Vui lòng kiểm tra hộp thư.");
+        document.getElementById("loginPage").style.display = "none";
+        return;
+      }
+      throw e;
+    }
+    
+    if (!userCred.user.emailVerified) {
+      showNotification("⚠️ Vui lòng xác nhận email trước khi đăng nhập", true);
+      return;
+    }
+    
+    currentUser = userCred.user;
+    const userData = await getUserData(currentUser.uid);
+    
+    if (!userData || !userData.nickname) {
+      document.getElementById("loginPage").style.display = "none";
+      document.getElementById("nicknamePage").style.display = "flex";
+      return;
+    }
+    
+    await loadUserData();
+    document.getElementById("loginPage").style.display = "none";
+    document.getElementById("mainContainer").style.display = "block";
+    showNotification(`✅ Chào mừng ${currentUserData.displayName}`);
+    await initApp();
+    
+  } catch (err) {
+    msg.innerText = "Lỗi: " + err.message;
+  }
+}
+
+window.saveNickname = async () => {
+  const nickname = document.getElementById("nicknameInput").value;
+  if (!nickname) { document.getElementById("nicknameMsg").innerText = "Nhập nickname"; return; }
+  
+  const existing = await getDocs(query(collection(db, "users"), where("nickname", "==", nickname)));
+  if (!existing.empty) {
+    document.getElementById("nicknameMsg").innerText = "Nickname đã tồn tại";
+    return;
+  }
+  
+  await setDoc(doc(db, "users", currentUser.uid), {
+    email: currentUser.email,
+    nickname: nickname,
+    groupId: null,
+    follows: [],
+    createdAt: serverTimestamp()
+  });
+  
+  document.getElementById("nicknamePage").style.display = "none";
+  document.getElementById("mainContainer").style.display = "block";
+  await loadUserData();
+  showNotification(`🎉 Chào mừng ${nickname}!`);
+  await initApp();
+};
+
+window.createNewGroup = async () => {
+  const groupName = document.getElementById("groupNameInput").value;
+  if (!groupName) { alert("Nhập tên nhóm"); return; }
+  
+  await addDoc(collection(db, "groups"), {
+    groupName: groupName,
+    description: document.getElementById("groupDescInput").value,
+    ownerId: currentUser.uid,
+    members: [currentUser.uid],
+    createdAt: serverTimestamp()
+  });
+  
+  const groupsSnap = await getDocs(query(collection(db, "groups"), where("ownerId", "==", currentUser.uid)));
+  const groupDoc = groupsSnap.docs[0];
+  await updateDoc(doc(db, "users", currentUser.uid), { groupId: groupDoc.id });
+  
+  closeModal("groupModal");
+  showNotification("✅ Tạo nhóm thành công! Đăng nhập lại để áp dụng.");
+  setTimeout(() => window.location.reload(), 1000);
+};
+
+window.handleLike = async (storyId) => {
+  await likeStory(storyId);
+  loadStories();
+};
+
+window.toggleFollow = async (storyId) => {
+  if (isFollowing(storyId)) {
+    await unfollowStory(storyId);
+  } else {
+    await followStory(storyId);
+  }
+  loadStories();
+};
+
+window.showHome = () => {
+  document.getElementById("readerModal").style.display = "none";
+  filterAndRender();
+};
+
+window.logout = async () => {
+  await signOut(auth);
+  localStorage.removeItem("userSession");
+  localStorage.removeItem("guestMode");
+  currentUser = null;
+  currentUserData = null;
+  showNotification("Đã đăng xuất");
+  window.location.reload();
+};
+
+function closeModal(modalId) {
+  document.getElementById(modalId).style.display = "none";
+}
+
+window.closeModal = closeModal;
+
+// ==================== INIT APP ====================
+async function initApp() {
+  const guestMode = localStorage.getItem("guestMode");
+  if (guestMode === "true" && !currentUser) {
+    currentUserData = { role: "guest", displayName: "Ẩn danh" };
+  }
+  
+  const userDisplay = document.getElementById("userDisplay");
+  const logoutBtn = document.getElementById("logoutBtn");
+  const createGroupBtn = document.getElementById("createGroupBtn");
+  
+  if (currentUserData?.role === "guest") {
+    userDisplay.innerHTML = "👤 Ẩn danh (Khách)";
+    logoutBtn.style.display = "none";
+    createGroupBtn.style.display = "none";
+  } else if (currentUserData) {
+    userDisplay.innerHTML = `👤 ${currentUserData.displayName} ${currentUserData.role === "admin" ? "👑" : ""}`;
+    logoutBtn.style.display = "inline-block";
+    createGroupBtn.style.display = currentUserData.groupId ? "none" : "inline-block";
+  } else {
+    userDisplay.innerHTML = "👤 Chưa đăng nhập";
+    logoutBtn.style.display = "none";
+    createGroupBtn.style.display = "none";
+  }
+  
+  await loadFollows();
+  renderUploadPanel();
+  await loadStories();
+}
+
+// ==================== EVENT LISTENERS ====================
+document.getElementById("continueBtn")?.addEventListener("click", () => {
+  document.getElementById("warningOverlay").style.display = "none";
+  document.getElementById("loginPage").style.display = "flex";
+});
+
+document.getElementById("exitBtn")?.addEventListener("click", () => {
+  document.body.innerHTML = "<div style='height:100vh;display:flex;justify-content:center;align-items:center;background:black;color:white;'>ĐÃ THOÁT</div>";
+});
+
+document.getElementById("doLoginBtn")?.addEventListener("click", handleLogin);
+document.getElementById("saveNicknameBtn")?.addEventListener("click", window.saveNickname);
+document.getElementById("confirmGroupBtn")?.addEventListener("click", window.createNewGroup);
+document.getElementById("createGroupBtn")?.addEventListener("click", () => {
+  document.getElementById("groupModal").style.display = "flex";
+});
+
+document.querySelectorAll(".tab-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    currentTab = btn.dataset.tab;
+    filterAndRender();
+  });
+});
+
+document.getElementById("searchInput")?.addEventListener("input", () => filterAndRender());
+document.getElementById("genreFilter")?.addEventListener("change", () => filterAndRender());
+document.getElementById("sortFilter")?.addEventListener("change", () => filterAndRender());
+
+onAuthStateChanged(auth, async (user) => {
+  if (user && user.emailVerified) {
+    currentUser = user;
+    await loadUserData();
+    localStorage.removeItem("guestMode");
+    document.getElementById("loginPage").style.display = "none";
+    document.getElementById("mainContainer").style.display = "block";
+    await initApp();
   }
 });
 
+if (localStorage.getItem("guestMode") === "true") {
+  currentUserData = { role: "guest", displayName: "Ẩn danh" };
+  document.getElementById("warningOverlay").style.display = "none";
+  document.getElementById("loginPage").style.display = "none";
+  document.getElementById("mainContainer").style.display = "block";
+  initApp();
+}
 </script>
-
 </body>
 </html>
