@@ -1,250 +1,144 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="vi">
 <head>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>DANMETOPIA</title>
-
-<style>
-body{
-  margin:0;
-  background:#0f0f0f;
-  color:white;
-  font-family:Arial;
-}
-
-/* ===== WARNING ===== */
-#warning{
-  position:fixed;
-  inset:0;
-  background:black;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  z-index:999;
-}
-
-.box{
-  background:#1c1c1c;
-  padding:20px;
-  width:340px;
-  border-radius:12px;
-  text-align:center;
-}
-
-/* ===== LOGIN ===== */
-#login{
-  display:none;
-  position:fixed;
-  inset:0;
-  justify-content:center;
-  align-items:center;
-  background:#0f0f0f;
-  z-index:998;
-}
-
-/* INPUT */
-input{
-  width:100%;
-  padding:10px;
-  margin-top:8px;
-  border:none;
-  border-radius:8px;
-  background:#2a2a2a;
-  color:white;
-}
-
-/* BUTTON */
-button{
-  width:100%;
-  padding:10px;
-  margin-top:10px;
-  border:none;
-  border-radius:8px;
-  cursor:pointer;
-  font-weight:bold;
-}
-
-.green{background:#00dc64;color:black;}
-.red{background:#ff4444;color:white;}
-
-/* ===== HOME ===== */
-#home{
-  display:none;
-}
-
-.topbar{
-  background:#00dc64;
-  color:black;
-  padding:15px;
-  display:flex;
-  justify-content:space-between;
-  font-weight:bold;
-}
-
-.container{
-  padding:15px;
-}
-
-.card{
-  background:#1c1c1c;
-  padding:15px;
-  margin-top:10px;
-  border-radius:10px;
-}
-</style>
-
+<link rel="stylesheet" href="style.css">
 </head>
-
 <body>
-
 <!-- ================= WARNING ================= -->
 <div id="warning">
   <div class="box">
     <h2>⚠️ CẢNH BÁO 18+</h2>
-    <p>Trang truyện người lớn. Xác nhận đủ tuổi khi tiếp tục.</p>
-
-    <button class="green" onclick="enter()">TIẾP TỤC</button>
-    <button class="red" onclick="leave()">THOÁT</button>
+    <p class="desc">
+      Trang web này có thể chứa nội dung dành cho người trưởng thành (18+).<br><br>
+      Bằng việc tiếp tục, bạn xác nhận rằng bạn đủ 18 tuổi trở lên và việc xem nội dung này hợp pháp tại khu vực của bạn.
+    </p>
+    <button class="green" onclick="enterSite()">TIẾP TỤC</button>
+    <button class="red" onclick="leaveSite()">THOÁT</button>
   </div>
 </div>
 
 <!-- ================= LOGIN ================= -->
-<div id="login">
-
+<div id="loginPage">
   <div class="box">
-
-    <h2>DANMETOPIA</h2>
-    <p>Nền tảng đọc truyện</p>
-
-    <!-- 🔥 REQUIRED PASSWORD -->
-    <input id="mainPass" type="password" placeholder="Mật khẩu">
-
+    <h1>DANMETOPIA</h1>
+    <p class="subtitle">Nền tảng đọc truyện</p>
+    
+    <input id="mainPassword" type="password" placeholder="Mật khẩu chính">
     <hr>
-
-    <!-- OPTIONAL LOGIN -->
-    <input id="email" placeholder="Email / Tên đăng nhập (không bắt buộc)">
-    <input id="pass" type="password" placeholder="Mật khẩu tài khoản (nếu có)">
-
-    <button class="green" onclick="login()">VÀO WEB</button>
-
-    <p id="msg" style="color:red"></p>
-
+    
+    <h3>🏠 ĐĂNG NHẬP / ĐĂNG KÝ</h3>
+    <input id="email" type="email" placeholder="Email">
+    <input id="password" type="password" placeholder="Mật khẩu">
+    <input id="nickname" type="text" placeholder="Tên hiển thị (nếu đăng ký mới)">
+    <button class="green" onclick="loginOrRegister()">TIẾP TỤC</button>
+    <hr>
+    
+    <h3>📚 TẠO NHÓM DỊCH</h3>
+    <p class="hint">(Sau khi đăng nhập, bạn có thể tạo nhóm để đăng truyện)</p>
+    <button class="yellow" onclick="showGroupForm()">TẠO NHÓM MỚI</button>
+    
+    <p id="msg"></p>
   </div>
 </div>
 
-<!-- ================= HOME ================= -->
-<div id="home">
-
-  <div class="topbar">
-    <div>🏠 DANMETOPIA - TRANG CHỦ</div>
-    <div id="userBox">Ẩn danh</div>
+<!-- Modal tạo nhóm -->
+<div id="groupModal" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closeGroupModal()">&times;</span>
+    <h2>📚 TẠO NHÓM DỊCH</h2>
+    <input id="groupName" placeholder="Tên nhóm dịch">
+    <textarea id="groupDesc" placeholder="Mô tả nhóm (không bắt buộc)"></textarea>
+    <button class="green" onclick="createNewGroup()">TẠO NHÓM</button>
   </div>
-
-  <div class="container">
-
-    <h3>📚 Danh sách truyện</h3>
-
-    <div class="card">📖 Truyện 1</div>
-    <div class="card">📖 Truyện 2</div>
-    <div class="card">📖 Truyện 3</div>
-
-  </div>
-
 </div>
 
-<script>
+<script type="module">
+import { loginUser, saveGuest, createGroup, auth, db, addDoc, collection, getDocs } from "./auth.js";
 
-/* ================= STATE ================= */
-let user = {
-  email:null,
-  role:"guest"
+window.enterSite = () => {
+  document.getElementById("warning").style.display = "none";
+  document.getElementById("loginPage").style.display = "flex";
 };
 
-/* ================= ENTER ================= */
-function enter(){
-  document.getElementById("warning").style.display="none";
-  document.getElementById("login").style.display="flex";
-}
+window.leaveSite = () => {
+  document.body.innerHTML = `<div class="exitPage"><h1>ĐÃ THOÁT</h1></div>`;
+};
 
-/* ================= EXIT ================= */
-function leave(){
-  document.body.innerHTML = "<h2 style='color:white;text-align:center;margin-top:100px'>Đã thoát</h2>";
-}
+window.loginOrRegister = async () => {
+  const mainPassword = document.getElementById("mainPassword").value;
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+  const nickname = document.getElementById("nickname").value;
+  const msg = document.getElementById("msg");
 
-/* ================= ROLE CHECK ================= */
-function getRole(email){
-
-  if(!email) return "user";
-
-  if(
-    email === "pydanmeii@gmail.com" ||
-    email === "pepyl4298@gmail.com"
-  ) return "admin";
-
-  if(email.includes("@group")) return "group";
-
-  return "user";
-}
-
-/* ================= LOGIN ================= */
-function login(){
-
-  const mainPass = document.getElementById("mainPass").value;
-
-  if(mainPass !== "danmei"){
-    document.getElementById("msg").innerText = "Sai mật khẩu chính";
+  if (mainPassword !== "danmei") {
+    msg.innerText = "Sai mật khẩu chính";
     return;
   }
 
-  const email = document.getElementById("email").value;
-
-  // 🔥 CASE 1: ANON
-  if(!email){
-    user = { email:null, role:"guest" };
+  // Guest mode
+  if (!email) {
+    saveGuest();
+    location.href = "home.html";
+    return;
   }
 
-  // 🔥 CASE 2: LOGIN USER
-  else{
-    user = {
-      email: email,
-      role: getRole(email)
-    };
+  try {
+    await loginUser(email, password);
+    location.href = "home.html";
+  } catch (err) {
+    if (err.code === "auth/user-not-found") {
+      // Tạo tài khoản mới
+      try {
+        const { createUser } = await import("./auth.js");
+        await createUser(email, password, nickname);
+        await loginUser(email, password);
+        location.href = "home.html";
+      } catch (createErr) {
+        msg.innerText = "Không thể tạo tài khoản: " + createErr.message;
+      }
+    } else {
+      msg.innerText = "Đăng nhập thất bại: " + err.message;
+    }
   }
+};
 
-  localStorage.setItem("user", JSON.stringify(user));
+window.showGroupForm = () => {
+  document.getElementById("groupModal").style.display = "flex";
+};
 
-  showHome();
-}
+window.closeGroupModal = () => {
+  document.getElementById("groupModal").style.display = "none";
+};
 
-/* ================= HOME ================= */
-function showHome(){
-
-  document.getElementById("warning").style.display="none";
-  document.getElementById("login").style.display="none";
-  document.getElementById("home").style.display="block";
-
-  updateUI();
-}
-
-/* ================= UI ================= */
-function updateUI(){
-
-  if(!user.email){
-    document.getElementById("userBox").innerText = "Ẩn danh";
-  }else{
-    document.getElementById("userBox").innerText =
-      user.email + " (" + user.role + ")";
+window.createNewGroup = async () => {
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  if (user.role === "guest" || !user.uid) {
+    alert("Vui lòng đăng nhập bằng email trước khi tạo nhóm");
+    return;
   }
-}
-
-/* ================= INIT ================= */
-const saved = localStorage.getItem("user");
-if(saved){
-  user = JSON.parse(saved);
-}
-
+  
+  const groupName = document.getElementById("groupName").value;
+  const groupDesc = document.getElementById("groupDesc").value;
+  
+  if (!groupName) {
+    alert("Nhập tên nhóm");
+    return;
+  }
+  
+  try {
+    await createGroup(user.uid, groupName, groupDesc);
+    alert("Tạo nhóm thành công! Vui lòng đăng nhập lại để cập nhật quyền.");
+    closeGroupModal();
+    localStorage.removeItem("user");
+    setTimeout(() => location.reload(), 1000);
+  } catch (err) {
+    alert("Lỗi: " + err.message);
+  }
+};
 </script>
-
 </body>
 </html>
