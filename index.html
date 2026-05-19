@@ -4,10 +4,274 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>DANMETOPIA</title>
-<link rel="stylesheet" href="style.css">
+<style>
+/* ================= RESET ================= */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: #0f0f0f;
+  color: white;
+  font-family: 'Segoe UI', Arial, sans-serif;
+}
+
+/* ================= WARNING ================= */
+#warning {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.95);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+#warning .box {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  width: 400px;
+  max-width: 90%;
+  padding: 30px 25px;
+  border-radius: 20px;
+  text-align: center;
+  border: 2px solid #e94560;
+  box-shadow: 0 0 30px rgba(233,69,96,0.3);
+}
+
+#warning h2 {
+  color: #e94560;
+  font-size: 28px;
+  margin-bottom: 20px;
+}
+
+#warning .desc {
+  color: #ccc;
+  font-size: 14px;
+  line-height: 1.6;
+  margin-bottom: 25px;
+}
+
+#warning button {
+  padding: 12px 24px;
+  margin: 0 8px;
+  border: none;
+  border-radius: 30px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+#warning .green {
+  background: #00dc64;
+  color: black;
+}
+
+#warning .green:hover {
+  background: #00b854;
+  transform: scale(1.05);
+}
+
+#warning .red {
+  background: #ff4444;
+  color: white;
+}
+
+#warning .red:hover {
+  background: #cc0000;
+  transform: scale(1.05);
+}
+
+/* ================= LOGIN PAGE ================= */
+#loginPage {
+  display: none;
+  position: fixed;
+  inset: 0;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(135deg, #0f0f0f 0%, #1a1a2e 100%);
+  overflow-y: auto;
+}
+
+#loginPage .box {
+  background: #1c1c1c;
+  width: 380px;
+  max-width: 90%;
+  padding: 30px 25px;
+  border-radius: 20px;
+  text-align: center;
+  border: 1px solid #333;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+}
+
+#loginPage h1 {
+  color: #00dc64;
+  font-size: 32px;
+  margin-bottom: 8px;
+}
+
+#loginPage .subtitle {
+  color: #aaa;
+  margin-bottom: 25px;
+  font-size: 14px;
+}
+
+#loginPage h3 {
+  color: #ffcc00;
+  margin: 20px 0 10px;
+  font-size: 16px;
+}
+
+#loginPage input {
+  width: 100%;
+  padding: 12px;
+  margin-top: 12px;
+  border: none;
+  border-radius: 10px;
+  background: #2a2a2a;
+  color: white;
+  box-sizing: border-box;
+  font-size: 14px;
+}
+
+#loginPage input:focus {
+  outline: 1px solid #00dc64;
+}
+
+#loginPage button {
+  width: 100%;
+  padding: 12px;
+  margin-top: 12px;
+  border: none;
+  border-radius: 30px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 16px;
+  transition: 0.3s;
+}
+
+#loginPage .green {
+  background: #00dc64;
+  color: black;
+}
+
+#loginPage .green:hover {
+  background: #00b854;
+}
+
+#loginPage .yellow {
+  background: #ffcc00;
+  color: black;
+}
+
+#loginPage .yellow:hover {
+  background: #e6b800;
+}
+
+#loginPage hr {
+  margin: 20px 0;
+  border-color: #333;
+}
+
+#loginPage .hint {
+  color: #888;
+  font-size: 12px;
+  margin-top: 10px;
+}
+
+#msg {
+  color: #ff6666;
+  margin-top: 15px;
+  font-size: 13px;
+}
+
+/* ================= MODAL ================= */
+.modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.8);
+  justify-content: center;
+  align-items: center;
+  z-index: 10000;
+}
+
+.modal-content {
+  background: #1c1c1c;
+  width: 350px;
+  max-width: 90%;
+  padding: 25px;
+  border-radius: 20px;
+  position: relative;
+  border: 1px solid #00dc64;
+}
+
+.modal-content h2 {
+  color: #00dc64;
+  margin-bottom: 20px;
+}
+
+.modal-content input, .modal-content textarea {
+  width: 100%;
+  padding: 10px;
+  margin-top: 10px;
+  background: #2a2a2a;
+  border: none;
+  border-radius: 8px;
+  color: white;
+  box-sizing: border-box;
+}
+
+.modal-content textarea {
+  height: 80px;
+  resize: none;
+}
+
+.modal-content button {
+  width: 100%;
+  padding: 10px;
+  margin-top: 15px;
+  background: #00dc64;
+  color: black;
+  border: none;
+  border-radius: 30px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.close {
+  position: absolute;
+  top: 15px;
+  right: 20px;
+  font-size: 24px;
+  cursor: pointer;
+  color: #aaa;
+}
+
+.close:hover {
+  color: white;
+}
+
+/* ================= EXIT PAGE ================= */
+.exitPage {
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: black;
+  font-size: 24px;
+  color: white;
+}
+</style>
 </head>
 <body>
-<!-- ================= WARNING ================= -->
+
+<!-- ================= WARNING 18+ ================= -->
 <div id="warning">
   <div class="box">
     <h2>⚠️ CẢNH BÁO 18+</h2>
@@ -15,30 +279,30 @@
       Trang web này có thể chứa nội dung dành cho người trưởng thành (18+).<br><br>
       Bằng việc tiếp tục, bạn xác nhận rằng bạn đủ 18 tuổi trở lên và việc xem nội dung này hợp pháp tại khu vực của bạn.
     </p>
-    <button class="green" onclick="enterSite()">TIẾP TỤC</button>
-    <button class="red" onclick="leaveSite()">THOÁT</button>
+    <button class="green" id="enterBtn">TIẾP TỤC</button>
+    <button class="red" id="leaveBtn">THOÁT</button>
   </div>
 </div>
 
-<!-- ================= LOGIN ================= -->
+<!-- ================= LOGIN PAGE ================= -->
 <div id="loginPage">
   <div class="box">
     <h1>DANMETOPIA</h1>
-    <p class="subtitle">Nền tảng đọc truyện</p>
+    <p class="subtitle">Nền tảng đọc truyện tranh</p>
     
-    <input id="mainPassword" type="password" placeholder="Mật khẩu chính">
+    <input id="mainPassword" type="password" placeholder="🔑 Mật khẩu chính">
     <hr>
     
     <h3>🏠 ĐĂNG NHẬP / ĐĂNG KÝ</h3>
-    <input id="email" type="email" placeholder="Email">
-    <input id="password" type="password" placeholder="Mật khẩu">
-    <input id="nickname" type="text" placeholder="Tên hiển thị (nếu đăng ký mới)">
-    <button class="green" onclick="loginOrRegister()">TRUY CẬP</button>
+    <input id="email" type="email" placeholder="📧 Email">
+    <input id="password" type="password" placeholder="🔒 Mật khẩu">
+    <input id="nickname" type="text" placeholder="📝 Tên hiển thị (nếu đăng ký mới)">
+    <button class="green" id="loginBtn">🚀 TIẾP TỤC</button>
     <hr>
     
     <h3>📚 TẠO NHÓM DỊCH</h3>
     <p class="hint">(Sau khi đăng nhập, bạn có thể tạo nhóm để đăng truyện)</p>
-    <button class="yellow" onclick="showGroupForm()">TẠO NHÓM MỚI</button>
+    <button class="yellow" id="createGroupBtn">➕ TẠO NHÓM MỚI</button>
     
     <p id="msg"></p>
   </div>
@@ -47,80 +311,209 @@
 <!-- Modal tạo nhóm -->
 <div id="groupModal" class="modal">
   <div class="modal-content">
-    <span class="close" onclick="closeGroupModal()">&times;</span>
+    <span class="close" id="closeModalBtn">&times;</span>
     <h2>📚 TẠO NHÓM DỊCH</h2>
     <input id="groupName" placeholder="Tên nhóm dịch">
     <textarea id="groupDesc" placeholder="Mô tả nhóm (không bắt buộc)"></textarea>
-    <button class="green" onclick="createNewGroup()">TẠO NHÓM</button>
+    <button id="confirmGroupBtn">TẠO NHÓM</button>
   </div>
 </div>
 
 <script type="module">
-import { loginUser, saveGuest, createGroup, auth, db, addDoc, collection, getDocs } from "./auth.js";
+// Import Firebase và các hàm
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
+import {
+  getAuth,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut
+} from "https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js";
+import {
+  getFirestore,
+  doc,
+  setDoc,
+  getDoc,
+  updateDoc,
+  addDoc,
+  collection,
+  getDocs
+} from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
+import {
+  getStorage,
+  ref,
+  uploadBytes,
+  getDownloadURL
+} from "https://www.gstatic.com/firebasejs/12.13.0/firebase-storage.js";
 
-window.enterSite = () => {
-  document.getElementById("warning").style.display = "none";
-  document.getElementById("loginPage").style.display = "flex";
+// Firebase config
+const firebaseConfig = {
+  apiKey: "AIzaSyCDQk9DlMNKwn_508fDMI_3IB_dgpgHujA",
+  authDomain: "danmetopia.firebaseapp.com",
+  projectId: "danmetopia",
+  storageBucket: "danmetopia.appspot.com",
+  messagingSenderId: "178240377870",
+  appId: "1:178240377870:web:d094b222ebabadccc5585f"
 };
 
-window.leaveSite = () => {
-  document.body.innerHTML = `<div class="exitPage"><h1>ĐÃ THOÁT</h1></div>`;
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const storage = getStorage(app);
+
+// Admin emails
+const ADMIN_EMAILS = ["pydanmeii@gmail.com", "pepyl4298@gmail.com"];
+
+// Helper functions
+async function getUserData(uid) {
+  const snap = await getDoc(doc(db, "users", uid));
+  return snap.exists() ? snap.data() : null;
+}
+
+async function getUserGroup(uid) {
+  const userData = await getUserData(uid);
+  if (userData && userData.groupId) {
+    const groupSnap = await getDoc(doc(db, "groups", userData.groupId));
+    if (groupSnap.exists()) return { id: groupSnap.id, ...groupSnap.data() };
+  }
+  return null;
+}
+
+async function getUserRole(uid, email) {
+  if (ADMIN_EMAILS.includes(email)) return "admin";
+  const group = await getUserGroup(uid);
+  return group ? "group" : "user";
+}
+
+async function getDisplayName(uid, email) {
+  const userData = await getUserData(uid);
+  const nickname = userData?.nickname || email?.split("@")[0] || "Ẩn danh";
+  const group = await getUserGroup(uid);
+  return group ? `${nickname} (${group.groupName})` : nickname;
+}
+
+async function loginUser(email, password) {
+  const cred = await signInWithEmailAndPassword(auth, email, password);
+  const userData = await getUserData(cred.user.uid);
+  const role = await getUserRole(cred.user.uid, email);
+  const displayName = await getDisplayName(cred.user.uid, email);
+  
+  localStorage.setItem("user", JSON.stringify({
+    uid: cred.user.uid,
+    email: email,
+    role: role,
+    nickname: userData?.nickname || email.split("@")[0],
+    groupId: userData?.groupId || null,
+    displayName: displayName
+  }));
+  return cred.user;
+}
+
+async function createUser(email, password, nickname) {
+  const cred = await createUserWithEmailAndPassword(auth, email, password);
+  await setDoc(doc(db, "users", cred.user.uid), {
+    email: email,
+    nickname: nickname || email.split("@")[0],
+    createdAt: new Date().toISOString(),
+    groupId: null,
+    bookmarks: [],
+    history: []
+  });
+  return cred.user;
+}
+
+async function createGroup(userId, groupName, description) {
+  const groupRef = await addDoc(collection(db, "groups"), {
+    groupName: groupName,
+    description: description || "",
+    ownerId: userId,
+    members: [userId],
+    createdAt: new Date().toISOString()
+  });
+  await updateDoc(doc(db, "users", userId), { groupId: groupRef.id });
+  return groupRef.id;
+}
+
+function saveGuest() {
+  localStorage.setItem("user", JSON.stringify({
+    role: "guest",
+    displayName: "Ẩn danh"
+  }));
+}
+
+// DOM elements
+const warningDiv = document.getElementById("warning");
+const loginPage = document.getElementById("loginPage");
+const enterBtn = document.getElementById("enterBtn");
+const leaveBtn = document.getElementById("leaveBtn");
+const loginBtn = document.getElementById("loginBtn");
+const createGroupBtn = document.getElementById("createGroupBtn");
+const groupModal = document.getElementById("groupModal");
+const closeModalBtn = document.getElementById("closeModalBtn");
+const confirmGroupBtn = document.getElementById("confirmGroupBtn");
+const msg = document.getElementById("msg");
+
+// Warning handlers
+enterBtn.onclick = () => {
+  warningDiv.style.display = "none";
+  loginPage.style.display = "flex";
 };
 
-window.loginOrRegister = async () => {
+leaveBtn.onclick = () => {
+  document.body.innerHTML = '<div class="exitPage"><h1>ĐÃ THOÁT</h1></div>';
+};
+
+// Login/Register handler
+loginBtn.onclick = async () => {
   const mainPassword = document.getElementById("mainPassword").value;
   const email = document.getElementById("email").value;
   const password = document.getElementById("password").value;
   const nickname = document.getElementById("nickname").value;
-  const msg = document.getElementById("msg");
 
   if (mainPassword !== "danmei") {
-    msg.innerText = "Sai mật khẩu chính";
+    msg.innerText = "❌ Sai mật khẩu chính";
     return;
   }
 
-  // Guest mode
   if (!email) {
     saveGuest();
-    location.href = "home.html";
+    window.location.href = "home.html";
     return;
   }
 
   try {
     await loginUser(email, password);
-    location.href = "home.html";
+    window.location.href = "home.html";
   } catch (err) {
     if (err.code === "auth/user-not-found") {
-      // Tạo tài khoản mới
       try {
-        const { createUser } = await import("./auth.js");
         await createUser(email, password, nickname);
         await loginUser(email, password);
-        location.href = "home.html";
+        window.location.href = "home.html";
       } catch (createErr) {
-        msg.innerText = "Không thể tạo tài khoản: " + createErr.message;
+        msg.innerText = "❌ Không thể tạo tài khoản: " + createErr.message;
       }
     } else {
-      msg.innerText = "Đăng nhập thất bại: " + err.message;
+      msg.innerText = "❌ Đăng nhập thất bại: " + err.message;
     }
   }
 };
 
-window.showGroupForm = () => {
-  document.getElementById("groupModal").style.display = "flex";
-};
-
-window.closeGroupModal = () => {
-  document.getElementById("groupModal").style.display = "none";
-};
-
-window.createNewGroup = async () => {
+// Group modal handlers
+createGroupBtn.onclick = () => {
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   if (user.role === "guest" || !user.uid) {
     alert("Vui lòng đăng nhập bằng email trước khi tạo nhóm");
     return;
   }
-  
+  groupModal.style.display = "flex";
+};
+
+closeModalBtn.onclick = () => {
+  groupModal.style.display = "none";
+};
+
+confirmGroupBtn.onclick = async () => {
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
   const groupName = document.getElementById("groupName").value;
   const groupDesc = document.getElementById("groupDesc").value;
   
@@ -131,13 +524,18 @@ window.createNewGroup = async () => {
   
   try {
     await createGroup(user.uid, groupName, groupDesc);
-    alert("Tạo nhóm thành công! Vui lòng đăng nhập lại để cập nhật quyền.");
-    closeGroupModal();
+    alert("✅ Tạo nhóm thành công! Vui lòng đăng nhập lại.");
+    groupModal.style.display = "none";
     localStorage.removeItem("user");
-    setTimeout(() => location.reload(), 1000);
+    setTimeout(() => window.location.reload(), 1000);
   } catch (err) {
     alert("Lỗi: " + err.message);
   }
+};
+
+// Click outside modal
+window.onclick = (e) => {
+  if (e.target === groupModal) groupModal.style.display = "none";
 };
 </script>
 </body>
