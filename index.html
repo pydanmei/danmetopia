@@ -818,9 +818,14 @@ window.testSendOTP = async function(email) {
   await sendOTPEmail(email);
 };
 
-async function sendOTPEmail(email) {
-  console.log("📩 [1] sendOTPEmail called with:", email);
+async function verifyOTP(email, inputCode) {
+  console.log("🔍 Verifying OTP for:", email, "Code:", inputCode);
+  const emailKey = email.replace(/\./g, "_");
+  const snap = await get(ref(db, `otp_requests/${emailKey}`));
+  const data = snap.val();
   
+  console.log("📦 OTP data from DB:", data);
+
   // Chống spam
   const now = Date.now();
   if (now - lastOtpSentTime < 30000) {
@@ -829,6 +834,25 @@ async function sendOTPEmail(email) {
     showNotification(`Vui lòng đợi ${waitTime} giây trước khi gửi lại`, true);
     return false;
   }
+  
+  if (!data) {
+    console.log("❌ No OTP found");
+    return { success: false, message: "Mã OTP không tồn tại" };
+  }
+  if (Date.now() > data.expires) {
+    console.log("❌ OTP expired");
+    return { success: false, message: "Mã OTP đã hết hạn" };
+  }
+  if (data.code !== inputCode) {
+    console.log("❌ Wrong OTP - Expected:", data.code, "Got:", inputCode);
+    return { success: false, message: "Sai mã OTP" };
+  }
+  
+  // Xóa OTP sau khi dùng thành công
+  await remove(ref(db, `otp_requests/${emailKey}`));
+  console.log("✅ OTP verified and removed");
+  return { success: true, message: "OK" };
+}
   
   const otp = generateOTP();
   console.log(`🔢 [3] Generated OTP: ${otp}`);
@@ -888,18 +912,80 @@ async function sendOTPEmail(email) {
   }
 }
 
-async function verifyOTP(email, inputCode) {
-  console.log("🔍 Verifying OTP for:", email, "Code:", inputCode);
-  const snap = await get(ref(db, `otp_requests/${email.replace(/\./g, "_")}`));
-  const data = snap.val();
+async function handleVerifyOTP() {
+  const email = pendingEmail || document.getElementById("loginEmail").value;
+  const otp = document.getElementById("otpCode").value;
   
-  if (!data) return { success: false, message: "Mã OTP không tồn tại" };
-  if (Date.now() > data.expires) return { success: false, message: "Mã OTP đã hết hạn" };
-  if (data.code !== inputCode) return { success: false, message: "Sai mã OTP" };
+  console.log("🔘 Verify OTP button clicked for:", email, "OTP:", otp);
   
-  await remove(ref(db, `otp_requests/${email.replace(/\./g, "_")}`));
-  console.log("✅ OTP verified successfully");
-  return { success: true, message: "OK" };
+  if (!otp || otp.length !== 6) {
+    showNotification("Nhập mã OTP 6 số", true);
+    return;
+  }
+  
+  showLoading(true);
+  const result = await verifyOTP(email, otp);
+  
+  if (!result.success) {
+    showNotification(result.message, true);
+    showLoading(false);
+    return;
+  }
+  
+  try {
+    const dummyPassword = "otp-temp-" + Date.now();
+    let userCred;
+    
+    try {
+      // Thử đăng nhập
+      userCred = await signInWithEmailAndPassword(auth, email, dummyPassword);
+      console.log("✅ Sign in successful for existing user:", userCred.user.uid);
+    } catch (e) {
+      if (e.code === "auth/user-not-found" || e.code === "auth/wrong-password") {
+        // Tạo tài khoản mới
+        userCred = await createUserWithEmailAndPassword(auth, email, dummyPassword);
+        console.log("✅ New user created:", userCred.user.uid);
+        await createNewUser(userCred.user.uid, email, null);
+      } else {
+        throw e;
+      }
+    }
+    
+    // Đợi Firebase auth state update
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    // Lấy user data từ database
+    const userData = await loadUserData(userCred.user.uid, email);
+    console.log("📦 User data loaded:", userData);
+    
+    // Kiểm tra xem đã có nickname chưa
+    if (!userData.nickname || userData.nickname === null) {
+      console.log("⚠️ No nickname found, showing nickname page");
+      currentUserData = userData;
+      localStorage.setItem("userSession", JSON.stringify(currentUserData));
+      document.getElementById("loginPage").style.display = "none";
+      document.getElementById("nicknamePage").style.display = "flex";
+      showLoading(false);
+      return;
+    }
+    
+    // Có nickname rồi -> vào trang chủ
+    currentUserData = userData;
+    localStorage.setItem("userSession", JSON.stringify(currentUserData));
+    localStorage.removeItem("guestMode");
+    
+    console.log("✅ Login successful, navigating to home");
+    document.getElementById("loginPage").style.display = "none";
+    document.getElementById("mainContainer").style.display = "block";
+    showNotification(`✅ Chào mừng ${currentUserData.displayName}`);
+    
+    await initApp();
+    
+  } catch (err) {
+    console.error("❌ Login error:", err);
+    showNotification("Lỗi: " + err.message, true);
+  }
+  showLoading(false);
 }
 
 // ==================== USER FUNCTIONS ====================
