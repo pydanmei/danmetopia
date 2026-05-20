@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>🌸 DANMETOPIA - Đọc truyện tranh online 🌸</title>
+<title>DANMETOPIA - Đọc truyện tranh online</title>
 <meta name="theme-color" content="#FF69B4">
 
 <!-- EmailJS -->
@@ -586,7 +586,7 @@ body {
 <!-- MAIN CONTAINER -->
 <div id="mainContainer">
   <div class="topbar">
-    <div class="logo" onclick="showHome()">🌸 DANMETOPIA 🌸</div>
+    <div class="logo" onclick="showHome()">🌸 DANMETOPIA</div>
     <div class="user-area">
       <span id="userDisplay">👤 Đang tải...</span>
       <button id="profileBtn" style="display:none">👤 Thông tin</button>
@@ -924,7 +924,7 @@ async function createNewUser(uid, email, nickname) {
   });
 }
 
-// ==================== STORIES CRUD ====================
+// ==================== STORIES CRUD (Realtime Database) ====================
 function loadStoriesRealtime() {
   if (storiesUnsubscribe) storiesUnsubscribe();
   const storiesRef = ref(db, 'stories');
@@ -1192,11 +1192,11 @@ function renderChapter() {
   readerDiv.innerHTML = `
     <div class="reader-page">
       <div class="chapter-nav">
-        <button onclick="changeChapter(-1)">⬅️ Chapter trước</button>
+        <button onclick="window.changeChapter(-1)">⬅️ Chapter trước</button>
         <h3>${escapeHtml(chap.title)}</h3>
-        <button onclick="changeChapter(1)">Chapter sau ➡️</button>
+        <button onclick="window.changeChapter(1)">Chapter sau ➡️</button>
       </div>
-      <div class="chapter-list" id="chapterList">${currentChapters.map((c, i) => `<div class="chapter-item" onclick="changeChapterTo(${i})">${escapeHtml(c.title)}</div>`).join("")}</div>
+      <div class="chapter-list" id="chapterList">${currentChapters.map((c, i) => `<div class="chapter-item" onclick="window.changeChapterTo(${i})">${escapeHtml(c.title)}</div>`).join("")}</div>
       <div>${chap.pages?.map(page => `<img class="reader-image" src="${escapeHtml(page)}" onerror="this.src='https://placehold.co/800x1200?text=Error'">`).join("") || "<p>Không có ảnh</p>"}</div>
       <div class="comment-section"><h4>💬 Bình luận</h4><textarea id="commentText" rows="3" style="width:100%; background:#2a2a2a; border:none; border-radius:12px; padding:12px; color:white;"></textarea><button id="postCommentBtn" style="margin-top:10px; background:#FF69B4; border:none; border-radius:30px; padding:10px 20px; cursor:pointer;">GỬI</button><div id="commentList"></div></div>
     </div>
@@ -1209,21 +1209,37 @@ window.changeChapter = (delta) => { let newIdx = currentChapterIndex + delta; if
 window.changeChapterTo = (index) => { currentChapterIndex = index; renderChapter(); window.scrollTo(0,0); };
 
 async function loadComments(storyId) {
-  const commentsSnap = await getDocs(query(collection(db, "comments"), where("storyId", "==", storyId), orderBy("createdAt", "desc")));
-  const commentList = document.getElementById("commentList");
-  if (commentList) {
-    commentList.innerHTML = commentsSnap.docs.map(doc => {
-      const c = doc.data();
-      return `<div class="comment-item"><div class="comment-name">${escapeHtml(c.userName)}</div><div>${escapeHtml(c.text)}</div><div style="font-size:11px;">${new Date(c.createdAt?.toDate()).toLocaleString()}</div></div>`;
-    }).join("");
-  }
+  const commentsRef = ref(db, `comments/${storyId}`);
+  const unsubscribe = onValue(commentsRef, (snapshot) => {
+    const data = snapshot.val();
+    const comments = data ? Object.entries(data).map(([id, value]) => ({ id, ...value })) : [];
+    comments.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+    const commentList = document.getElementById("commentList");
+    if (commentList) {
+      commentList.innerHTML = comments.map(c => `
+        <div class="comment-item">
+          <div class="comment-name">${escapeHtml(c.userName)}</div>
+          <div>${escapeHtml(c.text)}</div>
+          <div style="font-size:11px;">${new Date(c.createdAt).toLocaleString()}</div>
+        </div>
+      `).join("");
+    }
+    unsubscribe();
+  });
 }
 
 async function postComment(storyId) {
   if (!currentUserData) { showNotification("Đăng nhập để bình luận", true); return; }
   const text = document.getElementById("commentText")?.value;
   if (!text) return;
-  await addDoc(collection(db, "comments"), { storyId, text, userId: currentUserData.uid, userName: currentUserData.displayName, createdAt: new Date() });
+  const commentsRef = ref(db, `comments/${storyId}`);
+  const newCommentRef = push(commentsRef);
+  await set(newCommentRef, {
+    text: text,
+    userId: currentUserData.uid,
+    userName: currentUserData.displayName,
+    createdAt: Date.now()
+  });
   document.getElementById("commentText").value = "";
   loadComments(storyId);
   showNotification("Đã gửi bình luận");
@@ -1432,6 +1448,7 @@ async function initApp() {
 
 // ==================== EVENT LISTENERS ====================
 document.addEventListener("DOMContentLoaded", () => {
+  console.log("🚀 DOM ready");
   document.getElementById("continueBtn")?.addEventListener("click", () => {
     document.getElementById("warningOverlay").style.display = "none";
     document.getElementById("loginPage").style.display = "flex";
