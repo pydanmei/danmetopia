@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>🌸 DANMETOPIA - Đọc truyện tranh online 🌸</title>
+<title>DANMETOPIA - Đọc truyện tranh online</title>
 <meta name="theme-color" content="#FF69B4">
 
 <!-- EmailJS -->
@@ -260,7 +260,7 @@ body {
   margin-bottom: 15px;
   color: #FF69B4;
 }
-.upload-panel input, .upload-panel textarea {
+.upload-panel input, .upload-panel textarea, .upload-panel select {
   width: 100%;
   padding: 12px;
   margin-bottom: 12px;
@@ -375,7 +375,7 @@ body {
   color: #FF69B4;
   margin-bottom: 20px;
 }
-.modal-content input, .modal-content textarea {
+.modal-content input, .modal-content textarea, .modal-content select {
   width: 100%;
   padding: 12px;
   margin-bottom: 12px;
@@ -558,25 +558,21 @@ body {
 <div id="loginPage">
   <div class="login-box">
     <h2>🌸 DANMETOPIA 🌸</h2>
-    
     <button id="guestBtn" class="btn-pink">🎭 BỎ QUA (Guest)</button>
     <hr>
     <p>📧 Đăng nhập bằng email</p>
     <input type="email" id="loginEmail" placeholder="Email">
     <button id="checkEmailBtn" class="btn-pink">TIẾP TỤC</button>
-    
     <div id="otpGroup" class="otp-group">
       <input type="text" id="otpCode" placeholder="Nhập mã OTP 6 số" maxlength="6">
       <button id="verifyOtpBtn" class="btn-pink">XÁC NHẬN OTP</button>
       <div class="toggle-link" id="backToEmailBtn">← Quay lại</div>
     </div>
-    
     <div id="passwordGroup" class="password-group">
       <input type="password" id="loginPassword" placeholder="Mật khẩu">
       <button id="passwordLoginBtn" class="btn-pink">ĐĂNG NHẬP</button>
       <div class="toggle-link" id="backToEmailBtn2">← Quay lại</div>
     </div>
-    
     <p id="loginMsg" style="color:#ff6666; margin-top:15px;"></p>
   </div>
 </div>
@@ -1012,13 +1008,16 @@ async function createStory(data, coverFile) {
   const storiesRef = ref(db, 'stories');
   const newStoryRef = push(storiesRef);
   
+  // Lấy status từ data, mặc định là "Đang tiến hành"
+  const storyStatus = data.status || "Đang tiến hành";
+  
   const storyData = {
     title: data.title,
     otherName: data.otherName || "",
     author: data.author || "",
     genres: data.genres || "",
     tags: data.tags || "",
-    status: data.status || "Đang cập nhật",
+    status: storyStatus,
     desc: data.desc || "",
     cover: coverUrl || "",
     ownerUid: data.ownerUid || currentUserData?.uid || "",
@@ -1027,9 +1026,8 @@ async function createStory(data, coverFile) {
     groupId: data.groupId || null,
     likes: 0,
     views: 0,
-    storyStatus: "pending",
     approved: false,
-    createdAt: Date.now(),
+    createdAt: data.createdAt || Date.now(),
     chapters: []
   };
   
@@ -1072,7 +1070,7 @@ async function approveStory(storyId) {
     showNotification("Bạn không có quyền duyệt truyện", true);
     return;
   }
-  await update(ref(db, `stories/${storyId}`), { approved: true, storyStatus: "approved" }); 
+  await update(ref(db, `stories/${storyId}`), { approved: true }); 
   showNotification("Đã duyệt truyện");
   console.log("✅ Approved story:", storyId);
 }
@@ -1082,7 +1080,7 @@ async function rejectStory(storyId) {
     showNotification("Bạn không có quyền từ chối truyện", true);
     return;
   }
-  await update(ref(db, `stories/${storyId}`), { approved: false, storyStatus: "rejected" }); 
+  await update(ref(db, `stories/${storyId}`), { approved: false }); 
   showNotification("Đã từ chối truyện");
   console.log("❌ Rejected story:", storyId);
 }
@@ -1194,7 +1192,11 @@ function renderMangaGrid(stories) {
         <div class="manga-title">${escapeHtml(story.title)}</div>
         <div class="manga-meta">📚 ${escapeHtml(story.groupName) || "Cá nhân"}</div>
         <div class="manga-meta">❤️ ${story.likes || 0} | 👁 ${story.views || 0}</div>
-        ${story.status === "pending" ? '<div class="manga-meta" style="color:#FF69B4;">⏳ Chờ duyệt</div>' : ''}
+        ${story.approved === false ? '<div class="manga-meta" style="color:#FFCC00;">⏳ Chờ duyệt</div>' : ''}
+        <div class="manga-meta">${
+          story.status === "Đã hoàn thành" ? "✅ Hoàn thành" : 
+          story.status === "Tạm ngưng" ? "⏸ Tạm ngưng" : "📖 Đang ra"
+        }</div>
       </div>
     </div>
   `).join("");
@@ -1217,8 +1219,12 @@ window.openStoryDetail = async (storyId) => {
         <p><span class="story-detail-label">✍️ Tác giả:</span> ${escapeHtml(story.author) || "Chưa rõ"}</p>
         <p><span class="story-detail-label">🏷️ Thể loại:</span> ${escapeHtml(story.genres) || "Chưa cập nhật"}</p>
         <p><span class="story-detail-label">📚 Nhóm dịch:</span> ${escapeHtml(story.groupName) || "Cá nhân"}</p>
-        <p><span class="story-detail-label">📌 Tình trạng:</span> ${escapeHtml(story.status) || "Đang cập nhật"}</p>
+        <p><span class="story-detail-label">📌 Tình trạng:</span> ${
+          story.status === "Đã hoàn thành" ? "✅ " : 
+          story.status === "Tạm ngưng" ? "⏸ " : "📖 "
+        }${escapeHtml(story.status) || "Đang tiến hành"}</p>
         <p><span class="story-detail-label">📖 Số chương:</span> ${chapters.length}</p>
+        <p><span class="story-detail-label">🏷️ Tags:</span> ${escapeHtml(story.tags) || "Chưa có"}</p>
         <p><span class="story-detail-label">📝 Mô tả:</span><br>${escapeHtml(story.desc) || "Chưa có mô tả"}</p>
         <p><span class="story-detail-label">❤️ Lượt thích:</span> ${story.likes || 0}</p>
         <p><span class="story-detail-label">👁 Lượt xem:</span> ${story.views || 0}</p>
@@ -1236,7 +1242,7 @@ window.openStoryDetail = async (storyId) => {
   let actionsHtml = `<button onclick="likeStoryAndRefresh('${storyId}')">❤️ Thích</button>`;
   if (currentUserData && currentUserData.role !== "guest") actionsHtml += `<button onclick="toggleFollow('${storyId}')">${isFollowing(storyId) ? '⭐ Đã theo dõi' : '➕ Theo dõi'}</button>`;
   if (isEditable) actionsHtml += `<button onclick="openEditStory('${storyId}')">✏️ Chỉnh sửa truyện</button><button onclick="openAddChapter('${storyId}')">📖 Thêm chapter mới</button>`;
-  if (isMod && story.status === "pending") actionsHtml += `<button onclick="approveStoryAction('${storyId}')">✅ Duyệt truyện</button><button onclick="rejectStoryAction('${storyId}')">❌ Từ chối</button>`;
+  if (isMod && story.approved === false) actionsHtml += `<button onclick="approveStoryAction('${storyId}')">✅ Duyệt truyện</button><button onclick="rejectStoryAction('${storyId}')">❌ Từ chối</button>`;
   if (isAdmin(currentUserData)) actionsHtml += `<button onclick="deleteStoryAction('${storyId}')" style="background:#ff4444;">🗑 Xóa truyện</button>`;
   document.getElementById("storyActions").innerHTML = actionsHtml;
   document.getElementById("storyModal").style.display = "flex";
@@ -1255,7 +1261,12 @@ window.openEditStory = async (storyId) => {
     <input id="editOtherName" value="${escapeHtml(story.otherName || '')}" placeholder="Tên khác">
     <input id="editAuthor" value="${escapeHtml(story.author || '')}" placeholder="Tác giả">
     <input id="editGenres" value="${escapeHtml(story.genres || '')}" placeholder="Thể loại">
-    <input id="editStatus" value="${escapeHtml(story.status || 'Đang cập nhật')}" placeholder="Tình trạng">
+    <input id="editTags" value="${escapeHtml(story.tags || '')}" placeholder="Tags">
+    <select id="editStatus">
+      <option value="Đang tiến hành" ${story.status === "Đang tiến hành" ? "selected" : ""}>📖 Đang tiến hành</option>
+      <option value="Đã hoàn thành" ${story.status === "Đã hoàn thành" ? "selected" : ""}>✅ Đã hoàn thành</option>
+      <option value="Tạm ngưng" ${story.status === "Tạm ngưng" ? "selected" : ""}>⏸ Tạm ngưng</option>
+    </select>
     <input id="editCover" value="${escapeHtml(story.cover || '')}" placeholder="Link ảnh bìa">
     <textarea id="editDesc" placeholder="Mô tả">${escapeHtml(story.desc || '')}</textarea>
     <button onclick="saveEditStory('${storyId}')">💾 Lưu</button>
@@ -1269,6 +1280,7 @@ window.saveEditStory = async (storyId) => {
     otherName: document.getElementById("editOtherName").value,
     author: document.getElementById("editAuthor").value,
     genres: document.getElementById("editGenres").value,
+    tags: document.getElementById("editTags").value,
     status: document.getElementById("editStatus").value,
     cover: document.getElementById("editCover").value,
     desc: document.getElementById("editDesc").value
@@ -1399,9 +1411,13 @@ function renderUploadPanel() {
       <input id="uploadTitle" placeholder="Tên truyện *">
       <input id="uploadOtherName" placeholder="Tên khác">
       <input id="uploadAuthor" placeholder="Tác giả">
-      <input id="uploadGenres" placeholder="Thể loại">
-      <input id="uploadTags" placeholder="Tags">
-      <input id="uploadStatus" placeholder="Tình trạng">
+      <input id="uploadGenres" placeholder="Thể loại (cách nhau bằng dấu phẩy)">
+      <input id="uploadTags" placeholder="Tags (cách nhau bằng dấu phẩy)">
+      <select id="uploadStatus">
+        <option value="Đang tiến hành">📖 Đang tiến hành</option>
+        <option value="Đã hoàn thành">✅ Đã hoàn thành</option>
+        <option value="Tạm ngưng">⏸ Tạm ngưng</option>
+      </select>
       <input type="file" id="uploadCoverFile" accept="image/*">
       <input id="uploadCoverUrl" placeholder="Hoặc link ảnh bìa">
       <textarea id="uploadDesc" placeholder="Mô tả truyện"></textarea>
@@ -1409,11 +1425,13 @@ function renderUploadPanel() {
       <button class="btn-pink" id="submitUploadBtn">📤 ĐĂNG TRUYỆN</button>
     </div>
   `;
+  
   document.getElementById("uploadCoverFile")?.addEventListener("change", (e) => {
     const file = e.target.files[0];
     if (file) { const reader = new FileReader(); reader.onload = (ev) => document.getElementById("coverPreview").innerHTML = `<img class="cover-preview" src="${ev.target.result}">`; reader.readAsDataURL(file); }
     else document.getElementById("coverPreview").innerHTML = "";
   });
+  
   document.getElementById("submitUploadBtn")?.addEventListener("click", async () => {
     console.log("🔘 Upload button clicked");
     
@@ -1450,7 +1468,7 @@ function renderUploadPanel() {
         author: document.getElementById("uploadAuthor")?.value || "",
         genres: document.getElementById("uploadGenres")?.value || "",
         tags: document.getElementById("uploadTags")?.value || "",
-        status: document.getElementById("uploadStatus")?.value || "Đang cập nhật",
+        status: document.getElementById("uploadStatus")?.value || "Đang tiến hành",
         desc: document.getElementById("uploadDesc")?.value || "",
         cover: coverUrl,
         ownerUid: currentUserData.uid,
@@ -1468,7 +1486,7 @@ function renderUploadPanel() {
       document.getElementById("uploadAuthor").value = "";
       document.getElementById("uploadGenres").value = "";
       document.getElementById("uploadTags").value = "";
-      document.getElementById("uploadStatus").value = "";
+      document.getElementById("uploadStatus").value = "Đang tiến hành";
       document.getElementById("uploadCoverUrl").value = "";
       document.getElementById("uploadDesc").value = "";
       document.getElementById("uploadCoverFile").value = "";
