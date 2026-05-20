@@ -2,13 +2,8 @@
 <html lang="vi">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>DANMETOPIA - Đọc truyện tranh online</title>
-<meta name="theme-color" content="#FF69B4">
-
-<!-- EmailJS -->
-<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
-
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DANMETOPIA - Đăng nhập</title>
 <style>
 * {
   margin: 0;
@@ -16,102 +11,26 @@
   box-sizing: border-box;
 }
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+  font-family: Arial, sans-serif;
   background: #0f0f0f;
-  color: #e0e0e0;
-}
-.loading-spinner {
-  display: inline-block;
-  width: 40px;
-  height: 40px;
-  border: 3px solid #333;
-  border-top-color: #FF69B4;
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-}
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-.spinner-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.7);
+  color: white;
+  min-height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 20000;
-}
-#warningOverlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.98);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 10000;
-}
-.warning-box {
-  background: linear-gradient(135deg, #1a1a2e, #16213e);
-  max-width: 450px;
-  width: 90%;
-  padding: 35px 25px;
-  border-radius: 24px;
-  text-align: center;
-  border: 2px solid #FF69B4;
-  box-shadow: 0 0 40px rgba(255,105,180,0.3);
-}
-.warning-box h2 {
-  color: #FF69B4;
-  font-size: 28px;
-  margin-bottom: 20px;
-}
-.warning-box p {
-  color: #ccc;
-  line-height: 1.6;
-  margin-bottom: 25px;
-}
-.warning-box button {
-  padding: 12px 28px;
-  margin: 0 8px;
-  border: none;
-  border-radius: 40px;
-  font-weight: bold;
-  font-size: 16px;
-  cursor: pointer;
-  transition: transform 0.2s;
-}
-.warning-box button:hover {
-  transform: scale(1.03);
-}
-.btn-pink { background: #FF69B4; color: black; }
-.btn-red { background: #ff4444; color: white; }
-#loginPage {
-  position: fixed;
-  inset: 0;
-  display: none;
-  justify-content: center;
-  align-items: center;
-  background: linear-gradient(135deg, #0f0f0f, #1a1a2e);
-  z-index: 9999;
 }
 .login-box {
   background: #1c1c1c;
   width: 380px;
-  max-width: 90%;
   padding: 35px 25px;
   border-radius: 24px;
   text-align: center;
   border: 1px solid #FF69B4;
-  box-shadow: 0 10px 40px rgba(0,0,0,0.5);
 }
 .login-box h2 {
   color: #FF69B4;
-  font-size: 32px;
-  margin-bottom: 8px;
-}
-.login-box p {
-  color: #aaa;
-  margin-bottom: 25px;
+  font-size: 28px;
+  margin-bottom: 20px;
 }
 .login-box input {
   width: 100%;
@@ -121,10 +40,6 @@ body {
   border-radius: 12px;
   background: #2a2a2a;
   color: white;
-  font-size: 14px;
-}
-.login-box input:focus {
-  outline: 1px solid #FF69B4;
 }
 .login-box button {
   width: 100%;
@@ -135,566 +50,58 @@ body {
   background: #FF69B4;
   color: black;
   font-weight: bold;
-  font-size: 16px;
   cursor: pointer;
-  transition: 0.2s;
-}
-.login-box button:hover {
-  background: #FF1493;
-  color: white;
-}
-#loginMsg {
-  color: #ff6666;
-  margin-top: 15px;
-  font-size: 13px;
 }
 .otp-group {
   display: none;
   margin-top: 15px;
-  animation: fadeIn 0.3s ease;
 }
-.otp-resend {
-  margin-top: 10px;
-  font-size: 12px;
+.msg {
+  color: #ff6666;
+  margin-top: 15px;
+  font-size: 13px;
 }
-.otp-resend button {
-  background: transparent;
-  color: #FF69B4;
-  padding: 5px;
-  margin-top: 5px;
+.success {
+  color: #00dc64;
 }
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(-10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-#nicknamePage {
-  display: none;
-  position: fixed;
-  inset: 0;
-  justify-content: center;
-  align-items: center;
-  background: linear-gradient(135deg, #0f0f0f, #1a1a2e);
-  z-index: 10001;
-}
-#mainContainer {
-  display: none;
-  min-height: 100vh;
-}
-.topbar {
-  background: #FF69B4;
-  color: black;
-  padding: 12px 20px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-.logo {
-  font-size: 22px;
-  font-weight: bold;
-  cursor: pointer;
-}
-.user-area {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-  flex-wrap: wrap;
-}
-.user-area button, .nav-btn {
-  background: rgba(0,0,0,0.2);
-  border: none;
-  padding: 6px 14px;
-  border-radius: 30px;
-  cursor: pointer;
-  font-weight: bold;
-  color: black;
-  transition: background 0.2s;
-}
-.user-area button:hover, .nav-btn:hover {
-  background: rgba(0,0,0,0.4);
-}
-.tabs {
-  display: flex;
-  gap: 10px;
-  padding: 15px 20px 0;
-  flex-wrap: wrap;
-}
-.tab-btn {
-  background: #2a2a2a;
-  border: none;
-  padding: 8px 20px;
-  border-radius: 30px;
-  cursor: pointer;
-  color: white;
-  font-weight: bold;
-  transition: 0.2s;
-}
-.tab-btn.active {
-  background: #FF69B4;
-  color: black;
-}
-.upload-panel {
-  background: #1c1c1c;
-  margin: 15px 20px;
-  padding: 20px;
-  border-radius: 20px;
-  border: 1px solid #FF69B4;
-}
-.upload-panel h3 {
-  margin-bottom: 15px;
-  color: #FF69B4;
-}
-.upload-panel input, .upload-panel textarea, .upload-panel select {
-  width: 100%;
-  padding: 12px;
-  margin-bottom: 12px;
-  background: #2a2a2a;
-  border: none;
-  border-radius: 12px;
-  color: white;
-  font-size: 14px;
-}
-.upload-panel textarea {
-  height: 100px;
-  resize: vertical;
-}
-.cover-preview {
-  width: 120px;
-  height: 180px;
-  object-fit: cover;
-  border-radius: 8px;
-  margin-top: 10px;
-  border: 2px solid #FF69B4;
-}
-.manga-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 20px;
-  padding: 20px;
-}
-.manga-card {
-  background: #1c1c1c;
-  border-radius: 16px;
-  overflow: hidden;
-  cursor: pointer;
-  transition: transform 0.2s;
-  border: 1px solid #333;
-}
-.manga-card:hover {
-  transform: translateY(-5px);
-  border-color: #FF69B4;
-}
-.manga-cover {
-  width: 100%;
-  aspect-ratio: 2/3;
-  object-fit: cover;
-  background: #2a2a2a;
-}
-.manga-info {
-  padding: 12px;
-}
-.manga-title {
-  font-weight: bold;
-  font-size: 15px;
-  margin-bottom: 5px;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-.manga-meta {
-  font-size: 12px;
-  color: #aaa;
-  margin-top: 5px;
-}
-.search-bar {
-  padding: 15px 20px;
-}
-.search-bar input {
-  width: 100%;
-  padding: 12px 20px;
-  background: #1c1c1c;
-  border: 1px solid #333;
-  border-radius: 40px;
-  color: white;
-  font-size: 16px;
-}
-.search-bar input:focus {
-  outline: 1px solid #FF69B4;
-  border-color: #FF69B4;
-}
-.filter-row {
-  display: flex;
-  gap: 10px;
-  padding: 0 20px 15px;
-  flex-wrap: wrap;
-}
-.filter-row select {
-  padding: 8px 15px;
-  background: #1c1c1c;
-  border: 1px solid #333;
-  border-radius: 30px;
-  color: white;
-}
-.modal {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.9);
-  justify-content: center;
-  align-items: center;
-  z-index: 10002;
-}
-.modal-content {
-  background: #1c1c1c;
-  width: 90%;
-  max-width: 800px;
-  max-height: 90vh;
-  overflow-y: auto;
-  padding: 25px;
-  border-radius: 24px;
-  position: relative;
-  border: 1px solid #FF69B4;
-}
-.modal-content h2 {
-  color: #FF69B4;
-  margin-bottom: 20px;
-}
-.modal-content h3 {
-  margin: 20px 0 10px;
-  color: #FF69B4;
-}
-.modal-content input, .modal-content textarea, .modal-content select {
-  width: 100%;
-  padding: 12px;
-  margin-bottom: 12px;
-  background: #2a2a2a;
-  border: none;
-  border-radius: 12px;
-  color: white;
-}
-.modal-content textarea {
-  height: 100px;
-  resize: vertical;
-}
-.modal-content button {
-  padding: 10px 20px;
-  background: #FF69B4;
-  border: none;
-  border-radius: 30px;
-  font-weight: bold;
-  cursor: pointer;
-  color: black;
-  margin-right: 10px;
-  margin-bottom: 10px;
-}
-.modal-content button:hover {
-  background: #FF1493;
-  color: white;
-}
-.close-modal {
-  position: absolute;
-  top: 15px;
-  right: 20px;
-  font-size: 28px;
-  cursor: pointer;
-  color: #aaa;
-}
-.close-modal:hover {
-  color: #FF69B4;
-}
-.story-detail-grid {
-  display: grid;
-  grid-template-columns: 200px 1fr;
-  gap: 20px;
-  margin-bottom: 20px;
-}
-.story-detail-cover {
-  width: 100%;
-  border-radius: 12px;
-}
-.story-detail-info p {
-  margin-bottom: 10px;
-  line-height: 1.6;
-}
-.story-detail-label {
-  font-weight: bold;
-  color: #FF69B4;
-  min-width: 100px;
-  display: inline-block;
-}
-.chapter-list {
-  margin-top: 20px;
-  max-height: 400px;
-  overflow-y: auto;
-}
-.chapter-item {
-  background: #2a2a2a;
-  padding: 10px 15px;
-  margin-bottom: 8px;
-  border-radius: 8px;
-  cursor: pointer;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-.chapter-item:hover {
-  background: #FF69B4;
-  color: black;
-}
-.notification {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  background: #FF69B4;
-  color: black;
-  padding: 12px 20px;
-  border-radius: 40px;
-  font-weight: bold;
-  z-index: 1000;
-  animation: slideIn 0.3s ease;
-}
-@keyframes slideIn {
-  from { transform: translateX(100%); opacity: 0; }
-  to { transform: translateX(0); opacity: 1; }
-}
-.reader-page {
-  max-width: 900px;
-  margin: 0 auto;
-  padding: 20px;
-}
-.chapter-nav {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 20px;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-.chapter-nav button {
-  padding: 10px 20px;
-  background: #FF69B4;
-  border: none;
-  border-radius: 30px;
-  font-weight: bold;
-  cursor: pointer;
-  color: black;
-}
-.reader-image {
-  width: 100%;
-  margin: 10px 0;
-  border-radius: 12px;
-}
-.comment-section {
-  margin-top: 30px;
-}
-.comment-item {
-  background: #1c1c1c;
-  padding: 12px;
-  border-radius: 12px;
-  margin-bottom: 10px;
-}
-.comment-name {
-  font-weight: bold;
-  color: #FF69B4;
-  margin-bottom: 5px;
-}
-.admin-link {
-  background: #FF1493;
-  color: white !important;
-}
-.profile-field {
-  margin-bottom: 15px;
-}
-.profile-field label {
-  display: block;
-  margin-bottom: 5px;
-  color: #FF69B4;
-  font-weight: bold;
-}
-.profile-field input {
-  width: 100%;
-  padding: 10px;
-  background: #2a2a2a;
-  border: none;
-  border-radius: 8px;
-  color: white;
-}
-@media (max-width: 600px) {
-  .manga-grid {
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-    gap: 12px;
-  }
-  .topbar {
-    flex-direction: column;
-    text-align: center;
-  }
-  .story-detail-grid {
-    grid-template-columns: 1fr;
-  }
+hr {
+  margin: 20px 0;
+  border-color: #333;
 }
 </style>
 </head>
 <body>
 
-<div id="warningOverlay">
-  <div class="warning-box">
-    <h2>⚠️ CẢNH BÁO 18+ ⚠️</h2>
-    <p>Trang web này có thể chứa nội dung dành cho người trưởng thành (18+).<br><br>
-    Bằng việc tiếp tục, bạn xác nhận rằng bạn đủ 18 tuổi trở lên và việc xem nội dung này hợp pháp tại khu vực của bạn.</p>
-    <button class="btn-pink" id="continueBtn">TIẾP TỤC</button>
-    <button class="btn-red" id="exitBtn">THOÁT</button>
+<div class="login-box">
+  <h2>🌸 DANMETOPIA 🌸</h2>
+  
+  <input type="password" id="mainPassword" placeholder="Mật khẩu chính *">
+  <button id="guestBtn">🔓 VÀO WEB (KHÁCH)</button>
+  
+  <hr>
+  
+  <p>📧 Đăng nhập bằng email</p>
+  <input type="email" id="email" placeholder="Email">
+  <button id="sendOtpBtn">📩 Gửi mã OTP</button>
+  
+  <div id="otpGroup" class="otp-group">
+    <input type="text" id="otpCode" placeholder="Nhập mã 6 số" maxlength="6">
+    <button id="verifyBtn">🔓 Xác nhận & Đăng nhập</button>
+    <button id="resendBtn" style="background:#555;">🔄 Gửi lại</button>
   </div>
+  
+  <div id="msg" class="msg"></div>
 </div>
 
-<!-- LOGIN PAGE -->
-<div id="loginPage">
-  <div class="login-box">
-    <h2>🌸 DANMETOPIA 🌸</h2>
-    <p>Nhập mật khẩu chính để truy cập</p>
-    <input id="mainPassword" type="password" placeholder="Mật khẩu chính *">
-    <button id="enterMainBtn" class="btn-pink">🔓 TRUY CẬP</button>
-    <hr style="margin: 20px 0; border-color: #333;">
-    <p style="font-size:13px;">📧 Đăng nhập bằng email để có thêm quyền lợi</p>
-    <input id="loginEmail" type="email" placeholder="Email">
-    <button id="sendOtpBtn" class="btn-pink" style="background:#555;">📩 Gửi mã OTP</button>
-    <div id="otpGroup" class="otp-group">
-      <input id="otpCode" type="text" placeholder="Nhập mã 6 số" maxlength="6">
-      <button id="verifyOtpBtn" class="btn-pink">🔓 Xác nhận & Đăng nhập</button>
-      <div class="otp-resend">
-        <button id="resendOtpBtn" style="background:transparent; color:#FF69B4;">🔄 Gửi lại mã</button>
-      </div>
-    </div>
-    <p id="loginMsg" style="color:#ff6666; margin-top:15px;"></p>
-  </div>
-</div>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script>
+// EmailJS Config
+const EMAILJS_PUBLIC_KEY = "fPq8fpw1OqzOtj-lk";
+const EMAILJS_SERVICE_ID = "service_8bxh5mm";
+const EMAILJS_TEMPLATE_ID = "template_8ahbuhu";
 
-<!-- NICKNAME PAGE -->
-<div id="nicknamePage">
-  <div class="login-box" style="max-width:380px;">
-    <h2>🎉 CHÀO MỪNG BẠN ĐẾN VỚI DANMETOPIA!</h2>
-    <p>Vui lòng tạo nickname (sẽ hiển thị công khai)</p>
-    <input id="nicknameInput" type="text" placeholder="Nickname của bạn">
-    <button id="saveNicknameBtn">HOÀN TẤT</button>
-    <p id="nicknameMsg" style="color:#ff6666; margin-top:15px;"></p>
-  </div>
-</div>
-
-<!-- MAIN CONTAINER -->
-<div id="mainContainer">
-  <div class="topbar">
-    <div class="logo" onclick="showHome()">🌸 DANMETOPIA</div>
-    <div class="user-area">
-      <span id="userDisplay">👤 Đang tải...</span>
-      <button id="profileBtn" style="display:none">👤 Thông tin</button>
-      <a href="admin.html" id="adminLink" style="display:none" class="nav-btn admin-link">👑 Admin</a>
-      <button id="logoutBtn" style="display:none">🚪 Đăng xuất</button>
-      <button id="createGroupBtn" style="display:none" class="nav-btn">➕ Tạo nhóm</button>
-    </div>
-  </div>
-  <div class="search-bar">
-    <input type="text" id="searchInput" placeholder="🔍 Tìm kiếm truyện...">
-  </div>
-  <div class="filter-row">
-    <select id="genreFilter">
-      <option value="">📚 Tất cả thể loại</option>
-      <option>Hành động</option><option>Lãng mạn</option><option>Hài hước</option>
-      <option>Kinh dị</option><option>Fantasy</option><option>Đam mỹ</option>
-      <option>Học đường</option><option>Viễn tưởng</option><option>Trinh thám</option>
-    </select>
-    <select id="sortFilter">
-      <option value="likes">🔥 Hot nhất</option>
-      <option value="newest">📅 Mới nhất</option>
-      <option value="views">👁 Xem nhiều nhất</option>
-    </select>
-  </div>
-  <div class="tabs">
-    <button class="tab-btn active" data-tab="all">📚 Tất cả truyện</button>
-    <button class="tab-btn" data-tab="recommend">🎯 Gợi ý cho bạn</button>
-    <button class="tab-btn" data-tab="follows">⭐ Truyện theo dõi</button>
-    <button class="tab-btn" data-tab="my">📝 Truyện của nhóm</button>
-  </div>
-  <div id="uploadPanel"></div>
-  <div class="manga-grid" id="mangaGrid">
-    <div style="text-align:center; padding:50px;">
-      <div class="loading-spinner"></div>
-      <p style="margin-top:15px;">Đang tải truyện...</p>
-    </div>
-  </div>
-</div>
-
-<!-- MODALS -->
-<div id="groupModal" class="modal">
-  <div class="modal-content" style="max-width:400px;">
-    <span class="close-modal" onclick="closeModal('groupModal')">&times;</span>
-    <h3>📚 TẠO NHÓM DỊCH</h3>
-    <input type="text" id="groupNameInput" placeholder="Tên nhóm">
-    <textarea id="groupDescInput" placeholder="Mô tả nhóm (không bắt buộc)" rows="3"></textarea>
-    <button id="confirmGroupBtn">TẠO NHÓM</button>
-  </div>
-</div>
-<div id="storyModal" class="modal">
-  <div class="modal-content">
-    <span class="close-modal" onclick="closeModal('storyModal')">&times;</span>
-    <div id="storyDetailContent"></div>
-    <div id="storyChapters"></div>
-    <div id="storyActions" style="margin-top:20px;"></div>
-  </div>
-</div>
-<div id="editStoryModal" class="modal">
-  <div class="modal-content" style="max-width:600px;">
-    <span class="close-modal" onclick="closeModal('editStoryModal')">&times;</span>
-    <h2>📝 CHỈNH SỬA TRUYỆN</h2>
-    <div id="editStoryContent"></div>
-  </div>
-</div>
-<div id="addChapterModal" class="modal">
-  <div class="modal-content" style="max-width:600px;">
-    <span class="close-modal" onclick="closeModal('addChapterModal')">&times;</span>
-    <h2>📖 THÊM CHAPTER MỚI</h2>
-    <div id="addChapterContent"></div>
-  </div>
-</div>
-<div id="readerModal" class="modal">
-  <div class="modal-content" style="max-width:95%; max-height:90vh; overflow-y:auto;">
-    <span class="close-modal" onclick="closeReaderModal()">&times;</span>
-    <div id="readerContent"></div>
-  </div>
-</div>
-<div id="profileModal" class="modal">
-  <div class="modal-content" style="max-width:400px;">
-    <span class="close-modal" onclick="closeModal('profileModal')">&times;</span>
-    <h2>👤 THÔNG TIN CÁ NHÂN</h2>
-    <div id="profileContent"></div>
-  </div>
-</div>
-
-<script type="module">
-// Khởi tạo EmailJS
-if (typeof emailjs !== 'undefined') {
-  emailjs.init("fPq8fpw1OqzOtj-lk");
-  console.log("✅ EmailJS initialized");
-} else {
-  console.error("❌ EmailJS not loaded");
-}
-
-// ==================== FIREBASE IMPORTS ====================
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import {
-  getAuth, signInAnonymously, updateProfile, onAuthStateChanged, signOut
-} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-import {
-  getDatabase, ref, set, get, child, push, update, remove,
-  onValue, off
-} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
-import {
-  getStorage, ref as storageRef, uploadBytes, getDownloadURL
-} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
-
-const firebaseConfig = {
+// Firebase Config
+const FIREBASE_CONFIG = {
   apiKey: "AIzaSyCDQk9DlMNKwn_508fDMI_3IB_dgpgHujA",
   authDomain: "danmetopia.firebaseapp.com",
   projectId: "danmetopia",
@@ -704,906 +111,221 @@ const firebaseConfig = {
   appId: "1:178240377870:web:d094b222ebabadccc5585f"
 };
 
-const app = initializeApp(firebaseConfig);
+// Khởi tạo Firebase
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { getAuth, signInAnonymously, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { getDatabase, ref, set, get, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+const app = initializeApp(FIREBASE_CONFIG);
 const auth = getAuth(app);
 const db = getDatabase(app);
-const storage = getStorage(app);
 
-// ==================== CONSTANTS ====================
-const MAIN_PASSWORD = "danmei";
-const ADMIN_EMAILS = ["pydanmeii@gmail.com", "pepyl4298@gmail.com", "maihuong4298@gmail.com"];
+// EmailJS init
+emailjs.init(EMAILJS_PUBLIC_KEY);
 
-let currentUserData = null;
-let allStories = [];
-let currentTab = "all";
-let userFollows = {};
-let renderTimeout = null;
+// DOM elements
+const mainPassword = document.getElementById("mainPassword");
+const guestBtn = document.getElementById("guestBtn");
+const emailInput = document.getElementById("email");
+const sendOtpBtn = document.getElementById("sendOtpBtn");
+const otpGroup = document.getElementById("otpGroup");
+const otpCode = document.getElementById("otpCode");
+const verifyBtn = document.getElementById("verifyBtn");
+const resendBtn = document.getElementById("resendBtn");
+const msgDiv = document.getElementById("msg");
+
 let pendingEmail = null;
-let lastOtpSentTime = 0;
-let otpVerified = false;
+let lastOtpTime = 0;
 
-let storiesUnsubscribe = null;
-let chaptersUnsubscribe = null;
-let commentsUnsubscribe = null;
+const MAIN_PASSWORD = "danmei";
 
-// ==================== HELPER FUNCTIONS ====================
-function showNotification(msg, isError = false) {
-  const notif = document.createElement("div");
-  notif.className = "notification";
-  notif.style.background = isError ? "#ff4444" : "#FF69B4";
-  notif.style.color = "black";
-  notif.innerText = msg;
-  document.body.appendChild(notif);
-  setTimeout(() => notif.remove(), 3000);
+// Helper
+function showMessage(text, isError = true) {
+  msgDiv.innerHTML = text;
+  msgDiv.className = isError ? "msg" : "msg success";
+  setTimeout(() => { if (msgDiv.innerHTML === text) msgDiv.innerHTML = ""; }, 5000);
 }
 
-function showLoading(show) {
-  let spinner = document.getElementById("globalSpinner");
-  if (show) {
-    if (!spinner) {
-      spinner = document.createElement("div");
-      spinner.id = "globalSpinner";
-      spinner.className = "spinner-overlay";
-      spinner.innerHTML = '<div class="loading-spinner"></div>';
-      document.body.appendChild(spinner);
-    }
-    spinner.style.display = "flex";
-  } else {
-    if (spinner) spinner.style.display = "none";
-  }
-}
-
-function escapeHtml(str) {
-  if (!str) return "";
-  return str.replace(/[&<>]/g, m => m === "&" ? "&amp;" : m === "<" ? "&lt;" : "&gt;");
-}
-
-function scheduleRender() {
-  if (renderTimeout) clearTimeout(renderTimeout);
-  renderTimeout = setTimeout(() => renderCurrentTab(), 150);
-}
-
-function getGenres(str) {
-  return (str || "").split(",").map(s => s.trim()).filter(s => s);
-}
-
-function generateRandomGuestName() {
-  const randomNum = Math.floor(Math.random() * 10000);
-  return `Hủ nằm vùng ${randomNum}`;
-}
-
-// ==================== OTP FUNCTIONS ====================
+// Tạo OTP ngẫu nhiên
 function generateOTP() {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
-async function sendOTPEmail(email) {
+// Gửi OTP qua EmailJS
+async function sendOTP(email) {
   const now = Date.now();
-  if (now - lastOtpSentTime < 30000) {
-    const waitTime = Math.ceil((30000 - (now - lastOtpSentTime)) / 1000);
-    showNotification(`Vui lòng đợi ${waitTime} giây trước khi gửi lại`, true);
+  if (now - lastOtpTime < 30000) {
+    showMessage(`Vui lòng đợi ${Math.ceil((30000 - (now - lastOtpTime)) / 1000)} giây`, true);
     return false;
   }
   
   const otp = generateOTP();
-  const expires = Date.now() + 5 * 60 * 1000;
-  
-  await set(ref(db, `otp_requests/${email.replace(/\./g, "_")}`), {
-    code: otp,
-    expires: expires
-  });
+  const expires = now + 5 * 60 * 1000;
+  const emailKey = email.replace(/\./g, "_");
   
   try {
-    if (typeof emailjs === 'undefined') {
-      console.error("EmailJS not loaded!");
-      showNotification(`⚠️ EmailJS chưa sẵn sàng. Mã OTP demo: ${otp}`, true);
-      lastOtpSentTime = now;
-      return true;
-    }
+    // Lưu OTP vào database
+    await set(ref(db, `otp_requests/${emailKey}`), {
+      code: otp,
+      expires: expires
+    });
     
-    await emailjs.send(
-      "service_8bxh5mm",
-      "template_8ahbuhu",
-      { otp: otp, to_email: email }
-    );
+    // Gửi email
+    await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+      otp: otp,
+      to_email: email
+    });
     
-    lastOtpSentTime = now;
-    showNotification(`📩 Đã gửi mã OTP đến ${email}`, false);
+    lastOtpTime = now;
+    showMessage(`📩 Đã gửi mã OTP đến ${email}`, false);
     return true;
-  } catch (error) {
-    console.error("EmailJS error:", error);
-    showNotification(`❌ Gửi email thất bại. Mã OTP demo: ${otp}`, true);
-    lastOtpSentTime = now;
+  } catch (err) {
+    console.error("Send OTP error:", err);
+    showMessage(`Lỗi gửi OTP. Mã demo: ${otp}`, true);
     return true;
   }
 }
 
-async function verifyOTP(email, inputCode) {
-  console.log("🔍 verifyOTP called for:", email);
+// Xác thực OTP
+async function verifyOTP(email, code) {
+  const emailKey = email.replace(/\./g, "_");
+  const snapshot = await get(ref(db, `otp_requests/${emailKey}`));
+  const data = snapshot.val();
   
-  try {
-    const emailKey = email.replace(/\./g, "_");
-    const snap = await get(ref(db, `otp_requests/${emailKey}`));
-    const data = snap.val();
-    
-    console.log("📦 OTP data from DB:", data);
-    
-    if (!data) {
-      return { success: false, message: "Mã OTP không tồn tại. Vui lòng gửi lại mã." };
-    }
-    
-    if (Date.now() > data.expires) {
-      return { success: false, message: "Mã OTP đã hết hạn (5 phút). Vui lòng gửi lại." };
-    }
-    
-    if (data.code !== inputCode) {
-      return { success: false, message: `Sai mã OTP. Vui lòng thử lại.` };
-    }
-    
-    await remove(ref(db, `otp_requests/${emailKey}`));
-    console.log("✅ OTP verified and removed");
-    
-    return { success: true, message: "OK" };
-    
-  } catch (err) {
-    console.error("❌ verifyOTP error:", err);
-    return { success: false, message: "Lỗi xác thực OTP: " + err.message };
-  }
-}
-
-// ==================== USER FUNCTIONS ====================
-async function getUserData(uid) {
-  try {
-    const snapshot = await get(child(ref(db), `users/${uid}`));
-    return snapshot.exists() ? snapshot.val() : null;
-  } catch (err) {
-    console.error("getUserData error:", err);
-    return null;
-  }
-}
-
-async function getUserGroup(uid) {
-  const userData = await getUserData(uid);
-  if (userData?.privileges?.groupId) {
-    const snapshot = await get(child(ref(db), `groups/${userData.privileges.groupId}`));
-    return snapshot.exists() ? { id: userData.privileges.groupId, ...snapshot.val() } : null;
-  }
-  return null;
-}
-
-function isAdmin(userData) {
-  return userData?.role === "admin";
-}
-
-function isModerator(userData) {
-  return userData?.role === "user" && userData?.privileges?.moderator === true;
-}
-
-function hasGroup(userData) {
-  return userData?.role === "user" && !!userData?.privileges?.groupId;
-}
-
-function canModerate(userData) {
-  return isAdmin(userData) || isModerator(userData);
-}
-
-function canUpload(userData) {
-  return userData && (userData.role === "admin" || userData.role === "user");
-}
-
-async function getDisplayName(uid, email, userData) {
-  if (!userData) {
-    const data = await getUserData(uid);
-    userData = data;
-  }
-  if (!userData || userData.role === "guest") {
-    return generateRandomGuestName();
-  }
-  const nickname = userData?.nickname || email?.split("@")[0] || "Người dùng";
-  if (userData?.role === "admin") return `${nickname} (Admin)`;
-  if (userData?.role === "user" && userData?.privileges?.moderator) return `${nickname} (Quản lý)`;
-  if (userData?.role === "user" && userData?.privileges?.groupId) {
-    const group = await getUserGroup(uid);
-    return `${nickname} (${group?.groupName || "Nhóm dịch"})`;
-  }
-  return nickname;
-}
-
-async function loadUserData(uid, email) {
-  console.log("📦 loadUserData called for uid:", uid, "email:", email);
+  if (!data) return { success: false, message: "Mã OTP không tồn tại" };
+  if (Date.now() > data.expires) return { success: false, message: "Mã OTP đã hết hạn" };
+  if (data.code !== code) return { success: false, message: "Sai mã OTP" };
   
+  await remove(ref(db, `otp_requests/${emailKey}`));
+  return { success: true, message: "OK" };
+}
+
+// Login với Firebase Anonymous
+async function loginWithEmail(email) {
   try {
-    const userData = await getUserData(uid);
-    console.log("📦 User data from DB:", userData);
+    showMessage("Đang đăng nhập...", false);
     
-    const displayName = await getDisplayName(uid, email, userData);
-    console.log("📦 Display name generated:", displayName);
-    
-    const result = {
-      uid: uid,
-      email: email,
-      role: userData?.role || "user",
-      privileges: userData?.privileges || { moderator: false, groupId: null },
-      nickname: userData?.nickname,
-      displayName: displayName
-    };
-    
-    console.log("📦 Final userData object:", result);
-    return result;
-    
-  } catch (err) {
-    console.error("❌ loadUserData error:", err);
-    throw err;
-  }
-}
-
-async function updateNickname(uid, newNickname) {
-  const usersRef = ref(db, 'users');
-  const snapshot = await get(usersRef);
-  if (snapshot.exists()) {
-    const users = snapshot.val();
-    for (const key in users) {
-      if (users[key]?.nickname === newNickname && key !== uid) {
-        throw new Error("Nickname đã tồn tại");
-      }
-    }
-  }
-  await update(ref(db, `users/${uid}`), { nickname: newNickname });
-}
-
-async function createNewUser(uid, email, nickname) {
-  const isAdminEmail = ADMIN_EMAILS.includes(email);
-  await set(ref(db, `users/${uid}`), {
-    email: email,
-    nickname: nickname || email.split("@")[0],
-    role: isAdminEmail ? "admin" : "user",
-    privileges: { moderator: false, groupId: null },
-    follows: {}, history: [], genrePref: {}, strike: 0, bannedUntil: 0,
-    createdAt: Date.now()
-  });
-}
-
-// ==================== STORIES CRUD ====================
-function loadStoriesRealtime() {
-  if (storiesUnsubscribe) storiesUnsubscribe();
-  const storiesRef = ref(db, 'stories');
-  storiesUnsubscribe = onValue(storiesRef, (snapshot) => {
-    const data = snapshot.val();
-    allStories = data ? Object.entries(data).map(([id, value]) => ({ id, ...value })) : [];
-    scheduleRender();
-  });
-}
-
-async function createStory(data, coverFile) {
-  let coverUrl = data.cover;
-  if (coverFile) {
-    const coverRef = storageRef(storage, "covers/" + Date.now() + "_" + coverFile.name);
-    await uploadBytes(coverRef, coverFile);
-    coverUrl = await getDownloadURL(coverRef);
-  }
-  const storiesRef = ref(db, 'stories');
-  const newStoryRef = push(storiesRef);
-  await set(newStoryRef, { ...data, cover: coverUrl || "", id: newStoryRef.key, likes: 0, views: 0, status: "pending", approved: false, createdAt: Date.now(), chapters: [] });
-  return newStoryRef.key;
-}
-
-async function updateStoryData(storyId, data) {
-  await update(ref(db, `stories/${storyId}`), data);
-}
-
-async function deleteStory(storyId) {
-  if (!isAdmin(currentUserData)) return;
-  await remove(ref(db, `stories/${storyId}`));
-}
-
-async function likeStory(storyId) {
-  const storyRef = ref(db, `stories/${storyId}/likes`);
-  const snapshot = await get(storyRef);
-  await set(storyRef, (snapshot.val() || 0) + 1);
-}
-
-async function approveStory(storyId) {
-  if (!canModerate(currentUserData)) return;
-  await update(ref(db, `stories/${storyId}`), { approved: true, status: "approved" });
-  showNotification("Đã duyệt truyện");
-}
-
-async function rejectStory(storyId) {
-  if (!canModerate(currentUserData)) return;
-  await update(ref(db, `stories/${storyId}`), { approved: false, status: "rejected" });
-  showNotification("Đã từ chối truyện");
-}
-
-async function addChapter(storyId, title, pages, chapterNumber) {
-  const chaptersRef = ref(db, `chapters/${storyId}`);
-  const newChapterRef = push(chaptersRef);
-  await set(newChapterRef, { title, pages: pages.split('\n').filter(p => p.trim()), chapterNumber, createdAt: Date.now() });
-}
-
-async function getChapters(storyId) {
-  const snapshot = await get(ref(db, `chapters/${storyId}`));
-  const data = snapshot.val() || {};
-  const chapters = Object.entries(data).map(([id, value]) => ({ id, ...value }));
-  chapters.sort((a, b) => (a.chapterNumber || 0) - (b.chapterNumber || 0));
-  return chapters;
-}
-
-// ==================== FOLLOW SYSTEM ====================
-async function loadFollows() {
-  if (!currentUserData || currentUserData.role === "guest") return;
-  try {
-    const snapshot = await get(ref(db, `users/${currentUserData.uid}/follows`));
-    userFollows = snapshot.val() || {};
-  } catch (err) { userFollows = {}; }
-}
-
-async function followStory(storyId) {
-  if (!currentUserData || currentUserData.role === "guest") return false;
-  if (!userFollows[storyId]) {
-    userFollows[storyId] = true;
-    await set(ref(db, `users/${currentUserData.uid}/follows`), userFollows);
-    showNotification("✅ Đã theo dõi truyện");
-  }
-  return true;
-}
-
-async function unfollowStory(storyId) {
-  if (userFollows[storyId]) {
-    delete userFollows[storyId];
-    await set(ref(db, `users/${currentUserData.uid}/follows`), userFollows);
-    showNotification("Đã bỏ theo dõi");
-  }
-}
-
-function isFollowing(storyId) { return !!userFollows[storyId]; }
-
-// ==================== RECOMMENDATION ====================
-function getRecommendations() {
-  return allStories.filter(s => s.approved === true).slice(0, 12);
-}
-
-// ==================== RENDER FUNCTIONS ====================
-function renderCurrentTab() {
-  if (!document.getElementById("mangaGrid")) return;
-  let filtered = allStories.filter(s => s.approved === true);
-  const searchTerm = document.getElementById("searchInput")?.value.toLowerCase() || "";
-  if (searchTerm) filtered = filtered.filter(s => s.title?.toLowerCase().includes(searchTerm));
-  const genre = document.getElementById("genreFilter")?.value;
-  if (genre) filtered = filtered.filter(s => getGenres(s.genres).some(g => g === genre));
-  const sortBy = document.getElementById("sortFilter")?.value;
-  if (sortBy === "likes") filtered.sort((a,b) => (b.likes||0) - (a.likes||0));
-  else if (sortBy === "views") filtered.sort((a,b) => (b.views||0) - (a.views||0));
-  else filtered.sort((a,b) => (b.createdAt||0) - (a.createdAt||0));
-  renderMangaGrid(filtered);
-}
-
-function renderMangaGrid(stories) {
-  const grid = document.getElementById("mangaGrid");
-  if (!grid) return;
-  if (!stories.length) { grid.innerHTML = "<div style='text-align:center; padding:50px;'>📭 Không có truyện nào</div>"; return; }
-  grid.innerHTML = stories.map(story => `
-    <div class="manga-card" onclick="openStoryDetail('${story.id}')">
-      <img class="manga-cover" src="${escapeHtml(story.cover) || 'https://placehold.co/300x450?text=No+Cover'}" onerror="this.src='https://placehold.co/300x450?text=ERROR'">
-      <div class="manga-info">
-        <div class="manga-title">${escapeHtml(story.title)}</div>
-        <div class="manga-meta">📚 ${escapeHtml(story.groupName) || "Cá nhân"}</div>
-        <div class="manga-meta">❤️ ${story.likes || 0} | 👁 ${story.views || 0}</div>
-        ${story.status === "pending" ? '<div class="manga-meta" style="color:#FF69B4;">⏳ Chờ duyệt</div>' : ''}
-      </div>
-    </div>
-  `).join("");
-}
-
-// ==================== STORY DETAIL ====================
-window.openStoryDetail = async (storyId) => {
-  const story = allStories.find(s => s.id === storyId);
-  if (!story) return;
-  const chapters = await getChapters(storyId);
-  const isEditable = currentUserData && (isAdmin(currentUserData) || (hasGroup(currentUserData) && story.groupId === currentUserData.privileges?.groupId));
-  const isMod = canModerate(currentUserData);
-  
-  document.getElementById("storyDetailContent").innerHTML = `
-    <div class="story-detail-grid">
-      <img class="story-detail-cover" src="${escapeHtml(story.cover) || 'https://placehold.co/300x450?text=No+Cover'}" onerror="this.src='https://placehold.co/300x450?text=ERROR'">
-      <div class="story-detail-info">
-        <h2>${escapeHtml(story.title)}</h2>
-        <p><span class="story-detail-label">📖 Tên khác:</span> ${escapeHtml(story.otherName) || "Chưa có"}</p>
-        <p><span class="story-detail-label">✍️ Tác giả:</span> ${escapeHtml(story.author) || "Chưa rõ"}</p>
-        <p><span class="story-detail-label">🏷️ Thể loại:</span> ${escapeHtml(story.genres) || "Chưa cập nhật"}</p>
-        <p><span class="story-detail-label">📚 Nhóm dịch:</span> ${escapeHtml(story.groupName) || "Cá nhân"}</p>
-        <p><span class="story-detail-label">📌 Tình trạng:</span> ${escapeHtml(story.status) || "Đang cập nhật"}</p>
-        <p><span class="story-detail-label">📖 Số chương:</span> ${chapters.length}</p>
-        <p><span class="story-detail-label">📝 Mô tả:</span><br>${escapeHtml(story.desc) || "Chưa có mô tả"}</p>
-        <p><span class="story-detail-label">❤️ Lượt thích:</span> ${story.likes || 0}</p>
-        <p><span class="story-detail-label">👁 Lượt xem:</span> ${story.views || 0}</p>
-      </div>
-    </div>
-  `;
-  
-  let chaptersHtml = `<h3>📖 DANH SÁCH CHAPTER</h3><div class="chapter-list">`;
-  chapters.forEach((chap, idx) => {
-    chaptersHtml += `<div class="chapter-item" onclick="event.stopPropagation(); openReader('${storyId}', ${idx})"><span>${escapeHtml(chap.title)}</span><span>📅 ${new Date(chap.createdAt).toLocaleDateString()}</span></div>`;
-  });
-  chaptersHtml += `</div>`;
-  document.getElementById("storyChapters").innerHTML = chaptersHtml;
-  
-  let actionsHtml = `<button onclick="likeStoryAndRefresh('${storyId}')">❤️ Thích</button>`;
-  if (currentUserData && currentUserData.role !== "guest") actionsHtml += `<button onclick="toggleFollow('${storyId}')">${isFollowing(storyId) ? '⭐ Đã theo dõi' : '➕ Theo dõi'}</button>`;
-  if (isEditable) actionsHtml += `<button onclick="openEditStory('${storyId}')">✏️ Chỉnh sửa truyện</button><button onclick="openAddChapter('${storyId}')">📖 Thêm chapter mới</button>`;
-  if (isMod && story.status === "pending") actionsHtml += `<button onclick="approveStoryAction('${storyId}')">✅ Duyệt truyện</button><button onclick="rejectStoryAction('${storyId}')">❌ Từ chối</button>`;
-  if (isAdmin(currentUserData)) actionsHtml += `<button onclick="deleteStoryAction('${storyId}')" style="background:#ff4444;">🗑 Xóa truyện</button>`;
-  document.getElementById("storyActions").innerHTML = actionsHtml;
-  document.getElementById("storyModal").style.display = "flex";
-};
-
-window.likeStoryAndRefresh = async (storyId) => { await likeStory(storyId); openStoryDetail(storyId); };
-window.approveStoryAction = async (storyId) => { await approveStory(storyId); closeModal("storyModal"); };
-window.rejectStoryAction = async (storyId) => { await rejectStory(storyId); closeModal("storyModal"); };
-window.deleteStoryAction = async (storyId) => { if (confirm("Xóa truyện?")) { await deleteStory(storyId); closeModal("storyModal"); } };
-window.toggleFollow = async (storyId) => { if (isFollowing(storyId)) await unfollowStory(storyId); else await followStory(storyId); openStoryDetail(storyId); scheduleRender(); };
-
-// ==================== EDIT STORY ====================
-window.openEditStory = async (storyId) => {
-  const story = allStories.find(s => s.id === storyId);
-  document.getElementById("editStoryContent").innerHTML = `
-    <input type="text" id="editTitle" value="${escapeHtml(story.title)}" placeholder="Tên truyện *">
-    <input type="text" id="editOtherName" value="${escapeHtml(story.otherName || '')}" placeholder="Tên khác">
-    <input type="text" id="editAuthor" value="${escapeHtml(story.author || '')}" placeholder="Tác giả">
-    <input type="text" id="editGenres" value="${escapeHtml(story.genres || '')}" placeholder="Thể loại">
-    <input type="text" id="editStatus" value="${escapeHtml(story.status || 'Đang cập nhật')}" placeholder="Tình trạng">
-    <input type="url" id="editCover" value="${escapeHtml(story.cover || '')}" placeholder="Link ảnh bìa">
-    <textarea id="editDesc" placeholder="Mô tả">${escapeHtml(story.desc || '')}</textarea>
-    <button onclick="saveEditStory('${storyId}')">💾 Lưu</button>
-  `;
-  document.getElementById("editStoryModal").style.display = "flex";
-};
-
-window.saveEditStory = async (storyId) => {
-  await updateStoryData(storyId, {
-    title: document.getElementById("editTitle").value,
-    otherName: document.getElementById("editOtherName").value,
-    author: document.getElementById("editAuthor").value,
-    genres: document.getElementById("editGenres").value,
-    status: document.getElementById("editStatus").value,
-    cover: document.getElementById("editCover").value,
-    desc: document.getElementById("editDesc").value
-  });
-  closeModal("editStoryModal");
-  showNotification("Đã cập nhật");
-  openStoryDetail(storyId);
-};
-
-// ==================== ADD CHAPTER ====================
-window.openAddChapter = (storyId) => {
-  document.getElementById("addChapterContent").innerHTML = `
-    <input type="text" id="chapterTitle" placeholder="Tên chapter *">
-    <input type="number" id="chapterNumber" placeholder="Số chapter">
-    <textarea id="chapterPages" placeholder="Link ảnh (mỗi dòng 1 link)" rows="5"></textarea>
-    <button onclick="saveAddChapter('${storyId}')">📤 Đăng chapter</button>
-  `;
-  document.getElementById("addChapterModal").style.display = "flex";
-};
-
-window.saveAddChapter = async (storyId) => {
-  const title = document.getElementById("chapterTitle").value;
-  const pages = document.getElementById("chapterPages").value;
-  if (!title || !pages) { showNotification("Nhập đầy đủ thông tin", true); return; }
-  await addChapter(storyId, title, pages, parseInt(document.getElementById("chapterNumber").value) || 0);
-  closeModal("addChapterModal");
-  showNotification("Đã thêm chapter");
-  openStoryDetail(storyId);
-};
-
-// ==================== READER ====================
-let currentReaderStoryId = null, currentChapters = [], currentChapterIndex = 0;
-function closeReaderModal() {
-  document.getElementById("readerModal").style.display = "none";
-  if (chaptersUnsubscribe) chaptersUnsubscribe();
-  if (commentsUnsubscribe) commentsUnsubscribe();
-  currentReaderStoryId = null;
-}
-window.closeReaderModal = closeReaderModal;
-
-window.openReader = async (storyId, chapterIndex) => {
-  if (chaptersUnsubscribe) chaptersUnsubscribe();
-  if (commentsUnsubscribe) commentsUnsubscribe();
-  currentReaderStoryId = storyId;
-  currentChapterIndex = chapterIndex;
-  const story = allStories.find(s => s.id === storyId);
-  if (story) {
-    const viewRef = ref(db, `stories/${storyId}/views`);
-    const snapshot = await get(viewRef);
-    await set(viewRef, (snapshot.val() || 0) + 1);
-  }
-  const chaptersRef = ref(db, `chapters/${storyId}`);
-  chaptersUnsubscribe = onValue(chaptersRef, (snapshot) => {
-    const data = snapshot.val();
-    currentChapters = data ? Object.entries(data).map(([id, value]) => ({ id, ...value })).sort((a,b) => (a.chapterNumber||0) - (b.chapterNumber||0)) : [];
-    renderChapter();
-  });
-  document.getElementById("readerModal").style.display = "flex";
-};
-
-function renderChapter() {
-  if (!currentChapters[currentChapterIndex]) return;
-  const chap = currentChapters[currentChapterIndex];
-  const readerDiv = document.getElementById("readerContent");
-  readerDiv.innerHTML = `
-    <div class="reader-page">
-      <div class="chapter-nav">
-        <button onclick="window.changeChapter(-1)">⬅️ Chapter trước</button>
-        <h3>${escapeHtml(chap.title)}</h3>
-        <button onclick="window.changeChapter(1)">Chapter sau ➡️</button>
-      </div>
-      <div class="chapter-list" id="chapterList">${currentChapters.map((c, i) => `<div class="chapter-item" onclick="window.changeChapterTo(${i})">${escapeHtml(c.title)}</div>`).join("")}</div>
-      <div>${chap.pages?.map(page => `<img class="reader-image" src="${escapeHtml(page)}" onerror="this.src='https://placehold.co/800x1200?text=Error'">`).join("") || "<p>Không có ảnh</p>"}</div>
-      <div class="comment-section"><h4>💬 Bình luận</h4><textarea id="commentText" rows="3" style="width:100%; background:#2a2a2a; border:none; border-radius:12px; padding:12px; color:white;"></textarea><button id="postCommentBtn" style="margin-top:10px; background:#FF69B4; border:none; border-radius:30px; padding:10px 20px; cursor:pointer;">GỬI</button><div id="commentList"></div></div>
-    </div>
-  `;
-  loadComments(currentReaderStoryId);
-  document.getElementById("postCommentBtn")?.addEventListener("click", () => postComment(currentReaderStoryId));
-}
-
-window.changeChapter = (delta) => { let newIdx = currentChapterIndex + delta; if (newIdx >= 0 && newIdx < currentChapters.length) { currentChapterIndex = newIdx; renderChapter(); window.scrollTo(0,0); } };
-window.changeChapterTo = (index) => { currentChapterIndex = index; renderChapter(); window.scrollTo(0,0); };
-
-async function loadComments(storyId) {
-  const commentsRef = ref(db, `comments/${storyId}`);
-  const unsubscribe = onValue(commentsRef, (snapshot) => {
-    const data = snapshot.val();
-    const comments = data ? Object.entries(data).map(([id, value]) => ({ id, ...value })) : [];
-    comments.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-    const commentList = document.getElementById("commentList");
-    if (commentList) {
-      commentList.innerHTML = comments.map(c => `
-        <div class="comment-item">
-          <div class="comment-name">${escapeHtml(c.userName)}</div>
-          <div>${escapeHtml(c.text)}</div>
-          <div style="font-size:11px;">${new Date(c.createdAt).toLocaleString()}</div>
-        </div>
-      `).join("");
-    }
-    unsubscribe();
-  });
-}
-
-async function postComment(storyId) {
-  if (!currentUserData) { showNotification("Đăng nhập để bình luận", true); return; }
-  const text = document.getElementById("commentText")?.value;
-  if (!text) return;
-  const commentsRef = ref(db, `comments/${storyId}`);
-  const newCommentRef = push(commentsRef);
-  await set(newCommentRef, {
-    text: text,
-    userId: currentUserData.uid,
-    userName: currentUserData.displayName,
-    createdAt: Date.now()
-  });
-  document.getElementById("commentText").value = "";
-  loadComments(storyId);
-  showNotification("Đã gửi bình luận");
-}
-
-// ==================== UPLOAD PANEL ====================
-function renderUploadPanel() {
-  const panel = document.getElementById("uploadPanel");
-  if (!panel) return;
-  if (!canUpload(currentUserData) || currentUserData?.role === "guest") { panel.innerHTML = ""; return; }
-  panel.innerHTML = `
-    <div class="upload-panel">
-      <h3>📤 ĐĂNG TRUYỆN MỚI</h3>
-      <input type="text" id="uploadTitle" placeholder="Tên truyện *">
-      <input type="text" id="uploadOtherName" placeholder="Tên khác">
-      <input type="text" id="uploadAuthor" placeholder="Tác giả">
-      <input type="text" id="uploadGenres" placeholder="Thể loại">
-      <input type="text" id="uploadStatus" placeholder="Tình trạng">
-      <input type="file" id="uploadCoverFile" accept="image/*">
-      <input type="url" id="uploadCoverUrl" placeholder="Hoặc link ảnh bìa">
-      <textarea id="uploadDesc" placeholder="Mô tả truyện"></textarea>
-      <div id="coverPreview"></div>
-      <button class="btn-pink" id="submitUploadBtn">📤 ĐĂNG TRUYỆN</button>
-    </div>
-  `;
-  document.getElementById("uploadCoverFile")?.addEventListener("change", (e) => {
-    const file = e.target.files[0];
-    if (file) { const reader = new FileReader(); reader.onload = (ev) => document.getElementById("coverPreview").innerHTML = `<img class="cover-preview" src="${ev.target.result}">`; reader.readAsDataURL(file); }
-    else document.getElementById("coverPreview").innerHTML = "";
-  });
-  document.getElementById("submitUploadBtn")?.addEventListener("click", async () => {
-    const title = document.getElementById("uploadTitle").value;
-    if (!title) { showNotification("Nhập tên truyện", true); return; }
-    let groupName = "Cá nhân", groupId = null;
-    if (hasGroup(currentUserData)) {
-      const group = await getUserGroup(currentUserData.uid);
-      if (group) { groupName = group.groupName; groupId = currentUserData.privileges?.groupId; }
-    }
-    await createStory({
-      title, otherName: document.getElementById("uploadOtherName").value,
-      author: document.getElementById("uploadAuthor").value,
-      genres: document.getElementById("uploadGenres").value,
-      status: document.getElementById("uploadStatus").value,
-      desc: document.getElementById("uploadDesc").value,
-      cover: document.getElementById("uploadCoverUrl").value,
-      ownerUid: currentUserData.uid, ownerNickname: currentUserData.nickname,
-      groupName, groupId
-    }, document.getElementById("uploadCoverFile").files[0]);
-    showNotification("Đã gửi truyện, chờ duyệt");
-    document.querySelectorAll("#uploadTitle, #uploadOtherName, #uploadAuthor, #uploadGenres, #uploadStatus, #uploadCoverUrl, #uploadDesc").forEach(el => el.value = "");
-    document.getElementById("uploadCoverFile").value = "";
-    document.getElementById("coverPreview").innerHTML = "";
-  });
-}
-
-// ==================== PROFILE ====================
-window.openProfile = () => {
-  document.getElementById("profileContent").innerHTML = `
-    <div class="profile-field"><label>📧 Email</label><input type="text" value="${escapeHtml(currentUserData?.email || '')}" disabled></div>
-    <div class="profile-field"><label>🏷️ Nickname</label><input type="text" id="profileNickname" value="${escapeHtml(currentUserData?.nickname || '')}"></div>
-    <button onclick="saveProfile()">💾 Lưu</button>
-  `;
-  document.getElementById("profileModal").style.display = "flex";
-};
-
-window.saveProfile = async () => {
-  const newNickname = document.getElementById("profileNickname").value;
-  if (!newNickname) { showNotification("Nickname không được trống", true); return; }
-  try {
-    await updateNickname(currentUserData.uid, newNickname);
-    currentUserData.nickname = newNickname;
-    currentUserData.displayName = await getDisplayName(currentUserData.uid, currentUserData.email, currentUserData);
-    document.getElementById("userDisplay").innerHTML = `👤 ${escapeHtml(currentUserData.displayName)}`;
-    showNotification("Đã cập nhật");
-    closeModal("profileModal");
-  } catch (err) { showNotification(err.message, true); }
-};
-
-// ==================== AUTH FLOW (DÙNG ANONYMOUS AUTH) ====================
-async function handleMainPassword() {
-  const mainPass = document.getElementById("mainPassword").value;
-  if (mainPass !== MAIN_PASSWORD) { showNotification("❌ Sai mật khẩu chính", true); return; }
-  const guestName = generateRandomGuestName();
-  currentUserData = { role: "guest", displayName: guestName, nickname: guestName };
-  localStorage.setItem("userSession", JSON.stringify(currentUserData));
-  document.getElementById("loginPage").style.display = "none";
-  document.getElementById("mainContainer").style.display = "block";
-  showNotification(`👤 Chào mừng ${guestName} (Khách)`);
-  initApp();
-}
-
-async function handleSendOTP() {
-  const email = document.getElementById("loginEmail").value?.trim();
-  if (!email) {
-    return showNotification("Nhập email", true);
-  }
-  
-  showLoading(true);
-  try {
-    pendingEmail = email;
-    otpVerified = false;
-    
-    const success = await sendOTPEmail(email);
-    if (!success) {
-      throw new Error("Không gửi được OTP");
-    }
-    
-    document.getElementById("otpGroup").style.display = "block";
-    showNotification("📩 OTP đã gửi, vui lòng kiểm tra email");
-  } catch (err) {
-    console.error(err);
-    showNotification(err.message, true);
-  } finally {
-    showLoading(false);
-  }
-}
-
-async function handleResendOTP() { 
-  if (pendingEmail) await handleSendOTP(); 
-}
-
-async function firebaseLoginWithEmail(email) {
-  console.log("🔥 [1] Firebase login with email:", email);
-  
-  try {
     // Sign in anonymously
     const userCred = await signInAnonymously(auth);
     const uid = userCred.user.uid;
-    console.log("✅ [2] Anonymous sign in successful, UID:", uid);
     
-    // Update display name
-    await updateProfile(userCred.user, { displayName: email });
-    console.log("✅ [3] Profile updated");
+    // Lưu thông tin user vào database
+    await set(ref(db, `users/${uid}`), {
+      email: email,
+      nickname: email.split("@")[0],
+      role: "user",
+      privileges: { moderator: false, groupId: null },
+      createdAt: Date.now()
+    });
     
-    // Check if user exists in database
-    const userData = await getUserData(uid);
-    console.log("📦 [4] User data from DB:", userData);
+    // Lưu session
+    const sessionData = {
+      uid: uid,
+      email: email,
+      role: "user",
+      displayName: email.split("@")[0]
+    };
+    localStorage.setItem("userSession", JSON.stringify(sessionData));
     
-    if (!userData) {
-      // Create new user
-      await createNewUser(uid, email, null);
-      console.log("✅ [5] New user created");
-      
-      // Need nickname
-      currentUserData = await loadUserData(uid, email);
-      localStorage.setItem("userSession", JSON.stringify(currentUserData));
-      document.getElementById("loginPage").style.display = "none";
-      document.getElementById("nicknamePage").style.display = "flex";
-      return;
-    }
+    showMessage("✅ Đăng nhập thành công! Chuyển trang...", false);
     
-    // User exists
-    currentUserData = await loadUserData(uid, email);
-    localStorage.setItem("userSession", JSON.stringify(currentUserData));
-    localStorage.removeItem("guestMode");
-    
-    document.getElementById("loginPage").style.display = "none";
-    document.getElementById("mainContainer").style.display = "block";
-    showNotification(`✅ Chào mừng ${currentUserData.displayName}`);
-    await initApp();
+    // Chuyển sang trang chủ
+    setTimeout(() => {
+      window.location.href = "home.html";
+    }, 1000);
     
   } catch (err) {
-    console.error("❌ Firebase login error:", err);
-    showNotification("Lỗi đăng nhập: " + err.message, true);
-    throw err;
+    console.error("Login error:", err);
+    showMessage("Lỗi đăng nhập: " + err.message, true);
   }
 }
 
-async function handleVerifyOTP() {
-  const email = pendingEmail;
-  const otp = document.getElementById("otpCode").value?.trim();
+// Xử lý guest mode
+async function handleGuest() {
+  const pass = mainPassword.value;
+  if (pass !== MAIN_PASSWORD) {
+    showMessage("❌ Sai mật khẩu chính", true);
+    return;
+  }
   
-  console.log("🔘 [1] Verify OTP clicked - Email:", email, "OTP:", otp);
+  const guestName = "Hủ nằm vùng " + Math.floor(Math.random() * 10000);
+  const sessionData = {
+    role: "guest",
+    displayName: guestName
+  };
+  localStorage.setItem("userSession", JSON.stringify(sessionData));
+  showMessage("👤 Chế độ khách, đang chuyển trang...", false);
+  setTimeout(() => {
+    window.location.href = "home.html";
+  }, 500);
+}
+
+// Xử lý gửi OTP
+async function handleSendOTP() {
+  const email = emailInput.value.trim();
+  if (!email) {
+    showMessage("Nhập email", true);
+    return;
+  }
+  if (!email.includes("@")) {
+    showMessage("Email không hợp lệ", true);
+    return;
+  }
+  
+  pendingEmail = email;
+  const success = await sendOTP(email);
+  if (success) {
+    otpGroup.style.display = "block";
+    showMessage("Đã gửi OTP, kiểm tra email", false);
+  }
+}
+
+// Xử lý xác nhận OTP
+async function handleVerify() {
+  const email = pendingEmail;
+  const code = otpCode.value.trim();
   
   if (!email) {
-    showNotification("Email không được để trống", true);
+    showMessage("Vui lòng nhập email trước", true);
     return;
   }
-  if (!otp || otp.length !== 6) {
-    showNotification("Nhập mã OTP 6 số", true);
+  if (!code || code.length !== 6) {
+    showMessage("Nhập mã OTP 6 số", true);
     return;
   }
   
-  showLoading(true);
+  showMessage("Đang xác thực OTP...", false);
   
-  try {
-    // Step 1: Verify OTP
-    console.log("🔍 [2] Verifying OTP...");
-    const result = await verifyOTP(email, otp);
-    console.log("📦 [3] OTP verify result:", result);
-    
-    if (!result.success) {
-      showNotification(result.message, true);
-      showLoading(false);
-      return;
-    }
-    
-    otpVerified = true;
-    showNotification("✅ OTP hợp lệ, đang đăng nhập...");
-    console.log("✅ [4] OTP verified successfully!");
-    
-    // Step 2: Login with Firebase (Anonymous)
-    await firebaseLoginWithEmail(email);
-    
-  } catch (err) {
-    console.error("❌ [ERROR] Login error:", err);
-    showNotification("Lỗi: " + (err.message || "Đăng nhập thất bại"), true);
-  } finally {
-    showLoading(false);
-    console.log("🏁 [5] Login flow completed");
+  const result = await verifyOTP(email, code);
+  if (!result.success) {
+    showMessage(result.message, true);
+    return;
   }
+  
+  showMessage("✅ OTP chính xác! Đang đăng nhập...", false);
+  await loginWithEmail(email);
 }
 
-window.saveNickname = async () => {
-  const nickname = document.getElementById("nicknameInput").value;
-  if (!nickname) { document.getElementById("nicknameMsg").innerText = "Nhập nickname"; return; }
-  showLoading(true);
-  try {
-    await updateNickname(currentUserData.uid, nickname);
-    currentUserData.nickname = nickname;
-    currentUserData.displayName = await getDisplayName(currentUserData.uid, currentUserData.email, currentUserData);
-    localStorage.setItem("userSession", JSON.stringify(currentUserData));
-    document.getElementById("nicknamePage").style.display = "none";
-    document.getElementById("mainContainer").style.display = "block";
-    showNotification(`🎉 Chào mừng ${nickname}!`);
-    await initApp();
-  } catch (err) { document.getElementById("nicknameMsg").innerText = err.message; }
-  showLoading(false);
-};
-
-window.createNewGroup = async () => {
-  const groupName = document.getElementById("groupNameInput").value;
-  if (!groupName) { alert("Nhập tên nhóm"); return; }
-  showLoading(true);
-  try {
-    const groupsRef = ref(db, 'groups');
-    const newGroupRef = push(groupsRef);
-    await set(newGroupRef, { groupName, description: document.getElementById("groupDescInput").value || "", ownerId: currentUserData.uid, members: [currentUserData.uid], createdAt: Date.now() });
-    await update(ref(db, `users/${currentUserData.uid}/privileges`), { groupId: newGroupRef.key });
-    closeModal("groupModal");
-    showNotification("✅ Tạo nhóm thành công!");
-    setTimeout(() => window.location.reload(), 1000);
-  } catch (err) { alert("Lỗi: " + err.message); }
-  showLoading(false);
-};
-
-window.showHome = () => { closeReaderModal(); scheduleRender(); };
-window.logout = async () => { await signOut(auth); localStorage.clear(); window.location.reload(); };
-function closeModal(modalId) { document.getElementById(modalId).style.display = "none"; }
-window.closeModal = closeModal;
-
-async function updateUserDisplay() {
-  const userDisplay = document.getElementById("userDisplay");
-  if (!userDisplay) return;
-  if (!currentUserData || currentUserData.role === "guest") userDisplay.innerHTML = `👤 ${escapeHtml(currentUserData?.displayName || generateRandomGuestName())}`;
-  else userDisplay.innerHTML = `👤 ${escapeHtml(currentUserData.displayName)}`;
-  document.getElementById("profileBtn").style.display = currentUserData && currentUserData.role !== "guest" ? "inline-block" : "none";
-  document.getElementById("logoutBtn").style.display = currentUserData && currentUserData.role !== "guest" ? "inline-block" : "none";
-  document.getElementById("createGroupBtn").style.display = currentUserData && currentUserData.role !== "guest" && !hasGroup(currentUserData) ? "inline-block" : "none";
-  document.getElementById("adminLink").style.display = canModerate(currentUserData) ? "inline-block" : "none";
+// Xử lý gửi lại OTP
+async function handleResend() {
+  if (!pendingEmail) {
+    showMessage("Chưa có email", true);
+    return;
+  }
+  await sendOTP(pendingEmail);
 }
 
-async function initApp() {
-  if (!document.getElementById("mainContainer")) return;
-  const sessionStr = localStorage.getItem("userSession");
-  if (sessionStr) {
-    try {
-      const session = JSON.parse(sessionStr);
-      if (session.role === "guest") currentUserData = session;
-      else if (session.uid) currentUserData = await loadUserData(session.uid, session.email);
-    } catch(e) {}
-  }
-  await updateUserDisplay();
-  await loadFollows();
-  renderUploadPanel();
-  loadStoriesRealtime();
+// Gắn sự kiện
+guestBtn.onclick = handleGuest;
+sendOtpBtn.onclick = handleSendOTP;
+verifyBtn.onclick = handleVerify;
+resendBtn.onclick = handleResend;
+
+// Kiểm tra session đã tồn tại
+const existingSession = localStorage.getItem("userSession");
+if (existingSession) {
+  window.location.href = "home.html";
 }
-
-// ==================== EVENT LISTENERS ====================
-document.addEventListener("DOMContentLoaded", () => {
-  console.log("🚀 DOM ready");
-  document.getElementById("continueBtn")?.addEventListener("click", () => {
-    document.getElementById("warningOverlay").style.display = "none";
-    document.getElementById("loginPage").style.display = "flex";
-  });
-  document.getElementById("exitBtn")?.addEventListener("click", () => { document.body.innerHTML = "<div style='height:100vh;display:flex;justify-content:center;align-items:center;background:black;color:white;'>ĐÃ THOÁT</div>"; });
-  document.getElementById("enterMainBtn")?.addEventListener("click", handleMainPassword);
-  document.getElementById("sendOtpBtn")?.addEventListener("click", handleSendOTP);
-  document.getElementById("verifyOtpBtn")?.addEventListener("click", handleVerifyOTP);
-  document.getElementById("resendOtpBtn")?.addEventListener("click", handleResendOTP);
-  document.getElementById("saveNicknameBtn")?.addEventListener("click", window.saveNickname);
-  document.getElementById("confirmGroupBtn")?.addEventListener("click", window.createNewGroup);
-  document.getElementById("createGroupBtn")?.addEventListener("click", () => document.getElementById("groupModal").style.display = "flex");
-  document.getElementById("logoutBtn")?.addEventListener("click", window.logout);
-  document.getElementById("profileBtn")?.addEventListener("click", window.openProfile);
-  document.querySelectorAll(".tab-btn").forEach(btn => btn.addEventListener("click", () => {
-    document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
-    btn.classList.add("active");
-    currentTab = btn.dataset.tab;
-    scheduleRender();
-  }));
-  document.getElementById("searchInput")?.addEventListener("input", () => scheduleRender());
-  document.getElementById("genreFilter")?.addEventListener("change", () => scheduleRender());
-  document.getElementById("sortFilter")?.addEventListener("change", () => scheduleRender());
-  const session = localStorage.getItem("userSession");
-  if (session) {
-    document.getElementById("warningOverlay").style.display = "none";
-    document.getElementById("loginPage").style.display = "none";
-    document.getElementById("mainContainer").style.display = "block";
-    initApp();
-  }
-});
-
-onAuthStateChanged(auth, async (user) => {
-  console.log("🔥 onAuthStateChanged:", user?.uid || "null");
-  if (user && !currentUserData) {
-    // Lấy email từ displayName (lưu ý: anonymous user không có email)
-    const email = user.displayName || pendingEmail || "user@anonymous.com";
-    currentUserData = await loadUserData(user.uid, email);
-    localStorage.setItem("userSession", JSON.stringify(currentUserData));
-    document.getElementById("loginPage").style.display = "none";
-    document.getElementById("mainContainer").style.display = "block";
-    await initApp();
-  }
-});
 </script>
 </body>
 </html>
