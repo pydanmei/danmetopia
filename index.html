@@ -586,7 +586,7 @@ body {
 <!-- MAIN CONTAINER -->
 <div id="mainContainer">
   <div class="topbar">
-    <div class="logo" onclick="showHome()">🌸 DANMETOPIA</div>
+    <div class="logo" onclick="showHome()">🌸 DANMETOPIA 🌸</div>
     <div class="user-area">
       <span id="userDisplay">👤 Đang tải...</span>
       <button id="profileBtn" style="display:none">👤 Thông tin</button>
@@ -1364,7 +1364,9 @@ async function handleSendOTP() {
     pendingEmail = email;
     const success = await sendOTPEmail(email);
     if (success) {
-      document.getElementById("otpGroup").style.display = "block";
+      document.getElementById("otpGroup").style.display = "none";
+document.getElementById("otpCode").value = "";
+pendingEmail = null;
       showNotification("📩 OTP đã gửi, vui lòng kiểm tra email");
     }
   } catch (err) {
@@ -1379,14 +1381,53 @@ async function handleResendOTP() {
   if (pendingEmail) await handleSendOTP(); 
 }
 
-async function firebaseLoginWithEmail(email) {
-  console.log("🔥 Firebase login with email:", email);
-  
+    async function firebaseLoginWithEmail(email) {
   try {
-    // Sign in anonymously
-    const userCred = await signInAnonymously(auth);
-    const uid = userCred.user.uid;
-    console.log("✅ Anonymous sign in successful, UID:", uid);
+    const emailKey = email.replace(/\./g, "_");
+    
+    // tìm user theo email trong DB
+    const usersSnap = await get(ref(db, "users"));
+    const users = usersSnap.val() || {};
+
+    let uid = null;
+
+    for (const key in users) {
+      if (users[key].email === email) {
+        uid = key;
+        break;
+      }
+    }
+
+    // nếu chưa có user → tạo mới
+    if (!uid) {
+      const newUserRef = push(ref(db, "users"));
+      uid = newUserRef.key;
+
+      await set(ref(db, `users/${uid}`), {
+        email,
+        nickname: email.split("@")[0],
+        role: "user",
+        privileges: { moderator: false, groupId: null },
+        follows: {},
+        createdAt: Date.now()
+      });
+    }
+
+    currentUserData = await loadUserData(uid, email);
+
+    localStorage.setItem("userSession", JSON.stringify(currentUserData));
+
+    document.getElementById("loginPage").style.display = "none";
+    document.getElementById("mainContainer").style.display = "block";
+
+    await initApp();
+
+    showNotification("✅ Đăng nhập thành công!");
+  } catch (err) {
+    console.error(err);
+    showNotification("Lỗi login: " + err.message, true);
+  }
+}
     
     // Check if user exists in database
     const userData = await getUserData(uid);
@@ -1414,11 +1455,11 @@ async function firebaseLoginWithEmail(email) {
     showNotification(`✅ Chào mừng ${currentUserData.displayName}`);
     await initApp();
     
-  } catch (err) {
-    console.error("❌ Firebase login error:", err);
-    showNotification("Lỗi đăng nhập: " + err.message, true);
-    throw err;
-  }
+  } catch (error) {
+  console.error("EmailJS error:", error);
+  showNotification(`❌ Gửi email thất bại`, true);
+  return false; // 👈 quan trọng
+}
 }
 
 async function handleVerifyOTP() {
@@ -1427,7 +1468,8 @@ async function handleVerifyOTP() {
   
   const email = pendingEmail;
   const otp = document.getElementById("otpCode").value.trim();
-  
+
+  if (data.code !== String(inputCode).trim()) {
   if (!email) {
     showNotification("Chưa có email, vui lòng gửi lại OTP", true);
     isProcessing = false;
