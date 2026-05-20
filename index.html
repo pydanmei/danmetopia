@@ -825,15 +825,6 @@ async function verifyOTP(email, inputCode) {
   const data = snap.val();
   
   console.log("📦 OTP data from DB:", data);
-
-  // Chống spam
-  const now = Date.now();
-  if (now - lastOtpSentTime < 30000) {
-    const waitTime = Math.ceil((30000 - (now - lastOtpSentTime)) / 1000);
-    console.log(`⚠️ [2] Rate limit: wait ${waitTime}s`);
-    showNotification(`Vui lòng đợi ${waitTime} giây trước khi gửi lại`, true);
-    return false;
-  }
   
   if (!data) {
     console.log("❌ No OTP found");
@@ -2169,9 +2160,13 @@ window.addEventListener("DOMContentLoaded", () => {
 });
 
 // Auth state change
-onAuthStateChanged(auth, async (user) => {
+// Chống spam
+ onAuthStateChanged(auth, async (user) => {
+  console.log("🔥 onAuthStateChanged triggered, user:", user?.uid || "null");
   if (user) {
+    console.log("✅ User authenticated:", user.uid, user.email);
     currentUserData = await loadUserData(user.uid, user.email);
+    console.log("📦 User data loaded:", currentUserData);
     localStorage.setItem("userSession", JSON.stringify(currentUserData));
     document.getElementById("loginPage").style.display = "none";
     document.getElementById("mainContainer").style.display = "block";
