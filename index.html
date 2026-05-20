@@ -559,24 +559,18 @@ body {
   <div class="login-box">
     <h2>🌸 DANMETOPIA 🌸</h2>
     
-    <!-- LUỒNG 1: GUEST -->
     <button id="guestBtn" class="btn-pink">🎭 BỎ QUA (Guest)</button>
-    
     <hr>
-    
-    <!-- LUỒNG 2: EMAIL -->
     <p>📧 Đăng nhập bằng email</p>
     <input type="email" id="loginEmail" placeholder="Email">
     <button id="checkEmailBtn" class="btn-pink">TIẾP TỤC</button>
     
-    <!-- OTP group (hiện khi email mới và KHÔNG phải admin) -->
     <div id="otpGroup" class="otp-group">
       <input type="text" id="otpCode" placeholder="Nhập mã OTP 6 số" maxlength="6">
       <button id="verifyOtpBtn" class="btn-pink">XÁC NHẬN OTP</button>
       <div class="toggle-link" id="backToEmailBtn">← Quay lại</div>
     </div>
     
-    <!-- Password group (hiện khi email cũ HOẶC email admin) -->
     <div id="passwordGroup" class="password-group">
       <input type="password" id="loginPassword" placeholder="Mật khẩu">
       <button id="passwordLoginBtn" class="btn-pink">ĐĂNG NHẬP</button>
@@ -587,7 +581,7 @@ body {
   </div>
 </div>
 
-<!-- ==================== REGISTER PAGE (nickname + password) ==================== -->
+<!-- ==================== REGISTER PAGE ==================== -->
 <div id="registerPage">
   <div class="login-box" style="max-width:380px;">
     <h2>🎉 HOÀN TẤT ĐĂNG KÝ</h2>
@@ -831,8 +825,6 @@ async function createNewUser(uid, email, nickname) {
 }
 
 // ==================== AUTH FLOWS ====================
-
-// LUỒNG 1: Guest
 async function handleGuestLogin() {
   const guestName = generateRandomGuestName();
   currentUserData = { role: "guest", displayName: guestName, nickname: guestName };
@@ -843,19 +835,15 @@ async function handleGuestLogin() {
   initApp();
 }
 
-// LUỒNG 2: Xử lý email (kiểm tra email mới hay cũ)
 async function handleCheckEmail() {
   const email = document.getElementById("loginEmail").value.trim();
   if (!email) { showNotification("Nhập email", true); return; }
   
-  // KIỂM TRA EMAIL ADMIN (3 email cố định) - KHÔNG CẦN OTP
   const isAdminEmail = ADMIN_EMAILS.includes(email);
-  
   showLoading(true);
   const emailExists = await checkEmailExists(email);
   showLoading(false);
   
-  // ADMIN EMAIL: luôn chuyển sang password login (không OTP)
   if (isAdminEmail) {
     pendingRegisterEmail = email;
     document.getElementById("passwordGroup").style.display = "block";
@@ -864,15 +852,12 @@ async function handleCheckEmail() {
     return;
   }
   
-  // EMAIL THƯỜNG
   if (emailExists) {
-    // Email cũ → hiện ô nhập mật khẩu
     pendingRegisterEmail = email;
     document.getElementById("passwordGroup").style.display = "block";
     document.getElementById("otpGroup").style.display = "none";
     document.getElementById("loginMsg").innerHTML = "";
   } else {
-    // Email mới → gửi OTP
     pendingRegisterEmail = email;
     await sendOTPEmail(email);
     document.getElementById("otpGroup").style.display = "block";
@@ -881,7 +866,6 @@ async function handleCheckEmail() {
   }
 }
 
-// Xác nhận OTP (cho email mới và KHÔNG phải admin)
 async function handleVerifyOTP() {
   const otp = document.getElementById("otpCode").value.trim();
   if (!otp || otp.length !== 6) { showNotification("Nhập mã OTP 6 số", true); return; }
@@ -892,13 +876,11 @@ async function handleVerifyOTP() {
   
   if (!result.success) { showNotification(result.message, true); return; }
   
-  // OTP đúng → chuyển sang trang tạo nickname + mật khẩu
   document.getElementById("verifiedEmail").innerText = pendingRegisterEmail;
   document.getElementById("loginPage").style.display = "none";
   document.getElementById("registerPage").style.display = "flex";
 }
 
-// Đăng nhập bằng mật khẩu (cho email cũ + admin)
 async function handlePasswordLogin() {
   const email = document.getElementById("loginEmail").value.trim();
   const password = document.getElementById("loginPassword").value;
@@ -918,7 +900,6 @@ async function handlePasswordLogin() {
     if (err.code === "auth/invalid-credential") {
       const isAdminEmail = ADMIN_EMAILS.includes(email);
       if (isAdminEmail) {
-        // Admin chưa có tài khoản? Chuyển sang tạo mới
         const confirmCreate = confirm("Email Admin chưa có tài khoản. Bạn có muốn tạo tài khoản Admin mới không?");
         if (confirmCreate) {
           pendingRegisterEmail = email;
@@ -937,7 +918,6 @@ async function handlePasswordLogin() {
   } finally { showLoading(false); }
 }
 
-// Hoàn tất đăng ký (email mới sau OTP hoặc Admin tạo mới)
 async function handleCompleteRegistration() {
   const nickname = document.getElementById("nicknameInput").value.trim();
   const password = document.getElementById("newPassword").value;
@@ -964,7 +944,6 @@ async function handleCompleteRegistration() {
   } finally { showLoading(false); }
 }
 
-// Restore session từ localStorage
 async function restoreSession() {
   const session = localStorage.getItem("userSession");
   if (!session) return false;
@@ -990,7 +969,6 @@ async function restoreSession() {
   return false;
 }
 
-// Logout
 async function logout() {
   await signOut(auth);
   localStorage.removeItem("userSession");
@@ -1008,7 +986,6 @@ async function loadStoriesRealtime() {
   });
 }
 
-// ==================== STORIES CRUD ====================
 async function createStory(data, coverFile) {
   console.log("📤 createStory called with:", { data, coverFile: coverFile?.name });
   
@@ -1027,7 +1004,6 @@ async function createStory(data, coverFile) {
     }
   }
   
-  // Kiểm tra dữ liệu bắt buộc
   if (!data.title) {
     showNotification("Thiếu tên truyện", true);
     throw new Error("Thiếu title");
@@ -1111,7 +1087,6 @@ async function rejectStory(storyId) {
   console.log("❌ Rejected story:", storyId);
 }
 
-// ==================== CHAPTER FUNCTIONS ====================
 async function addChapter(storyId, title, pages, chapterNumber) {
   console.log("📖 Adding chapter:", { storyId, title, chapterNumber });
   
@@ -1134,7 +1109,6 @@ async function addChapter(storyId, title, pages, chapterNumber) {
   
   await set(newChapterRef, chapterData);
   
-  // Cập nhật số chương trong story
   const storyRef = ref(db, `stories/${storyId}/chapters`);
   const snap = await get(storyRef);
   const currentChapters = snap.val() || [];
@@ -1152,7 +1126,6 @@ async function getChapters(storyId) {
   return chapters;
 }
 
-// ==================== FOLLOW SYSTEM ====================
 async function loadFollows() {
   if (!currentUserData || currentUserData.role === "guest") return;
   try {
@@ -1195,7 +1168,7 @@ function getRecommendations() {
   return allStories.filter(s => s.approved === true).slice(0, 12); 
 }
 
-// RENDER
+// ==================== RENDER FUNCTIONS ====================
 function renderCurrentTab() {
   if (!document.getElementById("mangaGrid")) return;
   let filtered = allStories.filter(s => s.approved === true);
@@ -1227,7 +1200,7 @@ function renderMangaGrid(stories) {
   `).join("");
 }
 
-// STORY DETAIL
+// ==================== STORY DETAIL ====================
 window.openStoryDetail = async (storyId) => {
   const story = allStories.find(s => s.id === storyId);
   if (!story) return;
@@ -1325,7 +1298,7 @@ window.saveAddChapter = async (storyId) => {
   openStoryDetail(storyId);
 };
 
-// READER
+// ==================== READER ====================
 let currentReaderStoryId = null, currentChapters = [], currentChapterIndex = 0;
 function closeReaderModal() {
   document.getElementById("readerModal").style.display = "none";
@@ -1415,7 +1388,7 @@ async function postComment(storyId) {
   showNotification("Đã gửi bình luận");
 }
 
-// UPLOAD PANEL
+// ==================== UPLOAD PANEL ====================
 function renderUploadPanel() {
   const panel = document.getElementById("uploadPanel");
   if (!panel) return;
@@ -1427,6 +1400,7 @@ function renderUploadPanel() {
       <input id="uploadOtherName" placeholder="Tên khác">
       <input id="uploadAuthor" placeholder="Tác giả">
       <input id="uploadGenres" placeholder="Thể loại">
+      <input id="uploadTags" placeholder="Tags">
       <input id="uploadStatus" placeholder="Tình trạng">
       <input type="file" id="uploadCoverFile" accept="image/*">
       <input id="uploadCoverUrl" placeholder="Hoặc link ảnh bìa">
@@ -1441,88 +1415,75 @@ function renderUploadPanel() {
     else document.getElementById("coverPreview").innerHTML = "";
   });
   document.getElementById("submitUploadBtn")?.addEventListener("click", async () => {
-  console.log("🔘 Upload button clicked");
-  
-  const title = document.getElementById("uploadTitle").value;
-  if (!title) { 
-    showNotification("Nhập tên truyện", true); 
-    return; 
-  }
-  
-  showLoading(true);
-  
-  try {
-    // Kiểm tra đăng nhập
-    if (!currentUserData?.uid) {
-      throw new Error("Chưa đăng nhập");
+    console.log("🔘 Upload button clicked");
+    
+    const title = document.getElementById("uploadTitle").value;
+    if (!title) { 
+      showNotification("Nhập tên truyện", true); 
+      return; 
     }
     
-    console.log("📝 Form data:", {
-      title: title,
-      otherName: document.getElementById("uploadOtherName")?.value,
-      author: document.getElementById("uploadAuthor")?.value,
-      genres: document.getElementById("uploadGenres")?.value,
-      status: document.getElementById("uploadStatus")?.value,
-      desc: document.getElementById("uploadDesc")?.value,
-      coverUrl: document.getElementById("uploadCoverUrl")?.value,
-      coverFile: document.getElementById("uploadCoverFile")?.files[0]?.name
-    });
+    showLoading(true);
     
-    let groupName = "Cá nhân";
-    let groupId = null;
-    
-    if (hasGroup(currentUserData)) {
-      const group = await getUserGroup(currentUserData.uid);
-      if (group) { 
-        groupName = group.groupName; 
-        groupId = currentUserData.privileges?.groupId; 
+    try {
+      if (!currentUserData?.uid) {
+        throw new Error("Chưa đăng nhập");
       }
+      
+      let groupName = "Cá nhân";
+      let groupId = null;
+      
+      if (hasGroup(currentUserData)) {
+        const group = await getUserGroup(currentUserData.uid);
+        if (group) { 
+          groupName = group.groupName; 
+          groupId = currentUserData.privileges?.groupId; 
+        }
+      }
+      
+      const coverFile = document.getElementById("uploadCoverFile").files[0];
+      const coverUrl = document.getElementById("uploadCoverUrl").value;
+      
+      const storyId = await createStory({
+        title: title,
+        otherName: document.getElementById("uploadOtherName")?.value || "",
+        author: document.getElementById("uploadAuthor")?.value || "",
+        genres: document.getElementById("uploadGenres")?.value || "",
+        tags: document.getElementById("uploadTags")?.value || "",
+        status: document.getElementById("uploadStatus")?.value || "Đang cập nhật",
+        desc: document.getElementById("uploadDesc")?.value || "",
+        cover: coverUrl,
+        ownerUid: currentUserData.uid,
+        ownerNickname: currentUserData.nickname || currentUserData.email,
+        groupName: groupName,
+        groupId: groupId,
+        createdAt: Date.now()
+      }, coverFile);
+      
+      console.log("✅ Story created with ID:", storyId);
+      showNotification("Đã gửi truyện, chờ duyệt");
+      
+      document.getElementById("uploadTitle").value = "";
+      document.getElementById("uploadOtherName").value = "";
+      document.getElementById("uploadAuthor").value = "";
+      document.getElementById("uploadGenres").value = "";
+      document.getElementById("uploadTags").value = "";
+      document.getElementById("uploadStatus").value = "";
+      document.getElementById("uploadCoverUrl").value = "";
+      document.getElementById("uploadDesc").value = "";
+      document.getElementById("uploadCoverFile").value = "";
+      document.getElementById("coverPreview").innerHTML = "";
+      
+    } catch (err) {
+      console.error("❌ Upload error:", err);
+      showNotification("Lỗi: " + err.message, true);
+    } finally {
+      showLoading(false);
     }
-    
-    const coverFile = document.getElementById("uploadCoverFile").files[0];
-    const coverUrl = document.getElementById("uploadCoverUrl").value;
-    
-    const storyId = await createStory({
-      title: title,
-      otherName: document.getElementById("uploadOtherName")?.value || "",
-      author: document.getElementById("uploadAuthor")?.value || "",
-      genres: document.getElementById("uploadGenres")?.value || "",
-      tags: document.getElementById("uploadTags")?.value || "",
-      status: document.getElementById("uploadStatus")?.value || "Đang cập nhật",
-      desc: document.getElementById("uploadDesc")?.value || "",
-      cover: coverUrl,
-      ownerUid: currentUserData.uid,
-      ownerNickname: currentUserData.nickname || currentUserData.email,
-      groupName: groupName,
-      groupId: groupId,
-      createdAt: Date.now()
-    }, coverFile);
-    
-    console.log("✅ Story created with ID:", storyId);
-    showNotification("Đã gửi truyện, chờ duyệt");
-    
-    // Clear form
-    document.getElementById("uploadTitle").value = "";
-    document.getElementById("uploadOtherName").value = "";
-    document.getElementById("uploadAuthor").value = "";
-    document.getElementById("uploadGenres").value = "";
-    document.getElementById("uploadTags").value = "";
-    document.getElementById("uploadStatus").value = "";
-    document.getElementById("uploadCoverUrl").value = "";
-    document.getElementById("uploadDesc").value = "";
-    document.getElementById("uploadCoverFile").value = "";
-    document.getElementById("coverPreview").innerHTML = "";
-    
-  } catch (err) {
-    console.error("❌ Upload error:", err);
-    showNotification("Lỗi: " + err.message, true);
-  } finally {
-    showLoading(false);
-  }
-});
+  });
 }
-  
-// PROFILE
+
+// ==================== PROFILE ====================
 window.openProfile = () => {
   document.getElementById("profileContent").innerHTML = `
     <div class="profile-field"><label>📧 Email</label><input value="${escapeHtml(currentUserData?.email || '')}" disabled></div>
