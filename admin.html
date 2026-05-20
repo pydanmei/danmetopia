@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>DANMETOPIA - Trang quản trị</title>
+<title>🌸 DANMETOPIA - Trang quản trị 🌸</title>
 <style>
 * {
   margin: 0;
@@ -89,7 +89,7 @@ button {
   margin-bottom: 8px;
 }
 
-.btn-approve { background: #FF69B4; color: black; }
+.btn-approve { background: #00dc64; color: black; }
 .btn-reject { background: #ff4444; color: white; }
 .btn-delete { background: #ff8800; color: black; }
 .btn-hide { background: #FFCCCC; color: black; }
@@ -179,17 +179,17 @@ select {
 <body>
 <div class="admin-layout">
   <aside class="sidebar">
-    <h2>🌸 DANMETOPIA</h2>
-    <button onclick="showTab('dashboard')">📊 Tổng quan</button>
-    <button onclick="showTab('stories')">📚 Tất cả truyện</button>
-    <button onclick="showTab('pending')">⏳ Chờ duyệt</button>
-    <button onclick="showTab('users')">👤 Người dùng</button>
-    <button onclick="showTab('comments')">💬 Bình luận</button>
-    <button onclick="showTab('groups')">📚 Nhóm dịch</button>
-    <button onclick="showTab('broadcast')">📢 Gửi thông báo</button>
+    <h2>🌸 DANMETOPIA 🌸</h2>
+    <button id="dashboardBtn">📊 Tổng quan</button>
+    <button id="storiesBtn">📚 Tất cả truyện</button>
+    <button id="pendingBtn">⏳ Chờ duyệt</button>
+    <button id="usersBtn">👤 Người dùng</button>
+    <button id="commentsBtn">💬 Bình luận</button>
+    <button id="groupsBtn">📚 Nhóm dịch</button>
+    <button id="broadcastBtn">📢 Gửi thông báo</button>
     <hr style="margin: 15px 0; border-color: #333;">
-    <button onclick="goHome()">🏠 Về trang chủ</button>
-    <button onclick="logout()" style="background:#ff4444; color:white;">🚪 Đăng xuất</button>
+    <button id="homeBtn">🏠 Về trang chủ</button>
+    <button id="logoutBtn" style="background:#ff4444; color:white;">🚪 Đăng xuất</button>
   </aside>
   <main class="main-content" id="adminMain">
     <div style="text-align:center; padding:50px;">
@@ -200,19 +200,28 @@ select {
 </div>
 
 <script type="module">
-import { 
-  auth, db,
-  ADMIN_EMAILS,
-  getUserData, getUserGroup, getDisplayName, getUserLevel, getUserLevelText,
-  isAdmin, isModerator, hasGroup, isGuest,
-  canModerate, canDeleteStory, canDeleteUser, canChangeRole, canEditStory,
-  setModerator, setGroupId, joinGroup,
-  createGroup, getAllGroups, deleteGroup, deleteUser,
-  logout, getCurrentSession
-} from "./auth.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { getDatabase, ref, get, set, update, remove, push, onValue, off, query, orderByChild } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCDQk9DlMNKwn_508fDMI_3IB_dgpgHujA",
+  authDomain: "danmetopia.firebaseapp.com",
+  projectId: "danmetopia",
+  databaseURL: "https://danmetopia-default-rtdb.asia-southeast1.firebasedatabase.app/",
+  storageBucket: "danmetopia.appspot.com",
+  messagingSenderId: "178240377870",
+  appId: "1:178240377870:web:d094b222ebabadccc5585f"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getDatabase(app);
 
 let currentUserData = null;
+let currentUnsubscribe = null;
 
+// ==================== HELPER FUNCTIONS ====================
 function showNotification(msg, isError = false) {
   const notif = document.createElement("div");
   notif.style.cssText = `position:fixed;bottom:20px;right:20px;background:${isError ? '#ff4444' : '#FF69B4'};color:black;padding:12px 20px;border-radius:40px;z-index:1000;animation:slideIn 0.3s ease;`;
@@ -226,6 +235,13 @@ function escapeHtml(str) {
   return str.replace(/[&<>]/g, m => m === "&" ? "&amp;" : m === "<" ? "&lt;" : "&gt;");
 }
 
+function showLoading(show) {
+  const main = document.getElementById("adminMain");
+  if (show && main) {
+    main.innerHTML = '<div style="text-align:center; padding:50px;"><div class="loading-spinner"></div><p>Đang tải...</p></div>';
+  }
+}
+
 function getUserBadge(user) {
   if (user.role === "admin") return '<span class="user-badge badge-admin">Admin</span>';
   if (user.privileges?.moderator) return '<span class="user-badge badge-moderator">Quản lý</span>';
@@ -235,97 +251,125 @@ function getUserBadge(user) {
 
 // ==================== AUTH GUARD ====================
 async function checkAdminAccess() {
-  const session = getCurrentSession();
-  if (!session || session.role !== "admin") {
-    document.body.innerHTML = "<div style='height:100vh;display:flex;justify-content:center;align-items:center;'><h1 style='color:#ff4444;'>⛔ Không có quyền truy cập</h1><br><button onclick='window.location.href=\"index.html\"'>Về trang chủ</button></div>";
+  const session = localStorage.getItem("userSession");
+  if (!session) {
+    window.location.href = "index.html";
     return false;
   }
-  currentUserData = session;
-  return true;
+  try {
+    const data = JSON.parse(session);
+    if (data.role !== "admin" && !data.privileges?.moderator) {
+      document.getElementById("adminMain").innerHTML = "<div style='text-align:center; padding:50px;'><h1 style='color:#ff4444;'>⛔ Không có quyền truy cập</h1><button onclick='window.location.href=\"index.html\"'>Về trang chủ</button></div>";
+      return false;
+    }
+    currentUserData = data;
+    return true;
+  } catch(e) {
+    window.location.href = "index.html";
+    return false;
+  }
 }
 
 // ==================== DASHBOARD ====================
 async function loadDashboard() {
-  const storiesSnap = await get(ref(db, "stories"));
-  const stories = storiesSnap.val() || {};
-  const usersSnap = await get(ref(db, "users"));
-  const users = usersSnap.val() || {};
-  const commentsSnap = await get(ref(db, "comments"));
-  const comments = commentsSnap.val() || {};
-  const groupsSnap = await get(ref(db, "groups"));
-  const groups = groupsSnap.val() || {};
-  
-  let totalViews = 0;
-  let totalLikes = 0;
-  let pendingCount = 0;
-  let topStories = [];
-  
-  Object.entries(stories).forEach(([id, s]) => {
-    totalViews += s.views || 0;
-    totalLikes += s.likes || 0;
-    if (s.status === "pending") pendingCount++;
-    topStories.push({ title: s.title, views: s.views || 0 });
-  });
-  topStories.sort((a,b) => b.views - a.views);
-  
-  document.getElementById("adminMain").innerHTML = `
-    <h2>📊 Tổng quan</h2>
-    <div class="stats-grid">
-      <div class="stat-card"><div class="number">${Object.keys(stories).length}</div><div class="label">📚 Truyện</div></div>
-      <div class="stat-card"><div class="number">${totalViews}</div><div class="label">👁 Lượt xem</div></div>
-      <div class="stat-card"><div class="number">${totalLikes}</div><div class="label">❤️ Lượt thích</div></div>
-      <div class="stat-card"><div class="number">${pendingCount}</div><div class="label">⏳ Chờ duyệt</div></div>
-      <div class="stat-card"><div class="number">${Object.keys(users).length}</div><div class="label">👤 Người dùng</div></div>
-      <div class="stat-card"><div class="number">${Object.keys(comments).length}</div><div class="label">💬 Bình luận</div></div>
-      <div class="stat-card"><div class="number">${Object.keys(groups).length}</div><div class="label">📚 Nhóm dịch</div></div>
-    </div>
-    <h3>🔥 Top 5 truyện xem nhiều nhất</h3>
-    ${topStories.slice(0,5).map((s, i) => `
-      <div class="card">
-        <b>${i+1}. ${escapeHtml(s.title)}</b> — 👁 ${s.views}
+  showLoading(true);
+  try {
+    const [storiesSnap, usersSnap, commentsSnap, groupsSnap] = await Promise.all([
+      get(ref(db, "stories")),
+      get(ref(db, "users")),
+      get(ref(db, "comments")),
+      get(ref(db, "groups"))
+    ]);
+    
+    const stories = storiesSnap.val() || {};
+    const users = usersSnap.val() || {};
+    const comments = commentsSnap.val() || {};
+    const groups = groupsSnap.val() || {};
+    
+    let totalViews = 0;
+    let totalLikes = 0;
+    let pendingCount = 0;
+    let topStories = [];
+    
+    Object.entries(stories).forEach(([id, s]) => {
+      totalViews += s.views || 0;
+      totalLikes += s.likes || 0;
+      if (s.approved === false) pendingCount++;
+      topStories.push({ title: s.title, views: s.views || 0 });
+    });
+    topStories.sort((a,b) => b.views - a.views);
+    
+    document.getElementById("adminMain").innerHTML = `
+      <h2>📊 Tổng quan</h2>
+      <div class="stats-grid">
+        <div class="stat-card"><div class="number">${Object.keys(stories).length}</div><div class="label">📚 Truyện</div></div>
+        <div class="stat-card"><div class="number">${totalViews}</div><div class="label">👁 Lượt xem</div></div>
+        <div class="stat-card"><div class="number">${totalLikes}</div><div class="label">❤️ Lượt thích</div></div>
+        <div class="stat-card"><div class="number">${pendingCount}</div><div class="label">⏳ Chờ duyệt</div></div>
+        <div class="stat-card"><div class="number">${Object.keys(users).length}</div><div class="label">👤 Người dùng</div></div>
+        <div class="stat-card"><div class="number">${Object.keys(comments).length}</div><div class="label">💬 Bình luận</div></div>
+        <div class="stat-card"><div class="number">${Object.keys(groups).length}</div><div class="label">📚 Nhóm dịch</div></div>
       </div>
-    `).join("")}
-  `;
+      <h3>🔥 Top 5 truyện xem nhiều nhất</h3>
+      ${topStories.slice(0,5).map((s, i) => `
+        <div class="card">
+          <b>${i+1}. ${escapeHtml(s.title)}</b> — 👁 ${s.views}
+        </div>
+      `).join("")}
+    `;
+  } catch (err) {
+    console.error("Dashboard error:", err);
+    document.getElementById("adminMain").innerHTML = `<div class="card"><p>Lỗi tải dữ liệu: ${err.message}</p></div>`;
+  }
 }
 
 // ==================== STORIES MANAGEMENT ====================
 function loadStories() {
-  onValue(ref(db, "stories"), (snap) => {
+  if (currentUnsubscribe) currentUnsubscribe();
+  
+  const storiesRef = ref(db, 'stories');
+  currentUnsubscribe = onValue(storiesRef, (snap) => {
     const data = snap.val() || {};
     const storiesList = Object.entries(data).map(([id, v]) => ({ id, ...v }));
     
     document.getElementById("adminMain").innerHTML = `
-      <h2>📚 Tất cả truyện</h2>
+      <h2>📚 Tất cả truyện (${storiesList.length})</h2>
       ${storiesList.map(s => `
         <div class="card">
           <h3>${escapeHtml(s.title)}</h3>
-          <p>Trạng thái: ${s.status || "pending"} | 👤 ${s.groupName || "Cá nhân"} | 👁 ${s.views || 0} | ❤️ ${s.likes || 0}</p>
+          <p>📚 Nhóm: ${escapeHtml(s.groupName) || "Cá nhân"} | 👤 Chủ: ${escapeHtml(s.ownerNickname) || "Không rõ"}</p>
+          <p>📌 Trạng thái: ${s.approved === true ? '✅ Đã duyệt' : '⏳ Chờ duyệt'} | 📖 Tình trạng: ${s.status || "Đang tiến hành"}</p>
+          <p>👁 Lượt xem: ${s.views || 0} | ❤️ Lượt thích: ${s.likes || 0}</p>
           <button class="btn-approve" onclick="approveStory('${s.id}')">✔ Duyệt</button>
           <button class="btn-reject" onclick="rejectStory('${s.id}')">❌ Từ chối</button>
-          <button class="btn-delete" onclick="deleteStory('${s.id}')">🗑 Xóa</button>
+          ${currentUserData?.role === "admin" ? `<button class="btn-delete" onclick="deleteStory('${s.id}')">🗑 Xóa</button>` : ''}
         </div>
       `).join("")}
     `;
   });
 }
 
-// ==================== PENDING MODERATION ====================
+// ==================== PENDING STORIES ====================
 function loadPending() {
-  onValue(ref(db, "stories"), (snap) => {
+  if (currentUnsubscribe) currentUnsubscribe();
+  
+  const storiesRef = ref(db, 'stories');
+  currentUnsubscribe = onValue(storiesRef, (snap) => {
     const data = snap.val() || {};
     const pendingList = Object.entries(data)
       .map(([id, v]) => ({ id, ...v }))
-      .filter(s => s.status === "pending");
+      .filter(s => s.approved === false);
     
     document.getElementById("adminMain").innerHTML = `
       <h2>⏳ Truyện chờ duyệt (${pendingList.length})</h2>
       ${pendingList.map(s => `
         <div class="card">
           <h3>${escapeHtml(s.title)}</h3>
-          <p>👤 ${s.groupName || "Cá nhân"} | 📅 ${new Date(s.createdAt).toLocaleDateString()}</p>
+          <p>📚 Nhóm: ${escapeHtml(s.groupName) || "Cá nhân"} | 👤 Chủ: ${escapeHtml(s.ownerNickname) || "Không rõ"}</p>
+          <p>📅 Ngày đăng: ${new Date(s.createdAt).toLocaleDateString()}</p>
           <button class="btn-approve" onclick="approveStory('${s.id}')">✔ Duyệt</button>
           <button class="btn-reject" onclick="rejectStory('${s.id}')">❌ Từ chối</button>
-          <button class="btn-delete" onclick="deleteStory('${s.id}')">🗑 Xóa</button>
+          ${currentUserData?.role === "admin" ? `<button class="btn-delete" onclick="deleteStory('${s.id}')">🗑 Xóa</button>` : ''}
         </div>
       `).join("")}
     `;
@@ -334,12 +378,15 @@ function loadPending() {
 
 // ==================== USER MANAGEMENT ====================
 function loadUsers() {
-  onValue(ref(db, "users"), (snap) => {
+  if (currentUnsubscribe) currentUnsubscribe();
+  
+  const usersRef = ref(db, 'users');
+  currentUnsubscribe = onValue(usersRef, (snap) => {
     const data = snap.val() || {};
     const usersList = Object.entries(data).map(([id, u]) => ({ id, ...u }));
     
     document.getElementById("adminMain").innerHTML = `
-      <h2>👤 Quản lý người dùng</h2>
+      <h2>👤 Quản lý người dùng (${usersList.length})</h2>
       ${usersList.map(u => `
         <div class="card">
           <h3>${escapeHtml(u.nickname || u.email)} ${getUserBadge(u)}</h3>
@@ -351,8 +398,8 @@ function loadUsers() {
               <option value="false" ${!u.privileges?.moderator ? "selected" : ""}>👤 Người dùng thường</option>
               <option value="true" ${u.privileges?.moderator ? "selected" : ""}>🛡️ Quản lý (Moderator)</option>
             </select>
-            <button onclick="resetStrike('${u.id}')" style="background:#FFCCCC; color:black;">🔄 Reset vi phạm</button>
-            <button onclick="deleteUserAccount('${u.id}', '${escapeHtml(u.email)}')" style="background:#ff4444; color:white;">🗑 Xóa tài khoản</button>
+            ${currentUserData?.role === "admin" ? `<button onclick="resetStrike('${u.id}')" style="background:#FFCCCC; color:black;">🔄 Reset vi phạm</button>` : ''}
+            ${currentUserData?.role === "admin" ? `<button onclick="deleteUser('${u.id}', '${escapeHtml(u.email)}')" style="background:#ff4444; color:white;">🗑 Xóa tài khoản</button>` : ''}
           </div>
         </div>
       `).join("")}
@@ -360,9 +407,12 @@ function loadUsers() {
   });
 }
 
-// ==================== COMMENTS MODERATION ====================
+// ==================== COMMENTS MANAGEMENT ====================
 function loadComments() {
-  onValue(ref(db, "comments"), (snap) => {
+  if (currentUnsubscribe) currentUnsubscribe();
+  
+  const commentsRef = ref(db, 'comments');
+  currentUnsubscribe = onValue(commentsRef, (snap) => {
     const data = snap.val() || {};
     let allComments = [];
     
@@ -375,7 +425,7 @@ function loadComments() {
     allComments.sort((a,b) => (b.createdAt || 0) - (a.createdAt || 0));
     
     document.getElementById("adminMain").innerHTML = `
-      <h2>💬 Quản lý bình luận</h2>
+      <h2>💬 Quản lý bình luận (${allComments.length})</h2>
       ${allComments.map(c => `
         <div class="card">
           <p><b>${escapeHtml(c.userName)}</b> — ${new Date(c.createdAt).toLocaleString()}</p>
@@ -383,27 +433,31 @@ function loadComments() {
           <p style="font-size:12px; color:#888;">Truyện ID: ${c.storyId}</p>
           ${c.hidden ? '<span style="color:#FF69B4;">🔒 Đã ẩn</span>' : ''}
           <button class="btn-hide" onclick="hideComment('${c.storyId}','${c.cid}')">${c.hidden ? 'Hiện' : 'Ẩn'}</button>
+          ${currentUserData?.role === "admin" ? `<button class="btn-delete" onclick="deleteComment('${c.storyId}','${c.cid}')">🗑 Xóa</button>` : ''}
         </div>
       `).join("")}
     `;
   });
 }
 
-// ==================== GROUP MANAGEMENT ====================
+// ==================== GROUPS MANAGEMENT ====================
 function loadGroups() {
-  onValue(ref(db, "groups"), (snap) => {
+  if (currentUnsubscribe) currentUnsubscribe();
+  
+  const groupsRef = ref(db, 'groups');
+  currentUnsubscribe = onValue(groupsRef, (snap) => {
     const data = snap.val() || {};
     const groupsList = Object.entries(data).map(([id, g]) => ({ id, ...g }));
     
     document.getElementById("adminMain").innerHTML = `
-      <h2>📚 Quản lý nhóm dịch</h2>
+      <h2>📚 Quản lý nhóm dịch (${groupsList.length})</h2>
       ${groupsList.map(g => `
         <div class="card">
           <h3>${escapeHtml(g.groupName)}</h3>
-          <p>👑 Chủ nhóm: ${escapeHtml(g.ownerId)}</p>
+          <p>👤 Chủ nhóm: ${escapeHtml(g.ownerId)}</p>
           <p>👥 Số thành viên: ${g.members?.length || 0}</p>
           <p>📅 Ngày tạo: ${new Date(g.createdAt).toLocaleDateString()}</p>
-          <button onclick="deleteGroup('${g.id}')" style="background:#ff4444; color:white;">🗑 Xóa nhóm</button>
+          ${currentUserData?.role === "admin" ? `<button onclick="deleteGroup('${g.id}')" style="background:#ff4444; color:white;">🗑 Xóa nhóm</button>` : ''}
         </div>
       `).join("")}
     `;
@@ -412,6 +466,8 @@ function loadGroups() {
 
 // ==================== BROADCAST ====================
 function loadBroadcast() {
+  if (currentUnsubscribe) currentUnsubscribe();
+  
   document.getElementById("adminMain").innerHTML = `
     <h2>📢 Gửi thông báo đến tất cả người dùng</h2>
     <div class="broadcast-box">
@@ -419,41 +475,51 @@ function loadBroadcast() {
       <textarea id="broadcastMsg" rows="5" placeholder="Nhập nội dung thông báo..."></textarea>
       <button class="btn-approve" onclick="sendBroadcast()">📨 Gửi ngay</button>
     </div>
+    <h3 style="margin-top:20px;">📩 Lịch sử thông báo</h3>
+    <div id="notificationHistory"></div>
   `;
+  loadNotificationHistory();
+}
+
+async function loadNotificationHistory() {
+  const notifRef = ref(db, 'notifications');
+  const snapshot = await get(notifRef);
+  const data = snapshot.val() || {};
+  const notifs = Object.entries(data).map(([id, n]) => ({ id, ...n }));
+  notifs.sort((a,b) => b.sentAt - a.sentAt);
+  
+  document.getElementById("notificationHistory").innerHTML = notifs.slice(0,20).map(n => `
+    <div class="card">
+      <p><b>📧 ${escapeHtml(n.to)}</b> — ${new Date(n.sentAt).toLocaleString()}</p>
+      <p><b>${escapeHtml(n.subject)}</b></p>
+      <p>${escapeHtml(n.content)}</p>
+    </div>
+  `).join("") || "<p>Chưa có thông báo nào</p>";
 }
 
 // ==================== ACTIONS ====================
 window.approveStory = async (id) => {
-  await update(ref(db, `stories/${id}`), {
-    approved: true,
-    status: "approved",
-    moderatedBy: currentUserData.uid,
-    moderatedAt: Date.now()
-  });
+  await update(ref(db, `stories/${id}`), { approved: true });
   showNotification("Đã duyệt truyện");
+  loadPending();
 };
 
 window.rejectStory = async (id) => {
-  const reason = prompt("Lý do từ chối?");
-  await update(ref(db, `stories/${id}`), {
-    approved: false,
-    status: "rejected",
-    rejectedReason: reason || "",
-    moderatedBy: currentUserData.uid,
-    moderatedAt: Date.now()
-  });
+  await update(ref(db, `stories/${id}`), { approved: false });
   showNotification("Đã từ chối truyện");
+  loadPending();
 };
 
 window.deleteStory = async (id) => {
   if (!confirm("Xóa truyện này?")) return;
   await remove(ref(db, `stories/${id}`));
   showNotification("Đã xóa truyện");
+  loadStories();
 };
 
 window.toggleModerator = async (uid, value) => {
   const isMod = value === "true";
-  await setModerator(uid, isMod);
+  await update(ref(db, `users/${uid}/privileges`), { moderator: isMod });
   showNotification(isMod ? "Đã cấp quyền Quản lý" : "Đã thu hồi quyền Quản lý");
   loadUsers();
 };
@@ -461,21 +527,19 @@ window.toggleModerator = async (uid, value) => {
 window.resetStrike = async (uid) => {
   await update(ref(db, `users/${uid}`), { strike: 0, bannedUntil: 0 });
   showNotification("Đã reset vi phạm");
+  loadUsers();
 };
 
-window.deleteUserAccount = async (uid, email) => {
+window.deleteUser = async (uid, email) => {
+  const ADMIN_EMAILS = ["pydanmeii@gmail.com", "pepyl4298@gmail.com", "maihuong4298@gmail.com"];
   if (ADMIN_EMAILS.includes(email)) {
     showNotification("Không thể xóa tài khoản Admin!", true);
     return;
   }
   if (!confirm(`Xóa tài khoản ${email}?`)) return;
-  try {
-    await deleteUser(uid, email);
-    showNotification("Đã xóa tài khoản");
-    loadUsers();
-  } catch (err) {
-    showNotification(err.message, true);
-  }
+  await remove(ref(db, `users/${uid}`));
+  showNotification("Đã xóa tài khoản");
+  loadUsers();
 };
 
 window.hideComment = async (storyId, commentId) => {
@@ -484,11 +548,19 @@ window.hideComment = async (storyId, commentId) => {
   const currentHidden = snap.val()?.hidden || false;
   await update(commentsRef, { hidden: !currentHidden });
   showNotification(currentHidden ? "Đã hiện comment" : "Đã ẩn comment");
+  loadComments();
+};
+
+window.deleteComment = async (storyId, commentId) => {
+  if (!confirm("Xóa bình luận này?")) return;
+  await remove(ref(db, `comments/${storyId}/${commentId}`));
+  showNotification("Đã xóa bình luận");
+  loadComments();
 };
 
 window.deleteGroup = async (groupId) => {
   if (!confirm("Xóa nhóm này? Thành viên sẽ mất quyền nhóm!")) return;
-  await deleteGroup(groupId);
+  await remove(ref(db, `groups/${groupId}`));
   showNotification("Đã xóa nhóm");
   loadGroups();
 };
@@ -517,33 +589,53 @@ window.sendBroadcast = async () => {
   
   showNotification(`Đã gửi thông báo đến ${count} người dùng`);
   document.getElementById("broadcastMsg").value = "";
+  loadNotificationHistory();
 };
 
-// ==================== TAB SWITCHER ====================
-window.showTab = (tab) => {
-  if (tab === "dashboard") loadDashboard();
-  if (tab === "stories") loadStories();
-  if (tab === "pending") loadPending();
-  if (tab === "users") loadUsers();
-  if (tab === "comments") loadComments();
-  if (tab === "groups") loadGroups();
-  if (tab === "broadcast") loadBroadcast();
+// ==================== LOGOUT & NAVIGATION ====================
+window.logout = async () => {
+  await signOut(auth);
+  localStorage.removeItem("userSession");
+  window.location.href = "index.html";
 };
 
 window.goHome = () => {
   window.location.href = "index.html";
 };
 
-window.logout = async () => {
-  await logout();
-  window.location.href = "index.html";
-};
+// ==================== TAB SWITCHER ====================
+function switchTab(tab) {
+  if (currentUnsubscribe) {
+    currentUnsubscribe();
+    currentUnsubscribe = null;
+  }
+  
+  switch(tab) {
+    case 'dashboard': loadDashboard(); break;
+    case 'stories': loadStories(); break;
+    case 'pending': loadPending(); break;
+    case 'users': loadUsers(); break;
+    case 'comments': loadComments(); break;
+    case 'groups': loadGroups(); break;
+    case 'broadcast': loadBroadcast(); break;
+  }
+}
 
 // ==================== INIT ====================
 (async function() {
   const hasAccess = await checkAdminAccess();
   if (hasAccess) {
     loadDashboard();
+    
+    document.getElementById("dashboardBtn").onclick = () => switchTab('dashboard');
+    document.getElementById("storiesBtn").onclick = () => switchTab('stories');
+    document.getElementById("pendingBtn").onclick = () => switchTab('pending');
+    document.getElementById("usersBtn").onclick = () => switchTab('users');
+    document.getElementById("commentsBtn").onclick = () => switchTab('comments');
+    document.getElementById("groupsBtn").onclick = () => switchTab('groups');
+    document.getElementById("broadcastBtn").onclick = () => switchTab('broadcast');
+    document.getElementById("homeBtn").onclick = () => window.goHome();
+    document.getElementById("logoutBtn").onclick = () => window.logout();
   }
 })();
 </script>
