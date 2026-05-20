@@ -41,6 +41,8 @@ body {
   align-items: center;
   z-index: 20000;
 }
+
+/* Warning */
 #warningOverlay {
   position: fixed;
   inset: 0;
@@ -70,6 +72,16 @@ body {
   line-height: 1.6;
   margin-bottom: 25px;
 }
+.warning-box input {
+  width: 100%;
+  padding: 12px;
+  margin: 15px 0;
+  border: none;
+  border-radius: 12px;
+  background: #2a2a2a;
+  color: white;
+  font-size: 14px;
+}
 .warning-box button {
   padding: 12px 28px;
   margin: 0 8px;
@@ -85,6 +97,8 @@ body {
 }
 .btn-pink { background: #FF69B4; color: black; }
 .btn-red { background: #ff4444; color: white; }
+
+/* Login Page */
 #loginPage {
   position: fixed;
   inset: 0;
@@ -96,7 +110,7 @@ body {
 }
 .login-box {
   background: #1c1c1c;
-  width: 380px;
+  width: 400px;
   max-width: 90%;
   padding: 35px 25px;
   border-radius: 24px;
@@ -111,7 +125,7 @@ body {
 }
 .login-box p {
   color: #aaa;
-  margin-bottom: 25px;
+  margin-bottom: 10px;
 }
 .login-box input {
   width: 100%;
@@ -143,31 +157,35 @@ body {
   background: #FF1493;
   color: white;
 }
+.login-box hr {
+  margin: 20px 0;
+  border-color: #333;
+}
 #loginMsg {
   color: #ff6666;
   margin-top: 15px;
   font-size: 13px;
 }
-.otp-group {
+.otp-group, .password-group {
   display: none;
   margin-top: 15px;
   animation: fadeIn 0.3s ease;
-}
-.otp-resend {
-  margin-top: 10px;
-  font-size: 12px;
-}
-.otp-resend button {
-  background: transparent;
-  color: #FF69B4;
-  padding: 5px;
-  margin-top: 5px;
 }
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(-10px); }
   to { opacity: 1; transform: translateY(0); }
 }
-#nicknamePage {
+.toggle-link {
+  color: #FF69B4;
+  cursor: pointer;
+  text-decoration: underline;
+  margin-top: 10px;
+  display: inline-block;
+  font-size: 13px;
+}
+
+/* Nickname & Password Page */
+#registerPage {
   display: none;
   position: fixed;
   inset: 0;
@@ -176,6 +194,8 @@ body {
   background: linear-gradient(135deg, #0f0f0f, #1a1a2e);
   z-index: 10001;
 }
+
+/* Main Container */
 #mainContainer {
   display: none;
   min-height: 100vh;
@@ -248,7 +268,7 @@ body {
   margin-bottom: 15px;
   color: #FF69B4;
 }
-.upload-panel input, .upload-panel textarea, .upload-panel select {
+.upload-panel input, .upload-panel textarea {
   width: 100%;
   padding: 12px;
   margin-bottom: 12px;
@@ -325,7 +345,6 @@ body {
 }
 .search-bar input:focus {
   outline: 1px solid #FF69B4;
-  border-color: #FF69B4;
 }
 .filter-row {
   display: flex;
@@ -360,15 +379,11 @@ body {
   position: relative;
   border: 1px solid #FF69B4;
 }
-.modal-content h2 {
+.modal-content h2, .modal-content h3 {
   color: #FF69B4;
   margin-bottom: 20px;
 }
-.modal-content h3 {
-  margin: 20px 0 10px;
-  color: #FF69B4;
-}
-.modal-content input, .modal-content textarea, .modal-content select {
+.modal-content input, .modal-content textarea {
   width: 100%;
   padding: 12px;
   margin-bottom: 12px;
@@ -376,10 +391,6 @@ body {
   border: none;
   border-radius: 12px;
   color: white;
-}
-.modal-content textarea {
-  height: 100px;
-  resize: vertical;
 }
 .modal-content button {
   padding: 10px 20px;
@@ -390,7 +401,6 @@ body {
   cursor: pointer;
   color: black;
   margin-right: 10px;
-  margin-bottom: 10px;
 }
 .modal-content button:hover {
   background: #FF1493;
@@ -540,53 +550,68 @@ body {
 </head>
 <body>
 
+<!-- ==================== WARNING 18+ ==================== -->
 <div id="warningOverlay">
   <div class="warning-box">
     <h2>⚠️ CẢNH BÁO 18+ ⚠️</h2>
     <p>Trang web này có thể chứa nội dung dành cho người trưởng thành (18+).<br><br>
     Bằng việc tiếp tục, bạn xác nhận rằng bạn đủ 18 tuổi trở lên và việc xem nội dung này hợp pháp tại khu vực của bạn.</p>
-    <button class="btn-pink" id="continueBtn">TIẾP TỤC</button>
+    <input type="password" id="mainPassword" placeholder="Mật khẩu chính *">
+    <button class="btn-pink" id="warningContinueBtn">TIẾP TỤC</button>
     <button class="btn-red" id="exitBtn">THOÁT</button>
   </div>
 </div>
 
-<!-- LOGIN PAGE -->
+<!-- ==================== LOGIN PAGE ==================== -->
 <div id="loginPage">
   <div class="login-box">
     <h2>🌸 DANMETOPIA 🌸</h2>
-    <p>Nhập mật khẩu chính để truy cập</p>
-    <input id="mainPassword" type="password" placeholder="Mật khẩu chính *">
-    <button id="enterMainBtn" class="btn-pink">🔓 TRUY CẬP</button>
-    <hr style="margin: 20px 0; border-color: #333;">
-    <p style="font-size:13px;">📧 Đăng nhập bằng email để có thêm quyền lợi</p>
-    <input id="loginEmail" type="email" placeholder="Email">
-    <button id="sendOtpBtn" class="btn-pink" style="background:#555;">📩 Gửi mã OTP</button>
+    
+    <!-- LUỒNG 1: GUEST -->
+    <button id="guestBtn" class="btn-pink">🎭 BỎ QUA (Guest)</button>
+    
+    <hr>
+    
+    <!-- LUỒNG 2: EMAIL -->
+    <p>📧 Đăng nhập bằng email</p>
+    <input type="email" id="loginEmail" placeholder="Email">
+    <button id="checkEmailBtn" class="btn-pink">TIẾP TỤC</button>
+    
+    <!-- OTP group (hiện khi email mới) -->
     <div id="otpGroup" class="otp-group">
-      <input id="otpCode" type="text" placeholder="Nhập mã 6 số" maxlength="6">
-      <button id="verifyOtpBtn" class="btn-pink">🔓 Xác nhận & Đăng nhập</button>
-      <div class="otp-resend">
-        <button id="resendOtpBtn" style="background:transparent; color:#FF69B4;">🔄 Gửi lại mã</button>
-      </div>
+      <input type="text" id="otpCode" placeholder="Nhập mã OTP 6 số" maxlength="6">
+      <button id="verifyOtpBtn" class="btn-pink">XÁC NHẬN OTP</button>
+      <div class="toggle-link" id="backToEmailBtn">← Quay lại</div>
     </div>
+    
+    <!-- Password group (hiện khi email cũ) -->
+    <div id="passwordGroup" class="password-group">
+      <input type="password" id="loginPassword" placeholder="Mật khẩu">
+      <button id="passwordLoginBtn" class="btn-pink">ĐĂNG NHẬP</button>
+      <div class="toggle-link" id="backToEmailBtn2">← Quay lại</div>
+    </div>
+    
     <p id="loginMsg" style="color:#ff6666; margin-top:15px;"></p>
   </div>
 </div>
 
-<!-- NICKNAME PAGE -->
-<div id="nicknamePage">
+<!-- ==================== REGISTER PAGE (nickname + password) ==================== -->
+<div id="registerPage">
   <div class="login-box" style="max-width:380px;">
-    <h2>🎉 CHÀO MỪNG BẠN ĐẾN VỚI DANMETOPIA!</h2>
-    <p>Vui lòng tạo nickname (sẽ hiển thị công khai)</p>
-    <input id="nicknameInput" type="text" placeholder="Nickname của bạn">
-    <button id="saveNicknameBtn">HOÀN TẤT</button>
-    <p id="nicknameMsg" style="color:#ff6666; margin-top:15px;"></p>
+    <h2>🎉 HOÀN TẤT ĐĂNG KÝ</h2>
+    <p>Email: <strong id="verifiedEmail"></strong> đã được xác nhận!</p>
+    <input type="text" id="nicknameInput" placeholder="Nickname của bạn">
+    <input type="password" id="newPassword" placeholder="Mật khẩu (tối thiểu 6 ký tự)">
+    <input type="password" id="confirmPassword" placeholder="Xác nhận mật khẩu">
+    <button id="completeRegisterBtn" class="btn-pink">HOÀN TẤT</button>
+    <p id="registerMsg" style="color:#ff6666; margin-top:15px;"></p>
   </div>
 </div>
 
-<!-- MAIN CONTAINER -->
+<!-- ==================== MAIN CONTAINER ==================== -->
 <div id="mainContainer">
   <div class="topbar">
-    <div class="logo" onclick="showHome()">🌸 DANMETOPIA 🌸</div>
+    <div class="logo" onclick="showHome()">🌸 DANMETOPIA</div>
     <div class="user-area">
       <span id="userDisplay">👤 Đang tải...</span>
       <button id="profileBtn" style="display:none">👤 Thông tin</button>
@@ -619,80 +644,24 @@ body {
   </div>
   <div id="uploadPanel"></div>
   <div class="manga-grid" id="mangaGrid">
-    <div style="text-align:center; padding:50px;">
-      <div class="loading-spinner"></div>
-      <p style="margin-top:15px;">Đang tải truyện...</p>
-    </div>
+    <div style="text-align:center; padding:50px;"><div class="loading-spinner"></div><p>Đang tải truyện...</p></div>
   </div>
 </div>
 
 <!-- MODALS -->
-<div id="groupModal" class="modal">
-  <div class="modal-content" style="max-width:400px;">
-    <span class="close-modal" onclick="closeModal('groupModal')">&times;</span>
-    <h3>📚 TẠO NHÓM DỊCH</h3>
-    <input type="text" id="groupNameInput" placeholder="Tên nhóm">
-    <textarea id="groupDescInput" placeholder="Mô tả nhóm (không bắt buộc)" rows="3"></textarea>
-    <button id="confirmGroupBtn">TẠO NHÓM</button>
-  </div>
-</div>
-<div id="storyModal" class="modal">
-  <div class="modal-content">
-    <span class="close-modal" onclick="closeModal('storyModal')">&times;</span>
-    <div id="storyDetailContent"></div>
-    <div id="storyChapters"></div>
-    <div id="storyActions" style="margin-top:20px;"></div>
-  </div>
-</div>
-<div id="editStoryModal" class="modal">
-  <div class="modal-content" style="max-width:600px;">
-    <span class="close-modal" onclick="closeModal('editStoryModal')">&times;</span>
-    <h2>📝 CHỈNH SỬA TRUYỆN</h2>
-    <div id="editStoryContent"></div>
-  </div>
-</div>
-<div id="addChapterModal" class="modal">
-  <div class="modal-content" style="max-width:600px;">
-    <span class="close-modal" onclick="closeModal('addChapterModal')">&times;</span>
-    <h2>📖 THÊM CHAPTER MỚI</h2>
-    <div id="addChapterContent"></div>
-  </div>
-</div>
-<div id="readerModal" class="modal">
-  <div class="modal-content" style="max-width:95%; max-height:90vh; overflow-y:auto;">
-    <span class="close-modal" onclick="closeReaderModal()">&times;</span>
-    <div id="readerContent"></div>
-  </div>
-</div>
-<div id="profileModal" class="modal">
-  <div class="modal-content" style="max-width:400px;">
-    <span class="close-modal" onclick="closeModal('profileModal')">&times;</span>
-    <h2>👤 THÔNG TIN CÁ NHÂN</h2>
-    <div id="profileContent"></div>
-  </div>
-</div>
+<div id="groupModal" class="modal"><div class="modal-content"><span class="close-modal" onclick="closeModal('groupModal')">&times;</span><h3>📚 TẠO NHÓM DỊCH</h3><input id="groupNameInput" placeholder="Tên nhóm"><textarea id="groupDescInput" placeholder="Mô tả" rows="3"></textarea><button id="confirmGroupBtn">TẠO NHÓM</button></div></div>
+<div id="storyModal" class="modal"><div class="modal-content"><span class="close-modal" onclick="closeModal('storyModal')">&times;</span><div id="storyDetailContent"></div><div id="storyChapters"></div><div id="storyActions"></div></div></div>
+<div id="editStoryModal" class="modal"><div class="modal-content"><span class="close-modal" onclick="closeModal('editStoryModal')">&times;</span><h2>📝 CHỈNH SỬA TRUYỆN</h2><div id="editStoryContent"></div></div></div>
+<div id="addChapterModal" class="modal"><div class="modal-content"><span class="close-modal" onclick="closeModal('addChapterModal')">&times;</span><h2>📖 THÊM CHAPTER MỚI</h2><div id="addChapterContent"></div></div></div>
+<div id="readerModal" class="modal"><div class="modal-content"><span class="close-modal" onclick="closeReaderModal()">&times;</span><div id="readerContent"></div></div></div>
+<div id="profileModal" class="modal"><div class="modal-content"><span class="close-modal" onclick="closeModal('profileModal')">&times;</span><h2>👤 THÔNG TIN</h2><div id="profileContent"></div></div></div>
 
 <script type="module">
-// Khởi tạo EmailJS
-if (typeof emailjs !== 'undefined') {
-  emailjs.init("fPq8fpw1OqzOtj-lk");
-  console.log("✅ EmailJS initialized");
-} else {
-  console.error("❌ EmailJS not loaded");
-}
-
-// ==================== FIREBASE IMPORTS ====================
+// ==================== FIREBASE & EMAILJS ====================
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import {
-  getAuth, signInAnonymously, updateProfile, onAuthStateChanged, signOut
-} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-import {
-  getDatabase, ref, set, get, child, push, update, remove,
-  onValue, off
-} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
-import {
-  getStorage, ref as storageRef, uploadBytes, getDownloadURL
-} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { getDatabase, ref, set, get, child, push, update, remove, onValue, off } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCDQk9DlMNKwn_508fDMI_3IB_dgpgHujA",
@@ -708,6 +677,7 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getDatabase(app);
 const storage = getStorage(app);
+emailjs.init("fPq8fpw1OqzOtj-lk");
 
 // ==================== CONSTANTS ====================
 const MAIN_PASSWORD = "danmei";
@@ -718,15 +688,14 @@ let allStories = [];
 let currentTab = "all";
 let userFollows = {};
 let renderTimeout = null;
-let pendingEmail = null;
-let isProcessing = false;
-let lastOtpSentTime = 0;
+let pendingRegisterEmail = null;
 
+// Listener refs
 let storiesUnsubscribe = null;
 let chaptersUnsubscribe = null;
 let commentsUnsubscribe = null;
 
-// ==================== HELPER FUNCTIONS ====================
+// ==================== HELPER ====================
 function showNotification(msg, isError = false) {
   const notif = document.createElement("div");
   notif.className = "notification";
@@ -758,6 +727,10 @@ function escapeHtml(str) {
   return str.replace(/[&<>]/g, m => m === "&" ? "&amp;" : m === "<" ? "&lt;" : "&gt;");
 }
 
+function generateRandomGuestName() {
+  return `Hủ nằm vùng ${Math.floor(Math.random() * 10000)}`;
+}
+
 function scheduleRender() {
   if (renderTimeout) clearTimeout(renderTimeout);
   renderTimeout = setTimeout(() => renderCurrentTab(), 150);
@@ -767,128 +740,72 @@ function getGenres(str) {
   return (str || "").split(",").map(s => s.trim()).filter(s => s);
 }
 
-function generateRandomGuestName() {
-  const randomNum = Math.floor(Math.random() * 10000);
-  return `Hủ nằm vùng ${randomNum}`;
-}
-
 // ==================== OTP FUNCTIONS ====================
 function generateOTP() {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
 async function sendOTPEmail(email) {
-  const now = Date.now();
-  if (now - lastOtpSentTime < 30000) {
-    const waitTime = Math.ceil((30000 - (now - lastOtpSentTime)) / 1000);
-    showNotification(`Vui lòng đợi ${waitTime} giây trước khi gửi lại`, true);
-    return false;
-  }
-  
   const otp = generateOTP();
-  const expires = Date.now() + 5 * 60 * 1000;
-  
   await set(ref(db, `otp_requests/${email.replace(/\./g, "_")}`), {
     code: otp,
-    expires: expires
+    expires: Date.now() + 5 * 60 * 1000
   });
-  
   try {
-    if (typeof emailjs === 'undefined') {
-      console.error("EmailJS not loaded!");
-      showNotification(`⚠️ EmailJS chưa sẵn sàng. Mã OTP demo: ${otp}`, true);
-      lastOtpSentTime = now;
-      return true;
-    }
-    
-    await emailjs.send(
-      "service_8bxh5mm",
-      "template_8ahbuhu",
-      { otp: otp, to_email: email }
-    );
-    
-    lastOtpSentTime = now;
-    showNotification(`📩 Đã gửi mã OTP đến ${email}`, false);
+    await emailjs.send("service_8bxh5mm", "template_8ahbuhu", { otp: otp, to_email: email });
+    showNotification("📩 Mã OTP đã gửi đến email của bạn");
     return true;
   } catch (error) {
     console.error("EmailJS error:", error);
-    showNotification(`❌ Gửi email thất bại. Mã OTP demo: ${otp}`, true);
-    lastOtpSentTime = now;
+    showNotification(`⚠️ Mã OTP demo: ${otp}`, true);
     return true;
   }
 }
 
 async function verifyOTP(email, inputCode) {
-  try {
-    const emailKey = email.replace(/\./g, "_");
-    const snap = await get(ref(db, `otp_requests/${emailKey}`));
-    const data = snap.val();
-    
-    if (!data) {
-      return { success: false, message: "Mã OTP không tồn tại" };
-    }
-    if (Date.now() > data.expires) {
-      return { success: false, message: "Mã OTP đã hết hạn" };
-    }
-    if (data.code !== inputCode) {
-      return { success: false, message: "Sai mã OTP" };
-    }
-    
-    await remove(ref(db, `otp_requests/${emailKey}`));
-    return { success: true, message: "OK" };
-  } catch (err) {
-    console.error("verifyOTP error:", err);
-    return { success: false, message: "Lỗi xác thực OTP" };
-  }
+  const snap = await get(ref(db, `otp_requests/${email.replace(/\./g, "_")}`));
+  const data = snap.val();
+  if (!data) return { success: false, message: "Mã OTP không tồn tại" };
+  if (Date.now() > data.expires) return { success: false, message: "Mã OTP đã hết hạn" };
+  if (data.code !== inputCode) return { success: false, message: "Sai mã OTP" };
+  await remove(ref(db, `otp_requests/${email.replace(/\./g, "_")}`));
+  return { success: true };
 }
 
-// ==================== USER FUNCTIONS ====================
-async function getUserData(uid) {
-  try {
-    const snapshot = await get(child(ref(db), `users/${uid}`));
-    return snapshot.exists() ? snapshot.val() : null;
-  } catch (err) {
-    console.error("getUserData error:", err);
-    return null;
+// ==================== CHECK EMAIL EXIST ====================
+async function checkEmailExists(email) {
+  const usersSnap = await get(ref(db, "users"));
+  const users = usersSnap.val() || {};
+  for (const uid in users) {
+    if (users[uid].email === email) return true;
   }
+  return false;
+}
+
+// ==================== USER DATA FUNCTIONS ====================
+async function getUserData(uid) {
+  const snap = await get(child(ref(db), `users/${uid}`));
+  return snap.exists() ? snap.val() : null;
 }
 
 async function getUserGroup(uid) {
   const userData = await getUserData(uid);
   if (userData?.privileges?.groupId) {
-    const snapshot = await get(child(ref(db), `groups/${userData.privileges.groupId}`));
-    return snapshot.exists() ? { id: userData.privileges.groupId, ...snapshot.val() } : null;
+    const snap = await get(child(ref(db), `groups/${userData.privileges.groupId}`));
+    return snap.exists() ? { id: userData.privileges.groupId, ...snap.val() } : null;
   }
   return null;
 }
 
-function isAdmin(userData) {
-  return userData?.role === "admin";
-}
-
-function isModerator(userData) {
-  return userData?.role === "user" && userData?.privileges?.moderator === true;
-}
-
-function hasGroup(userData) {
-  return userData?.role === "user" && !!userData?.privileges?.groupId;
-}
-
-function canModerate(userData) {
-  return isAdmin(userData) || isModerator(userData);
-}
-
-function canUpload(userData) {
-  return userData && (userData.role === "admin" || userData.role === "user");
-}
+function isAdmin(userData) { return userData?.role === "admin"; }
+function isModerator(userData) { return userData?.role === "user" && userData?.privileges?.moderator === true; }
+function hasGroup(userData) { return userData?.role === "user" && !!userData?.privileges?.groupId; }
+function canModerate(userData) { return isAdmin(userData) || isModerator(userData); }
+function canUpload(userData) { return userData && (userData.role === "admin" || userData.role === "user"); }
 
 async function getDisplayName(uid, email, userData) {
-  if (!userData) {
-    userData = await getUserData(uid);
-  }
-  if (!userData || userData.role === "guest") {
-    return generateRandomGuestName();
-  }
+  if (!userData) userData = await getUserData(uid);
+  if (!userData) return generateRandomGuestName();
   const nickname = userData?.nickname || email?.split("@")[0] || "Người dùng";
   if (userData?.role === "admin") return `${nickname} (Admin)`;
   if (userData?.role === "user" && userData?.privileges?.moderator) return `${nickname} (Quản lý)`;
@@ -900,41 +817,21 @@ async function getDisplayName(uid, email, userData) {
 }
 
 async function loadUserData(uid, email) {
-  try {
-    const userData = await getUserData(uid);
-    const displayName = await getDisplayName(uid, email, userData);
-    return {
-      uid, email,
-      role: userData?.role || "user",
-      privileges: userData?.privileges || { moderator: false, groupId: null },
-      nickname: userData?.nickname,
-      displayName: displayName
-    };
-  } catch (err) {
-    console.error("loadUserData error:", err);
-    throw err;
-  }
-}
-
-async function updateNickname(uid, newNickname) {
-  const usersRef = ref(db, 'users');
-  const snapshot = await get(usersRef);
-  if (snapshot.exists()) {
-    const users = snapshot.val();
-    for (const key in users) {
-      if (users[key]?.nickname === newNickname && key !== uid) {
-        throw new Error("Nickname đã tồn tại");
-      }
-    }
-  }
-  await update(ref(db, `users/${uid}`), { nickname: newNickname });
+  const userData = await getUserData(uid);
+  const displayName = await getDisplayName(uid, email, userData);
+  return {
+    uid, email,
+    role: userData?.role || "user",
+    privileges: userData?.privileges || { moderator: false, groupId: null },
+    nickname: userData?.nickname,
+    displayName: displayName
+  };
 }
 
 async function createNewUser(uid, email, nickname) {
   const isAdminEmail = ADMIN_EMAILS.includes(email);
   await set(ref(db, `users/${uid}`), {
-    email: email,
-    nickname: nickname || email.split("@")[0],
+    email, nickname,
     role: isAdminEmail ? "admin" : "user",
     privileges: { moderator: false, groupId: null },
     follows: {}, history: [], genrePref: {}, strike: 0, bannedUntil: 0,
@@ -942,8 +839,144 @@ async function createNewUser(uid, email, nickname) {
   });
 }
 
-// ==================== STORIES CRUD ====================
-function loadStoriesRealtime() {
+// ==================== AUTH FLOWS ====================
+
+// LUỒNG 1: Guest
+async function handleGuestLogin() {
+  const guestName = generateRandomGuestName();
+  currentUserData = { role: "guest", displayName: guestName, nickname: guestName };
+  localStorage.setItem("userSession", JSON.stringify(currentUserData));
+  document.getElementById("loginPage").style.display = "none";
+  document.getElementById("mainContainer").style.display = "block";
+  showNotification(`👤 Chào mừng ${guestName} (Khách)`);
+  initApp();
+}
+
+// LUỒNG 2: Xử lý email (kiểm tra email mới hay cũ)
+async function handleCheckEmail() {
+  const email = document.getElementById("loginEmail").value.trim();
+  if (!email) { showNotification("Nhập email", true); return; }
+  
+  showLoading(true);
+  const emailExists = await checkEmailExists(email);
+  showLoading(false);
+  
+  if (emailExists) {
+    // Email cũ → hiện ô nhập mật khẩu
+    document.getElementById("passwordGroup").style.display = "block";
+    document.getElementById("otpGroup").style.display = "none";
+    document.getElementById("loginMsg").innerHTML = "";
+  } else {
+    // Email mới → gửi OTP
+    pendingRegisterEmail = email;
+    await sendOTPEmail(email);
+    document.getElementById("otpGroup").style.display = "block";
+    document.getElementById("passwordGroup").style.display = "none";
+    document.getElementById("loginMsg").innerHTML = "📩 Mã OTP đã gửi, vui lòng kiểm tra email";
+  }
+}
+
+// Xác nhận OTP (cho email mới)
+async function handleVerifyOTP() {
+  const otp = document.getElementById("otpCode").value.trim();
+  if (!otp || otp.length !== 6) { showNotification("Nhập mã OTP 6 số", true); return; }
+  
+  showLoading(true);
+  const result = await verifyOTP(pendingRegisterEmail, otp);
+  showLoading(false);
+  
+  if (!result.success) { showNotification(result.message, true); return; }
+  
+  // OTP đúng → chuyển sang trang tạo nickname + mật khẩu
+  document.getElementById("verifiedEmail").innerText = pendingRegisterEmail;
+  document.getElementById("loginPage").style.display = "none";
+  document.getElementById("registerPage").style.display = "flex";
+}
+
+// Đăng nhập bằng mật khẩu (cho email cũ)
+async function handlePasswordLogin() {
+  const email = document.getElementById("loginEmail").value.trim();
+  const password = document.getElementById("loginPassword").value;
+  if (!email || !password) { showNotification("Nhập email và mật khẩu", true); return; }
+  
+  showLoading(true);
+  try {
+    const userCred = await signInWithEmailAndPassword(auth, email, password);
+    const userData = await loadUserData(userCred.user.uid, email);
+    currentUserData = userData;
+    localStorage.setItem("userSession", JSON.stringify(currentUserData));
+    document.getElementById("loginPage").style.display = "none";
+    document.getElementById("mainContainer").style.display = "block";
+    showNotification(`✅ Chào mừng ${currentUserData.displayName}`);
+    initApp();
+  } catch (err) {
+    if (err.code === "auth/invalid-credential") showNotification("Sai email hoặc mật khẩu", true);
+    else showNotification("Lỗi: " + err.message, true);
+  } finally { showLoading(false); }
+}
+
+// Hoàn tất đăng ký (email mới sau OTP)
+async function handleCompleteRegistration() {
+  const nickname = document.getElementById("nicknameInput").value.trim();
+  const password = document.getElementById("newPassword").value;
+  const confirm = document.getElementById("confirmPassword").value;
+  const msg = document.getElementById("registerMsg");
+  
+  if (!nickname) { msg.innerText = "Nhập nickname"; return; }
+  if (!password || password.length < 6) { msg.innerText = "Mật khẩu phải có ít nhất 6 ký tự"; return; }
+  if (password !== confirm) { msg.innerText = "Mật khẩu không khớp"; return; }
+  
+  showLoading(true);
+  try {
+    const userCred = await createUserWithEmailAndPassword(auth, pendingRegisterEmail, password);
+    await createNewUser(userCred.user.uid, pendingRegisterEmail, nickname);
+    const userData = await loadUserData(userCred.user.uid, pendingRegisterEmail);
+    currentUserData = userData;
+    localStorage.setItem("userSession", JSON.stringify(currentUserData));
+    document.getElementById("registerPage").style.display = "none";
+    document.getElementById("mainContainer").style.display = "block";
+    showNotification(`🎉 Chào mừng ${nickname}!`);
+    initApp();
+  } catch (err) {
+    msg.innerText = "Lỗi: " + err.message;
+  } finally { showLoading(false); }
+}
+
+// Restore session từ localStorage
+async function restoreSession() {
+  const session = localStorage.getItem("userSession");
+  if (!session) return false;
+  try {
+    const data = JSON.parse(session);
+    if (data.role === "guest") {
+      currentUserData = data;
+      document.getElementById("warningOverlay").style.display = "none";
+      document.getElementById("loginPage").style.display = "none";
+      document.getElementById("mainContainer").style.display = "block";
+      initApp();
+      return true;
+    } else if (data.uid) {
+      currentUserData = await loadUserData(data.uid, data.email);
+      localStorage.setItem("userSession", JSON.stringify(currentUserData));
+      document.getElementById("warningOverlay").style.display = "none";
+      document.getElementById("loginPage").style.display = "none";
+      document.getElementById("mainContainer").style.display = "block";
+      initApp();
+      return true;
+    }
+  } catch(e) { console.error("Restore error:", e); }
+  return false;
+}
+
+// Logout
+async function logout() {
+  await signOut(auth);
+  localStorage.removeItem("userSession");
+  window.location.reload();
+}
+
+// ==================== CORE APP FUNCTIONS ====================
+async function loadStoriesRealtime() {
   if (storiesUnsubscribe) storiesUnsubscribe();
   const storiesRef = ref(db, 'stories');
   storiesUnsubscribe = onValue(storiesRef, (snapshot) => {
@@ -966,32 +999,11 @@ async function createStory(data, coverFile) {
   return newStoryRef.key;
 }
 
-async function updateStoryData(storyId, data) {
-  await update(ref(db, `stories/${storyId}`), data);
-}
-
-async function deleteStory(storyId) {
-  if (!isAdmin(currentUserData)) return;
-  await remove(ref(db, `stories/${storyId}`));
-}
-
-async function likeStory(storyId) {
-  const storyRef = ref(db, `stories/${storyId}/likes`);
-  const snapshot = await get(storyRef);
-  await set(storyRef, (snapshot.val() || 0) + 1);
-}
-
-async function approveStory(storyId) {
-  if (!canModerate(currentUserData)) return;
-  await update(ref(db, `stories/${storyId}`), { approved: true, status: "approved" });
-  showNotification("Đã duyệt truyện");
-}
-
-async function rejectStory(storyId) {
-  if (!canModerate(currentUserData)) return;
-  await update(ref(db, `stories/${storyId}`), { approved: false, status: "rejected" });
-  showNotification("Đã từ chối truyện");
-}
+async function updateStoryData(storyId, data) { await update(ref(db, `stories/${storyId}`), data); }
+async function deleteStory(storyId) { if (!isAdmin(currentUserData)) return; await remove(ref(db, `stories/${storyId}`)); }
+async function likeStory(storyId) { const storyRef = ref(db, `stories/${storyId}/likes`); const snapshot = await get(storyRef); await set(storyRef, (snapshot.val() || 0) + 1); }
+async function approveStory(storyId) { if (!canModerate(currentUserData)) return; await update(ref(db, `stories/${storyId}`), { approved: true, status: "approved" }); showNotification("Đã duyệt truyện"); }
+async function rejectStory(storyId) { if (!canModerate(currentUserData)) return; await update(ref(db, `stories/${storyId}`), { approved: false, status: "rejected" }); showNotification("Đã từ chối truyện"); }
 
 async function addChapter(storyId, title, pages, chapterNumber) {
   const chaptersRef = ref(db, `chapters/${storyId}`);
@@ -1007,7 +1019,7 @@ async function getChapters(storyId) {
   return chapters;
 }
 
-// ==================== FOLLOW SYSTEM ====================
+// FOLLOW SYSTEM
 async function loadFollows() {
   if (!currentUserData || currentUserData.role === "guest") return;
   try {
@@ -1015,7 +1027,6 @@ async function loadFollows() {
     userFollows = snapshot.val() || {};
   } catch (err) { userFollows = {}; }
 }
-
 async function followStory(storyId) {
   if (!currentUserData || currentUserData.role === "guest") return false;
   if (!userFollows[storyId]) {
@@ -1025,7 +1036,6 @@ async function followStory(storyId) {
   }
   return true;
 }
-
 async function unfollowStory(storyId) {
   if (userFollows[storyId]) {
     delete userFollows[storyId];
@@ -1033,15 +1043,11 @@ async function unfollowStory(storyId) {
     showNotification("Đã bỏ theo dõi");
   }
 }
-
 function isFollowing(storyId) { return !!userFollows[storyId]; }
 
-// ==================== RECOMMENDATION ====================
-function getRecommendations() {
-  return allStories.filter(s => s.approved === true).slice(0, 12);
-}
+function getRecommendations() { return allStories.filter(s => s.approved === true).slice(0, 12); }
 
-// ==================== RENDER FUNCTIONS ====================
+// RENDER
 function renderCurrentTab() {
   if (!document.getElementById("mangaGrid")) return;
   let filtered = allStories.filter(s => s.approved === true);
@@ -1073,7 +1079,7 @@ function renderMangaGrid(stories) {
   `).join("");
 }
 
-// ==================== STORY DETAIL ====================
+// STORY DETAIL
 window.openStoryDetail = async (storyId) => {
   const story = allStories.find(s => s.id === storyId);
   if (!story) return;
@@ -1121,16 +1127,15 @@ window.rejectStoryAction = async (storyId) => { await rejectStory(storyId); clos
 window.deleteStoryAction = async (storyId) => { if (confirm("Xóa truyện?")) { await deleteStory(storyId); closeModal("storyModal"); } };
 window.toggleFollow = async (storyId) => { if (isFollowing(storyId)) await unfollowStory(storyId); else await followStory(storyId); openStoryDetail(storyId); scheduleRender(); };
 
-// ==================== EDIT STORY ====================
 window.openEditStory = async (storyId) => {
   const story = allStories.find(s => s.id === storyId);
   document.getElementById("editStoryContent").innerHTML = `
-    <input type="text" id="editTitle" value="${escapeHtml(story.title)}" placeholder="Tên truyện *">
-    <input type="text" id="editOtherName" value="${escapeHtml(story.otherName || '')}" placeholder="Tên khác">
-    <input type="text" id="editAuthor" value="${escapeHtml(story.author || '')}" placeholder="Tác giả">
-    <input type="text" id="editGenres" value="${escapeHtml(story.genres || '')}" placeholder="Thể loại">
-    <input type="text" id="editStatus" value="${escapeHtml(story.status || 'Đang cập nhật')}" placeholder="Tình trạng">
-    <input type="url" id="editCover" value="${escapeHtml(story.cover || '')}" placeholder="Link ảnh bìa">
+    <input id="editTitle" value="${escapeHtml(story.title)}" placeholder="Tên truyện *">
+    <input id="editOtherName" value="${escapeHtml(story.otherName || '')}" placeholder="Tên khác">
+    <input id="editAuthor" value="${escapeHtml(story.author || '')}" placeholder="Tác giả">
+    <input id="editGenres" value="${escapeHtml(story.genres || '')}" placeholder="Thể loại">
+    <input id="editStatus" value="${escapeHtml(story.status || 'Đang cập nhật')}" placeholder="Tình trạng">
+    <input id="editCover" value="${escapeHtml(story.cover || '')}" placeholder="Link ảnh bìa">
     <textarea id="editDesc" placeholder="Mô tả">${escapeHtml(story.desc || '')}</textarea>
     <button onclick="saveEditStory('${storyId}')">💾 Lưu</button>
   `;
@@ -1152,11 +1157,10 @@ window.saveEditStory = async (storyId) => {
   openStoryDetail(storyId);
 };
 
-// ==================== ADD CHAPTER ====================
 window.openAddChapter = (storyId) => {
   document.getElementById("addChapterContent").innerHTML = `
-    <input type="text" id="chapterTitle" placeholder="Tên chapter *">
-    <input type="number" id="chapterNumber" placeholder="Số chapter">
+    <input id="chapterTitle" placeholder="Tên chapter *">
+    <input id="chapterNumber" placeholder="Số chapter">
     <textarea id="chapterPages" placeholder="Link ảnh (mỗi dòng 1 link)" rows="5"></textarea>
     <button onclick="saveAddChapter('${storyId}')">📤 Đăng chapter</button>
   `;
@@ -1173,7 +1177,7 @@ window.saveAddChapter = async (storyId) => {
   openStoryDetail(storyId);
 };
 
-// ==================== READER ====================
+// READER
 let currentReaderStoryId = null, currentChapters = [], currentChapterIndex = 0;
 function closeReaderModal() {
   document.getElementById("readerModal").style.display = "none";
@@ -1263,7 +1267,7 @@ async function postComment(storyId) {
   showNotification("Đã gửi bình luận");
 }
 
-// ==================== UPLOAD PANEL ====================
+// UPLOAD PANEL
 function renderUploadPanel() {
   const panel = document.getElementById("uploadPanel");
   if (!panel) return;
@@ -1271,13 +1275,13 @@ function renderUploadPanel() {
   panel.innerHTML = `
     <div class="upload-panel">
       <h3>📤 ĐĂNG TRUYỆN MỚI</h3>
-      <input type="text" id="uploadTitle" placeholder="Tên truyện *">
-      <input type="text" id="uploadOtherName" placeholder="Tên khác">
-      <input type="text" id="uploadAuthor" placeholder="Tác giả">
-      <input type="text" id="uploadGenres" placeholder="Thể loại">
-      <input type="text" id="uploadStatus" placeholder="Tình trạng">
+      <input id="uploadTitle" placeholder="Tên truyện *">
+      <input id="uploadOtherName" placeholder="Tên khác">
+      <input id="uploadAuthor" placeholder="Tác giả">
+      <input id="uploadGenres" placeholder="Thể loại">
+      <input id="uploadStatus" placeholder="Tình trạng">
       <input type="file" id="uploadCoverFile" accept="image/*">
-      <input type="url" id="uploadCoverUrl" placeholder="Hoặc link ảnh bìa">
+      <input id="uploadCoverUrl" placeholder="Hoặc link ảnh bìa">
       <textarea id="uploadDesc" placeholder="Mô tả truyện"></textarea>
       <div id="coverPreview"></div>
       <button class="btn-pink" id="submitUploadBtn">📤 ĐĂNG TRUYỆN</button>
@@ -1313,11 +1317,11 @@ function renderUploadPanel() {
   });
 }
 
-// ==================== PROFILE ====================
+// PROFILE
 window.openProfile = () => {
   document.getElementById("profileContent").innerHTML = `
-    <div class="profile-field"><label>📧 Email</label><input type="text" value="${escapeHtml(currentUserData?.email || '')}" disabled></div>
-    <div class="profile-field"><label>🏷️ Nickname</label><input type="text" id="profileNickname" value="${escapeHtml(currentUserData?.nickname || '')}"></div>
+    <div class="profile-field"><label>📧 Email</label><input value="${escapeHtml(currentUserData?.email || '')}" disabled></div>
+    <div class="profile-field"><label>🏷️ Nickname</label><input id="profileNickname" value="${escapeHtml(currentUserData?.nickname || '')}"></div>
     <button onclick="saveProfile()">💾 Lưu</button>
   `;
   document.getElementById("profileModal").style.display = "flex";
@@ -1327,205 +1331,13 @@ window.saveProfile = async () => {
   const newNickname = document.getElementById("profileNickname").value;
   if (!newNickname) { showNotification("Nickname không được trống", true); return; }
   try {
-    await updateNickname(currentUserData.uid, newNickname);
+    await update(ref(db, `users/${currentUserData.uid}`), { nickname: newNickname });
     currentUserData.nickname = newNickname;
     currentUserData.displayName = await getDisplayName(currentUserData.uid, currentUserData.email, currentUserData);
     document.getElementById("userDisplay").innerHTML = `👤 ${escapeHtml(currentUserData.displayName)}`;
     showNotification("Đã cập nhật");
     closeModal("profileModal");
   } catch (err) { showNotification(err.message, true); }
-};
-
-// ==================== AUTH FLOW ====================
-async function handleMainPassword() {
-  const mainPass = document.getElementById("mainPassword").value;
-  if (mainPass !== MAIN_PASSWORD) { 
-    showNotification("❌ Sai mật khẩu chính", true); 
-    return; 
-  }
-  const guestName = generateRandomGuestName();
-  currentUserData = { role: "guest", displayName: guestName, nickname: guestName };
-  localStorage.setItem("userSession", JSON.stringify(currentUserData));
-  document.getElementById("loginPage").style.display = "none";
-  document.getElementById("mainContainer").style.display = "block";
-  showNotification(`👤 Chào mừng ${guestName} (Khách)`);
-  initApp();
-}
-
-async function handleSendOTP() {
-  const email = document.getElementById("loginEmail").value?.trim();
-  if (!email) {
-    showNotification("Nhập email", true);
-    return;
-  }
-  
-  showLoading(true);
-  try {
-    pendingEmail = email;
-    const success = await sendOTPEmail(email);
-    if (success) {
-      document.getElementById("otpGroup").style.display = "none";
-document.getElementById("otpCode").value = "";
-pendingEmail = null;
-      showNotification("📩 OTP đã gửi, vui lòng kiểm tra email");
-    }
-  } catch (err) {
-    console.error(err);
-    showNotification(err.message, true);
-  } finally {
-    showLoading(false);
-  }
-}
-
-async function handleResendOTP() { 
-  if (pendingEmail) await handleSendOTP(); 
-}
-
-    async function firebaseLoginWithEmail(email) {
-  try {
-    const emailKey = email.replace(/\./g, "_");
-    
-    // tìm user theo email trong DB
-    const usersSnap = await get(ref(db, "users"));
-    const users = usersSnap.val() || {};
-
-    let uid = null;
-
-    for (const key in users) {
-      if (users[key].email === email) {
-        uid = key;
-        break;
-      }
-    }
-
-    // nếu chưa có user → tạo mới
-    if (!uid) {
-      const newUserRef = push(ref(db, "users"));
-      uid = newUserRef.key;
-
-      await set(ref(db, `users/${uid}`), {
-        email,
-        nickname: email.split("@")[0],
-        role: "user",
-        privileges: { moderator: false, groupId: null },
-        follows: {},
-        createdAt: Date.now()
-      });
-    }
-
-    currentUserData = await loadUserData(uid, email);
-
-    localStorage.setItem("userSession", JSON.stringify(currentUserData));
-
-    document.getElementById("loginPage").style.display = "none";
-    document.getElementById("mainContainer").style.display = "block";
-
-    await initApp();
-
-    showNotification("✅ Đăng nhập thành công!");
-  } catch (err) {
-    console.error(err);
-    showNotification("Lỗi login: " + err.message, true);
-  }
-}
-    
-    // Check if user exists in database
-    const userData = await getUserData(uid);
-    
-    if (!userData) {
-      // Create new user
-      await createNewUser(uid, email, null);
-      console.log("✅ New user created");
-      
-      // Need nickname
-      currentUserData = await loadUserData(uid, email);
-      localStorage.setItem("userSession", JSON.stringify(currentUserData));
-      document.getElementById("loginPage").style.display = "none";
-      document.getElementById("nicknamePage").style.display = "flex";
-      return;
-    }
-    
-    // User exists
-    currentUserData = await loadUserData(uid, email);
-    localStorage.setItem("userSession", JSON.stringify(currentUserData));
-    localStorage.removeItem("guestMode");
-    
-    document.getElementById("loginPage").style.display = "none";
-    document.getElementById("mainContainer").style.display = "block";
-    showNotification(`✅ Chào mừng ${currentUserData.displayName}`);
-    await initApp();
-    
-  } catch (error) {
-  console.error("EmailJS error:", error);
-  showNotification(`❌ Gửi email thất bại`, true);
-  return false; // 👈 quan trọng
-}
-}
-
-async function handleVerifyOTP() {
-  if (isProcessing) return;
-  isProcessing = true;
-  
-  const email = pendingEmail;
-  const otp = document.getElementById("otpCode").value.trim();
-
-  if (data.code !== String(inputCode).trim()) {
-  if (!email) {
-    showNotification("Chưa có email, vui lòng gửi lại OTP", true);
-    isProcessing = false;
-    return;
-  }
-  if (!otp || otp.length !== 6) {
-    showNotification("Nhập mã OTP 6 số", true);
-    isProcessing = false;
-    return;
-  }
-  
-  showLoading(true);
-  
-  try {
-    showNotification("Đang xác thực OTP...", false);
-    const result = await verifyOTP(email, otp);
-    
-    if (!result.success) {
-      showNotification(result.message, true);
-      isProcessing = false;
-      showLoading(false);
-      return;
-    }
-    
-    showNotification("OTP chính xác! Đang đăng nhập...", false);
-    await firebaseLoginWithEmail(email);
-    
-  } catch (err) {
-    console.error("Verify error:", err);
-    showNotification("Lỗi: " + err.message, true);
-  } finally {
-    isProcessing = false;
-    showLoading(false);
-  }
-}
-
-window.saveNickname = async () => {
-  const nickname = document.getElementById("nicknameInput").value;
-  if (!nickname) { 
-    document.getElementById("nicknameMsg").innerText = "Nhập nickname"; 
-    return; 
-  }
-  showLoading(true);
-  try {
-    await updateNickname(currentUserData.uid, nickname);
-    currentUserData.nickname = nickname;
-    currentUserData.displayName = await getDisplayName(currentUserData.uid, currentUserData.email, currentUserData);
-    localStorage.setItem("userSession", JSON.stringify(currentUserData));
-    document.getElementById("nicknamePage").style.display = "none";
-    document.getElementById("mainContainer").style.display = "block";
-    showNotification(`🎉 Chào mừng ${nickname}!`);
-    await initApp();
-  } catch (err) { 
-    document.getElementById("nicknameMsg").innerText = err.message; 
-  }
-  showLoading(false);
 };
 
 window.createNewGroup = async () => {
@@ -1545,7 +1357,7 @@ window.createNewGroup = async () => {
 };
 
 window.showHome = () => { closeReaderModal(); scheduleRender(); };
-window.logout = async () => { await signOut(auth); localStorage.clear(); window.location.reload(); };
+
 function closeModal(modalId) { document.getElementById(modalId).style.display = "none"; }
 window.closeModal = closeModal;
 
@@ -1561,7 +1373,6 @@ async function updateUserDisplay() {
   const logoutBtn = document.getElementById("logoutBtn");
   const createGroupBtn = document.getElementById("createGroupBtn");
   const adminLink = document.getElementById("adminLink");
-  
   if (profileBtn) profileBtn.style.display = currentUserData && currentUserData.role !== "guest" ? "inline-block" : "none";
   if (logoutBtn) logoutBtn.style.display = currentUserData && currentUserData.role !== "guest" ? "inline-block" : "none";
   if (createGroupBtn) createGroupBtn.style.display = currentUserData && currentUserData.role !== "guest" && !hasGroup(currentUserData) ? "inline-block" : "none";
@@ -1570,19 +1381,6 @@ async function updateUserDisplay() {
 
 async function initApp() {
   if (!document.getElementById("mainContainer")) return;
-  const sessionStr = localStorage.getItem("userSession");
-  if (sessionStr) {
-    try {
-      const session = JSON.parse(sessionStr);
-      if (session.role === "guest") {
-        currentUserData = session;
-      } else if (session.uid) {
-        currentUserData = await loadUserData(session.uid, session.email);
-      }
-    } catch(e) {
-      console.error("initApp parse error:", e);
-    }
-  }
   await updateUserDisplay();
   await loadFollows();
   renderUploadPanel();
@@ -1590,48 +1388,49 @@ async function initApp() {
 }
 
 // ==================== EVENT LISTENERS ====================
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
   console.log("🚀 DOM ready");
   
-  const continueBtn = document.getElementById("continueBtn");
-  const exitBtn = document.getElementById("exitBtn");
-  const enterMainBtn = document.getElementById("enterMainBtn");
-  const sendOtpBtn = document.getElementById("sendOtpBtn");
-  const verifyOtpBtn = document.getElementById("verifyOtpBtn");
-  const resendOtpBtn = document.getElementById("resendOtpBtn");
-  const saveNicknameBtn = document.getElementById("saveNicknameBtn");
-  const confirmGroupBtn = document.getElementById("confirmGroupBtn");
-  const createGroupBtn = document.getElementById("createGroupBtn");
-  const logoutBtn = document.getElementById("logoutBtn");
-  const profileBtn = document.getElementById("profileBtn");
+  // Warning buttons
+  document.getElementById("warningContinueBtn")?.addEventListener("click", async () => {
+    const mainPass = document.getElementById("mainPassword").value;
+    if (mainPass !== MAIN_PASSWORD) {
+      showNotification("❌ Sai mật khẩu chính", true);
+      return;
+    }
+    // Ẩn warning, hiện login
+    document.getElementById("warningOverlay").style.display = "none";
+    document.getElementById("loginPage").style.display = "flex";
+  });
   
-  if (continueBtn) {
-    continueBtn.addEventListener("click", () => {
-      document.getElementById("warningOverlay").style.display = "none";
-      document.getElementById("loginPage").style.display = "flex";
-    });
-  }
+  document.getElementById("exitBtn")?.addEventListener("click", () => {
+    document.body.innerHTML = "<div style='height:100vh;display:flex;justify-content:center;align-items:center;background:black;color:white;'>ĐÃ THOÁT</div>";
+  });
   
-  if (exitBtn) {
-    exitBtn.addEventListener("click", () => { 
-      document.body.innerHTML = "<div style='height:100vh;display:flex;justify-content:center;align-items:center;background:black;color:white;'>ĐÃ THOÁT</div>"; 
-    });
-  }
+  // Login page buttons
+  document.getElementById("guestBtn")?.addEventListener("click", handleGuestLogin);
+  document.getElementById("checkEmailBtn")?.addEventListener("click", handleCheckEmail);
+  document.getElementById("verifyOtpBtn")?.addEventListener("click", handleVerifyOTP);
+  document.getElementById("passwordLoginBtn")?.addEventListener("click", handlePasswordLogin);
+  document.getElementById("completeRegisterBtn")?.addEventListener("click", handleCompleteRegistration);
   
-  if (enterMainBtn) enterMainBtn.addEventListener("click", handleMainPassword);
-  if (sendOtpBtn) sendOtpBtn.addEventListener("click", handleSendOTP);
-  if (verifyOtpBtn) verifyOtpBtn.addEventListener("click", handleVerifyOTP);
-  if (resendOtpBtn) resendOtpBtn.addEventListener("click", handleResendOTP);
-  if (saveNicknameBtn) saveNicknameBtn.addEventListener("click", window.saveNickname);
-  if (confirmGroupBtn) confirmGroupBtn.addEventListener("click", window.createNewGroup);
-  if (createGroupBtn) {
-    createGroupBtn.addEventListener("click", () => {
-      document.getElementById("groupModal").style.display = "flex";
-    });
-  }
-  if (logoutBtn) logoutBtn.addEventListener("click", window.logout);
-  if (profileBtn) profileBtn.addEventListener("click", window.openProfile);
+  // Back buttons
+  document.getElementById("backToEmailBtn")?.addEventListener("click", () => {
+    document.getElementById("otpGroup").style.display = "none";
+    document.getElementById("loginMsg").innerHTML = "";
+  });
+  document.getElementById("backToEmailBtn2")?.addEventListener("click", () => {
+    document.getElementById("passwordGroup").style.display = "none";
+    document.getElementById("loginMsg").innerHTML = "";
+  });
   
+  // Main container buttons
+  document.getElementById("logoutBtn")?.addEventListener("click", logout);
+  document.getElementById("profileBtn")?.addEventListener("click", window.openProfile);
+  document.getElementById("createGroupBtn")?.addEventListener("click", () => document.getElementById("groupModal").style.display = "flex");
+  document.getElementById("confirmGroupBtn")?.addEventListener("click", window.createNewGroup);
+  
+  // Tabs
   document.querySelectorAll(".tab-btn").forEach(btn => {
     btn.addEventListener("click", () => {
       document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
@@ -1641,27 +1440,22 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
   
-  const searchInput = document.getElementById("searchInput");
-  const genreFilter = document.getElementById("genreFilter");
-  const sortFilter = document.getElementById("sortFilter");
+  // Search & filters
+  document.getElementById("searchInput")?.addEventListener("input", () => scheduleRender());
+  document.getElementById("genreFilter")?.addEventListener("change", () => scheduleRender());
+  document.getElementById("sortFilter")?.addEventListener("change", () => scheduleRender());
   
-  if (searchInput) searchInput.addEventListener("input", () => scheduleRender());
-  if (genreFilter) genreFilter.addEventListener("change", () => scheduleRender());
-  if (sortFilter) sortFilter.addEventListener("change", () => scheduleRender());
-  
-  const session = localStorage.getItem("userSession");
-  if (session) {
-    document.getElementById("warningOverlay").style.display = "none";
-    document.getElementById("loginPage").style.display = "none";
-    document.getElementById("mainContainer").style.display = "block";
-    initApp();
+  // Restore session
+  const restored = await restoreSession();
+  if (!restored) {
+    // Nếu không có session, hiện warning (loginPage sẽ hiện sau warning)
+    document.getElementById("warningOverlay").style.display = "flex";
   }
 });
 
 onAuthStateChanged(auth, async (user) => {
-  console.log("🔥 onAuthStateChanged:", user?.uid || "null");
   if (user && !currentUserData) {
-    const email = pendingEmail || "user@anonymous.com";
+    const email = user.email || "user@anonymous.com";
     currentUserData = await loadUserData(user.uid, email);
     localStorage.setItem("userSession", JSON.stringify(currentUserData));
     document.getElementById("loginPage").style.display = "none";
