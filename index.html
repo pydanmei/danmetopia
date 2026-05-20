@@ -1346,23 +1346,76 @@ async function handleResendOTP() { if (pendingEmail) await handleSendOTP(); }
 async function handleVerifyOTP() {
   const email = pendingEmail || document.getElementById("loginEmail").value;
   const otp = document.getElementById("otpCode").value;
-  if (!otp || otp.length !== 6) { showNotification("Nhập mã OTP 6 số", true); return; }
+  
+  console.log("🔘 [1] Verify OTP clicked - Email:", email, "OTP:", otp);
+  
+  if (!email) {
+    showNotification("Email không được để trống", true);
+    return;
+  }
+  if (!otp || otp.length !== 6) {
+    showNotification("Nhập mã OTP 6 số", true);
+    return;
+  }
+  
   showLoading(true);
-  const result = await verifyOTP(email, otp);
-  if (!result.success) { showNotification(result.message, true); showLoading(false); return; }
+  
   try {
+    // Bước 1: Xác thực OTP
+    console.log("🔍 [2] Verifying OTP...");
+    const result = await verifyOTP(email, otp);
+    console.log("📦 [3] OTP verify result:", result);
+    
+    if (!result.success) {
+      showNotification(result.message, true);
+      showLoading(false);
+      return;
+    }
+    
+    console.log("✅ [4] OTP verified successfully!");
+    
+    // Bước 2: Tạo mật khẩu tạm
     const dummyPassword = "otp-temp-" + Date.now();
+    console.log("🔑 [5] Using dummy password:", dummyPassword);
+    
     let userCred;
     try {
+      // Thử đăng nhập
       userCred = await signInWithEmailAndPassword(auth, email, dummyPassword);
-    } catch (e) {
-      if (e.code === "auth/user-not-found" || e.code === "auth/wrong-password") {
+      console.log("✅ [6] Sign in successful for existing user:", userCred.user.uid);
+    } catch (loginError) {
+      console.log("⚠️ [6] Sign in failed, error code:", loginError.code);
+      
+      // Xử lý tất cả các loại lỗi Firebase auth
+      if (loginError.code === "auth/user-not-found" || 
+          loginError.code === "auth/wrong-password" ||
+          loginError.code === "auth/invalid-credential") {
+        
+        console.log("📝 [7] User not found or invalid credential, creating new account...");
         userCred = await createUserWithEmailAndPassword(auth, email, dummyPassword);
+        console.log("✅ [8] New user created:", userCred.user.uid);
+        
+        // Tạo user data trong Realtime Database
         await createNewUser(userCred.user.uid, email, null);
-      } else throw e;
+        console.log("✅ [9] User data created in database");
+        
+      } else if (loginError.code === "auth/too-many-requests") {
+        throw new Error("Quá nhiều yêu cầu, vui lòng thử lại sau");
+      } else if (loginError.code === "auth/network-request-failed") {
+        throw new Error("Lỗi kết nối mạng, vui lòng kiểm tra internet");
+      } else {
+        throw loginError;
+      }
     }
+    
+    // Bước 3: Lấy user data
+    console.log("📦 [10] Loading user data...");
     const userData = await loadUserData(userCred.user.uid, email);
-    if (!userData.nickname) {
+    console.log("📦 [11] User data loaded:", userData);
+    
+    // Bước 4: Kiểm tra nickname
+    if (!userData.nickname || userData.nickname === null) {
+      console.log("⚠️ [12] No nickname found, showing nickname page");
       currentUserData = userData;
       localStorage.setItem("userSession", JSON.stringify(currentUserData));
       document.getElementById("loginPage").style.display = "none";
@@ -1370,17 +1423,29 @@ async function handleVerifyOTP() {
       showLoading(false);
       return;
     }
+    
+    // Bước 5: Đăng nhập thành công
+    console.log("✅ [13] Login successful! Navigating to home...");
     currentUserData = userData;
     localStorage.setItem("userSession", JSON.stringify(currentUserData));
     localStorage.removeItem("guestMode");
+    
     document.getElementById("loginPage").style.display = "none";
     document.getElementById("mainContainer").style.display = "block";
     showNotification(`✅ Chào mừng ${currentUserData.displayName}`);
+    
     await initApp();
-  } catch (err) { showNotification("Lỗi: " + err.message, true); }
-  showLoading(false);
+    console.log("✅ [14] App initialized");
+    
+  } catch (err) {
+    console.error("❌ [ERROR] Login error:", err);
+    console.error("❌ Error details:", err.code, err.message);
+    showNotification("Lỗi: " + (err.message || "Đăng nhập thất bại"), true);
+  } finally {
+    showLoading(false);
+    console.log("🏁 [15] Login flow completed");
+  }
 }
-
 window.saveNickname = async () => {
   const nickname = document.getElementById("nicknameInput").value;
   if (!nickname) { document.getElementById("nicknameMsg").innerText = "Nhập nickname"; return; }
