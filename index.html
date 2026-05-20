@@ -41,8 +41,6 @@ body {
   align-items: center;
   z-index: 20000;
 }
-
-/* Warning */
 #warningOverlay {
   position: fixed;
   inset: 0;
@@ -97,8 +95,6 @@ body {
 }
 .btn-pink { background: #FF69B4; color: black; }
 .btn-red { background: #ff4444; color: white; }
-
-/* Login Page */
 #loginPage {
   position: fixed;
   inset: 0;
@@ -183,8 +179,6 @@ body {
   display: inline-block;
   font-size: 13px;
 }
-
-/* Nickname & Password Page */
 #registerPage {
   display: none;
   position: fixed;
@@ -194,8 +188,6 @@ body {
   background: linear-gradient(135deg, #0f0f0f, #1a1a2e);
   z-index: 10001;
 }
-
-/* Main Container */
 #mainContainer {
   display: none;
   min-height: 100vh;
@@ -577,14 +569,14 @@ body {
     <input type="email" id="loginEmail" placeholder="Email">
     <button id="checkEmailBtn" class="btn-pink">TIẾP TỤC</button>
     
-    <!-- OTP group (hiện khi email mới) -->
+    <!-- OTP group (hiện khi email mới và KHÔNG phải admin) -->
     <div id="otpGroup" class="otp-group">
       <input type="text" id="otpCode" placeholder="Nhập mã OTP 6 số" maxlength="6">
       <button id="verifyOtpBtn" class="btn-pink">XÁC NHẬN OTP</button>
       <div class="toggle-link" id="backToEmailBtn">← Quay lại</div>
     </div>
     
-    <!-- Password group (hiện khi email cũ) -->
+    <!-- Password group (hiện khi email cũ HOẶC email admin) -->
     <div id="passwordGroup" class="password-group">
       <input type="password" id="loginPassword" placeholder="Mật khẩu">
       <button id="passwordLoginBtn" class="btn-pink">ĐĂNG NHẬP</button>
@@ -690,7 +682,6 @@ let userFollows = {};
 let renderTimeout = null;
 let pendingRegisterEmail = null;
 
-// Listener refs
 let storiesUnsubscribe = null;
 let chaptersUnsubscribe = null;
 let commentsUnsubscribe = null;
@@ -857,12 +848,26 @@ async function handleCheckEmail() {
   const email = document.getElementById("loginEmail").value.trim();
   if (!email) { showNotification("Nhập email", true); return; }
   
+  // KIỂM TRA EMAIL ADMIN (3 email cố định) - KHÔNG CẦN OTP
+  const isAdminEmail = ADMIN_EMAILS.includes(email);
+  
   showLoading(true);
   const emailExists = await checkEmailExists(email);
   showLoading(false);
   
+  // ADMIN EMAIL: luôn chuyển sang password login (không OTP)
+  if (isAdminEmail) {
+    pendingRegisterEmail = email;
+    document.getElementById("passwordGroup").style.display = "block";
+    document.getElementById("otpGroup").style.display = "none";
+    document.getElementById("loginMsg").innerHTML = "👑 Email Admin, vui lòng nhập mật khẩu";
+    return;
+  }
+  
+  // EMAIL THƯỜNG
   if (emailExists) {
     // Email cũ → hiện ô nhập mật khẩu
+    pendingRegisterEmail = email;
     document.getElementById("passwordGroup").style.display = "block";
     document.getElementById("otpGroup").style.display = "none";
     document.getElementById("loginMsg").innerHTML = "";
@@ -876,7 +881,7 @@ async function handleCheckEmail() {
   }
 }
 
-// Xác nhận OTP (cho email mới)
+// Xác nhận OTP (cho email mới và KHÔNG phải admin)
 async function handleVerifyOTP() {
   const otp = document.getElementById("otpCode").value.trim();
   if (!otp || otp.length !== 6) { showNotification("Nhập mã OTP 6 số", true); return; }
@@ -893,7 +898,7 @@ async function handleVerifyOTP() {
   document.getElementById("registerPage").style.display = "flex";
 }
 
-// Đăng nhập bằng mật khẩu (cho email cũ)
+// Đăng nhập bằng mật khẩu (cho email cũ + admin)
 async function handlePasswordLogin() {
   const email = document.getElementById("loginEmail").value.trim();
   const password = document.getElementById("loginPassword").value;
@@ -910,12 +915,29 @@ async function handlePasswordLogin() {
     showNotification(`✅ Chào mừng ${currentUserData.displayName}`);
     initApp();
   } catch (err) {
-    if (err.code === "auth/invalid-credential") showNotification("Sai email hoặc mật khẩu", true);
-    else showNotification("Lỗi: " + err.message, true);
+    if (err.code === "auth/invalid-credential") {
+      const isAdminEmail = ADMIN_EMAILS.includes(email);
+      if (isAdminEmail) {
+        // Admin chưa có tài khoản? Chuyển sang tạo mới
+        const confirmCreate = confirm("Email Admin chưa có tài khoản. Bạn có muốn tạo tài khoản Admin mới không?");
+        if (confirmCreate) {
+          pendingRegisterEmail = email;
+          document.getElementById("verifiedEmail").innerText = email;
+          document.getElementById("loginPage").style.display = "none";
+          document.getElementById("registerPage").style.display = "flex";
+        } else {
+          showNotification("Vui lòng tạo tài khoản Admin", true);
+        }
+      } else {
+        showNotification("Sai email hoặc mật khẩu", true);
+      }
+    } else {
+      showNotification("Lỗi: " + err.message, true);
+    }
   } finally { showLoading(false); }
 }
 
-// Hoàn tất đăng ký (email mới sau OTP)
+// Hoàn tất đăng ký (email mới sau OTP hoặc Admin tạo mới)
 async function handleCompleteRegistration() {
   const nickname = document.getElementById("nicknameInput").value.trim();
   const password = document.getElementById("newPassword").value;
@@ -1391,14 +1413,12 @@ async function initApp() {
 document.addEventListener("DOMContentLoaded", async () => {
   console.log("🚀 DOM ready");
   
-  // Warning buttons
   document.getElementById("warningContinueBtn")?.addEventListener("click", async () => {
     const mainPass = document.getElementById("mainPassword").value;
     if (mainPass !== MAIN_PASSWORD) {
       showNotification("❌ Sai mật khẩu chính", true);
       return;
     }
-    // Ẩn warning, hiện login
     document.getElementById("warningOverlay").style.display = "none";
     document.getElementById("loginPage").style.display = "flex";
   });
@@ -1407,14 +1427,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     document.body.innerHTML = "<div style='height:100vh;display:flex;justify-content:center;align-items:center;background:black;color:white;'>ĐÃ THOÁT</div>";
   });
   
-  // Login page buttons
   document.getElementById("guestBtn")?.addEventListener("click", handleGuestLogin);
   document.getElementById("checkEmailBtn")?.addEventListener("click", handleCheckEmail);
   document.getElementById("verifyOtpBtn")?.addEventListener("click", handleVerifyOTP);
   document.getElementById("passwordLoginBtn")?.addEventListener("click", handlePasswordLogin);
   document.getElementById("completeRegisterBtn")?.addEventListener("click", handleCompleteRegistration);
   
-  // Back buttons
   document.getElementById("backToEmailBtn")?.addEventListener("click", () => {
     document.getElementById("otpGroup").style.display = "none";
     document.getElementById("loginMsg").innerHTML = "";
@@ -1424,13 +1442,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     document.getElementById("loginMsg").innerHTML = "";
   });
   
-  // Main container buttons
   document.getElementById("logoutBtn")?.addEventListener("click", logout);
   document.getElementById("profileBtn")?.addEventListener("click", window.openProfile);
   document.getElementById("createGroupBtn")?.addEventListener("click", () => document.getElementById("groupModal").style.display = "flex");
   document.getElementById("confirmGroupBtn")?.addEventListener("click", window.createNewGroup);
   
-  // Tabs
   document.querySelectorAll(".tab-btn").forEach(btn => {
     btn.addEventListener("click", () => {
       document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
@@ -1440,15 +1456,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   });
   
-  // Search & filters
   document.getElementById("searchInput")?.addEventListener("input", () => scheduleRender());
   document.getElementById("genreFilter")?.addEventListener("change", () => scheduleRender());
   document.getElementById("sortFilter")?.addEventListener("change", () => scheduleRender());
   
-  // Restore session
   const restored = await restoreSession();
   if (!restored) {
-    // Nếu không có session, hiện warning (loginPage sẽ hiện sau warning)
     document.getElementById("warningOverlay").style.display = "flex";
   }
 });
