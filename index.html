@@ -7,6 +7,9 @@
 <meta name="description" content="Nền tảng đọc truyện tranh online miễn phí">
 <meta name="theme-color" content="#FF69B4">
 
+<!-- EmailJS -->
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+
 <style>
 * {
   margin: 0;
@@ -44,7 +47,6 @@ body {
   z-index: 20000;
 }
 
-/* Warning */
 #warningOverlay {
   position: fixed;
   inset: 0;
@@ -96,7 +98,6 @@ body {
 .btn-pink { background: #FF69B4; color: black; }
 .btn-red { background: #ff4444; color: white; }
 
-/* Login Page */
 #loginPage {
   position: fixed;
   inset: 0;
@@ -175,12 +176,23 @@ body {
   animation: fadeIn 0.3s ease;
 }
 
+.otp-resend {
+  margin-top: 10px;
+  font-size: 12px;
+}
+
+.otp-resend button {
+  background: transparent;
+  color: #FF69B4;
+  padding: 5px;
+  margin-top: 5px;
+}
+
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(-10px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* Nickname Page */
 #nicknamePage {
   display: none;
   position: fixed;
@@ -191,13 +203,11 @@ body {
   z-index: 10001;
 }
 
-/* Main Container */
 #mainContainer {
   display: none;
   min-height: 100vh;
 }
 
-/* Topbar */
 .topbar {
   background: #FF69B4;
   color: black;
@@ -240,7 +250,6 @@ body {
   background: rgba(0,0,0,0.4);
 }
 
-/* Tabs */
 .tabs {
   display: flex;
   gap: 10px;
@@ -264,7 +273,6 @@ body {
   color: black;
 }
 
-/* Upload Panel */
 .upload-panel {
   background: #1c1c1c;
   margin: 15px 20px;
@@ -303,7 +311,6 @@ body {
   border: 2px solid #FF69B4;
 }
 
-/* Manga Grid */
 .manga-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
@@ -352,7 +359,6 @@ body {
   margin-top: 5px;
 }
 
-/* Search & Filter */
 .search-bar {
   padding: 15px 20px;
 }
@@ -387,7 +393,6 @@ body {
   color: white;
 }
 
-/* Modal */
 .modal {
   display: none;
   position: fixed;
@@ -511,7 +516,6 @@ body {
   color: black;
 }
 
-/* Notification */
 .notification {
   position: fixed;
   bottom: 20px;
@@ -530,7 +534,6 @@ body {
   to { transform: translateX(0); opacity: 1; }
 }
 
-/* Reader */
 .reader-page {
   max-width: 900px;
   margin: 0 auto;
@@ -583,7 +586,6 @@ body {
   color: white !important;
 }
 
-/* Profile Modal */
 .profile-field {
   margin-bottom: 15px;
 }
@@ -638,7 +640,7 @@ body {
     <p>Nhập mật khẩu chính để truy cập</p>
     
     <input id="mainPassword" type="password" placeholder="Mật khẩu chính *">
-    <button id="enterMainBtn" class="btn-pink">🔓 VÀO WEB</button>
+    <button id="enterMainBtn" class="btn-pink">🔓 TRUY CẬP</button>
     
     <hr style="margin: 20px 0; border-color: #333;">
     
@@ -649,13 +651,16 @@ body {
     <div id="otpGroup" class="otp-group">
       <input id="otpCode" type="text" placeholder="Nhập mã 6 số" maxlength="6">
       <button id="verifyOtpBtn" class="btn-pink">🔓 Xác nhận & Đăng nhập</button>
+      <div class="otp-resend">
+        <button id="resendOtpBtn" style="background:transparent; color:#FF69B4;">🔄 Gửi lại mã</button>
+      </div>
     </div>
     
     <p id="loginMsg" style="color:#ff6666; margin-top:15px;"></p>
   </div>
 </div>
 
-<!-- NICKNAME PAGE (CHO EMAIL MỚI) -->
+<!-- NICKNAME PAGE -->
 <div id="nicknamePage">
   <div class="login-box" style="max-width:380px;">
     <h2>🎉 CHÀO MỪNG BẠN ĐẾN VỚI DANMETOPIA!</h2>
@@ -714,7 +719,7 @@ body {
   </div>
 </div>
 
-<!-- GROUP MODAL -->
+<!-- MODALS -->
 <div id="groupModal" class="modal">
   <div class="modal-content" style="max-width:400px;">
     <span class="close-modal" onclick="closeModal('groupModal')">&times;</span>
@@ -725,7 +730,6 @@ body {
   </div>
 </div>
 
-<!-- STORY DETAIL MODAL -->
 <div id="storyModal" class="modal">
   <div class="modal-content">
     <span class="close-modal" onclick="closeModal('storyModal')">&times;</span>
@@ -735,7 +739,6 @@ body {
   </div>
 </div>
 
-<!-- EDIT STORY MODAL -->
 <div id="editStoryModal" class="modal">
   <div class="modal-content" style="max-width:600px;">
     <span class="close-modal" onclick="closeModal('editStoryModal')">&times;</span>
@@ -744,7 +747,6 @@ body {
   </div>
 </div>
 
-<!-- ADD CHAPTER MODAL -->
 <div id="addChapterModal" class="modal">
   <div class="modal-content" style="max-width:600px;">
     <span class="close-modal" onclick="closeModal('addChapterModal')">&times;</span>
@@ -753,7 +755,6 @@ body {
   </div>
 </div>
 
-<!-- READER MODAL -->
 <div id="readerModal" class="modal">
   <div class="modal-content" style="max-width:95%; max-height:90vh; overflow-y:auto;">
     <span class="close-modal" onclick="closeReaderModal()">&times;</span>
@@ -761,7 +762,6 @@ body {
   </div>
 </div>
 
-<!-- PROFILE MODAL -->
 <div id="profileModal" class="modal">
   <div class="modal-content" style="max-width:400px;">
     <span class="close-modal" onclick="closeModal('profileModal')">&times;</span>
@@ -771,21 +771,42 @@ body {
 </div>
 
 <script type="module">
-// Import từ auth.js mới
-import { 
-  auth, db, storage,
-  ADMIN_EMAILS, MAIN_PASSWORD,
-  generateOTP, sendOTP, verifyOTP,
-  getUserData, getUserGroup, getDisplayName, getUserLevel, getUserLevelText,
-  isAdmin, isModerator, hasGroup, isGuest,
-  canModerate, canDeleteStory, canDeleteUser, canChangeRole, canEditStory, canUpload, canComment,
-  createNewUser, updateNickname, setModerator, setGroupId, joinGroup,
-  createGroup, getAllGroups, deleteGroup, deleteUser,
-  loginWithOTP, saveGuestMode, isGuestMode, getCurrentSession, logout,
-  uploadImage, onAuthChange
-} from "./auth.js";
+// ==================== EMAILJS INIT ====================
+emailjs.init("fPq8fpw1OqzOtj-lk");
 
-// ==================== BIẾN TOÀN CỤC ====================
+// ==================== FIREBASE IMPORTS ====================
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import {
+  getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword,
+  sendEmailVerification, onAuthStateChanged, signOut
+} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import {
+  getDatabase, ref, set, get, child, push, update, remove,
+  onValue, off
+} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+import {
+  getStorage, ref as storageRef, uploadBytes, getDownloadURL
+} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCDQk9DlMNKwn_508fDMI_3IB_dgpgHujA",
+  authDomain: "danmetopia.firebaseapp.com",
+  projectId: "danmetopia",
+  databaseURL: "https://danmetopia-default-rtdb.asia-southeast1.firebasedatabase.app/",
+  storageBucket: "danmetopia.appspot.com",
+  messagingSenderId: "178240377870",
+  appId: "1:178240377870:web:d094b222ebabadccc5585f"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getDatabase(app);
+const storage = getStorage(app);
+
+// ==================== CONSTANTS ====================
+const MAIN_PASSWORD = "danmei";
+const ADMIN_EMAILS = ["pydanmeii@gmail.com", "pepyl4298@gmail.com", "maihuong4298@gmail.com"];
+
 let currentUserData = null;
 let allStories = [];
 let currentTab = "all";
@@ -793,6 +814,7 @@ let userFollows = {};
 let userGenrePref = {};
 let renderTimeout = null;
 let pendingEmail = null;
+let lastOtpSentTime = 0;
 
 let storiesUnsubscribe = null;
 let chaptersUnsubscribe = null;
@@ -844,63 +866,205 @@ function getGenres(str) {
   return (str || "").split(",").map(s => s.trim()).filter(s => s);
 }
 
-// ==================== USER SESSION ====================
-async function loadCurrentUser() {
-  const session = getCurrentSession();
-  if (!session) return null;
-  
-  if (session.role === "guest") {
-    currentUserData = session;
-    return session;
+function generateRandomGuestName() {
+  const randomNum = Math.floor(Math.random() * 10000);
+  return `Hủ nằm vùng ${randomNum}`;
+}
+
+// ==================== OTP FUNCTIONS (EMAILJS) ====================
+function generateOTP() {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+}
+
+async function sendOTPEmail(email) {
+  // Chống spam gửi OTP (30s cooldown)
+  const now = Date.now();
+  if (now - lastOtpSentTime < 30000) {
+    const waitTime = Math.ceil((30000 - (now - lastOtpSentTime)) / 1000);
+    showNotification(`Vui lòng đợi ${waitTime} giây trước khi gửi lại`, true);
+    return false;
   }
   
-  if (session.uid) {
-    const userData = await getUserData(session.uid);
-    const displayName = await getDisplayName(session.uid, session.email, userData);
-    currentUserData = {
-      ...session,
-      ...userData,
-      displayName: displayName
+  const otp = generateOTP();
+  const expires = Date.now() + 5 * 60 * 1000;
+  
+  // Lưu OTP vào database
+  await set(ref(db, `otp_requests/${email.replace(/\./g, "_")}`), {
+    code: otp,
+    expires: expires
+  });
+  
+  // GỬI EMAIL THẬT QUA EMAILJS
+  try {
+    const templateParams = {
+      to_email: email,
+      otp: otp,
+      to_name: email.split('@')[0],
     };
-    return currentUserData;
+    
+    const response = await emailjs.send(
+      "service_8bxh5mm",      // Service ID
+      "template_8ahbuhu",     // Template ID
+      templateParams
+    );
+    
+    console.log('Email sent successfully!', response);
+    lastOtpSentTime = now;
+    showNotification(`📩 Đã gửi mã OTP đến ${email}`, false);
+    return true;
+    
+  } catch (error) {
+    console.error('Failed to send email:', error);
+    showNotification(`❌ Không thể gửi email. Mã OTP demo: ${otp}`, true);
+    return true; // Vẫn cho phép dùng demo OTP
   }
+}
+
+async function verifyOTP(email, inputCode) {
+  const snap = await get(ref(db, `otp_requests/${email.replace(/\./g, "_")}`));
+  const data = snap.val();
   
+  if (!data) return { success: false, message: "Mã OTP không tồn tại" };
+  if (Date.now() > data.expires) return { success: false, message: "Mã OTP đã hết hạn" };
+  if (data.code !== inputCode) return { success: false, message: "Sai mã OTP" };
+  
+  await remove(ref(db, `otp_requests/${email.replace(/\./g, "_")}`));
+  return { success: true, message: "OK" };
+}
+
+// ==================== USER FUNCTIONS ====================
+async function getUserData(uid) {
+  try {
+    const snapshot = await get(child(ref(db), `users/${uid}`));
+    return snapshot.exists() ? snapshot.val() : null;
+  } catch (err) {
+    console.error("getUserData error:", err);
+    return null;
+  }
+}
+
+async function getUserGroup(uid) {
+  const userData = await getUserData(uid);
+  if (userData?.privileges?.groupId) {
+    const snapshot = await get(child(ref(db), `groups/${userData.privileges.groupId}`));
+    return snapshot.exists() ? { id: userData.privileges.groupId, ...snapshot.val() } : null;
+  }
   return null;
 }
 
-async function updateUserDisplay() {
-  const userDisplay = document.getElementById("userDisplay");
-  const profileBtn = document.getElementById("profileBtn");
-  const logoutBtn = document.getElementById("logoutBtn");
-  const createGroupBtn = document.getElementById("createGroupBtn");
-  const adminLink = document.getElementById("adminLink");
+function isAdmin(userData) {
+  return userData?.role === "admin";
+}
+
+function isModerator(userData) {
+  return userData?.role === "user" && userData?.privileges?.moderator === true;
+}
+
+function hasGroup(userData) {
+  return userData?.role === "user" && !!userData?.privileges?.groupId;
+}
+
+function canModerate(userData) {
+  return isAdmin(userData) || isModerator(userData);
+}
+
+function canUpload(userData) {
+  return userData && (userData.role === "admin" || userData.role === "user");
+}
+
+async function getDisplayName(uid, email, userData) {
+  if (!userData) {
+    const data = await getUserData(uid);
+    userData = data;
+  }
   
-  if (!userDisplay) return;
+  if (userData?.role === "guest" || !userData) {
+    return generateRandomGuestName();
+  }
   
-  await loadCurrentUser();
+  const nickname = userData?.nickname || email?.split("@")[0] || "Người dùng";
   
-  if (!currentUserData || currentUserData.role === "guest") {
-    const guestName = currentUserData?.displayName || "Hủ nằm vùng";
-    userDisplay.innerHTML = `👤 ${escapeHtml(guestName)}`;
-    if (profileBtn) profileBtn.style.display = "none";
-    if (logoutBtn) logoutBtn.style.display = "none";
-    if (createGroupBtn) createGroupBtn.style.display = "none";
-    if (adminLink) adminLink.style.display = "none";
-  } else {
-    userDisplay.innerHTML = `👤 ${escapeHtml(currentUserData.displayName || currentUserData.nickname)}`;
-    if (profileBtn) profileBtn.style.display = "inline-block";
-    if (logoutBtn) logoutBtn.style.display = "inline-block";
-    
-    // Chỉ hiển thị nút tạo nhóm nếu chưa có nhóm
-    if (createGroupBtn) {
-      createGroupBtn.style.display = !hasGroup(currentUserData) ? "inline-block" : "none";
+  if (userData?.role === "admin") {
+    if (userData?.privileges?.groupId) {
+      const group = await getUserGroup(uid);
+      const groupName = group?.groupName || "Nhóm dịch";
+      return `${nickname} (Admin - ${groupName})`;
     }
-    
-    // Chỉ hiển thị link admin nếu có quyền moderate hoặc admin
-    if (adminLink) {
-      adminLink.style.display = canModerate(currentUserData) ? "inline-block" : "none";
+    return `${nickname} (Admin)`;
+  }
+  
+  if (userData?.role === "user" && userData?.privileges?.moderator === true) {
+    if (userData?.privileges?.groupId) {
+      const group = await getUserGroup(uid);
+      const groupName = group?.groupName || "Nhóm dịch";
+      return `${nickname} (Quản lý - ${groupName})`;
+    }
+    return `${nickname} (Quản lý)`;
+  }
+  
+  if (userData?.role === "user" && userData?.privileges?.groupId) {
+    const group = await getUserGroup(uid);
+    const groupName = group?.groupName || "Nhóm dịch";
+    return `${nickname} (${groupName})`;
+  }
+  
+  if (userData?.role === "user") {
+    return nickname;
+  }
+  
+  return generateRandomGuestName();
+}
+
+async function loadUserData(uid, email) {
+  const userData = await getUserData(uid);
+  const group = await getUserGroup(uid);
+  const displayName = await getDisplayName(uid, email, userData);
+  
+  return {
+    uid: uid,
+    email: email,
+    role: userData?.role || "user",
+    privileges: userData?.privileges || { moderator: false, groupId: null },
+    nickname: userData?.nickname,
+    groupName: group?.groupName,
+    displayName: displayName,
+    strike: userData?.strike || 0,
+    bannedUntil: userData?.bannedUntil || 0
+  };
+}
+
+async function updateNickname(uid, newNickname) {
+  const usersRef = ref(db, 'users');
+  const snapshot = await get(usersRef);
+  if (snapshot.exists()) {
+    const users = snapshot.val();
+    for (const key in users) {
+      if (users[key]?.nickname === newNickname && key !== uid) {
+        throw new Error("Nickname đã tồn tại");
+      }
     }
   }
+  await update(ref(db, `users/${uid}`), { nickname: newNickname });
+}
+
+async function createNewUser(uid, email, nickname) {
+  const isAdminEmail = ADMIN_EMAILS.includes(email);
+  
+  await set(ref(db, `users/${uid}`), {
+    email: email,
+    nickname: nickname || email.split("@")[0],
+    role: isAdminEmail ? "admin" : "user",
+    privileges: {
+      moderator: false,
+      groupId: null
+    },
+    follows: {},
+    history: [],
+    genrePref: {},
+    strike: 0,
+    bannedUntil: 0,
+    createdAt: Date.now()
+  });
 }
 
 // ==================== STORIES CRUD ====================
@@ -961,7 +1125,7 @@ async function updateStoryData(storyId, data) {
 }
 
 async function deleteStory(storyId) {
-  if (!canDeleteStory(currentUserData)) {
+  if (!isAdmin(currentUserData)) {
     showNotification("Bạn không có quyền xóa truyện này", true);
     return;
   }
@@ -1165,9 +1329,9 @@ window.openStoryDetail = async (storyId) => {
   
   const chapters = await getChapters(storyId);
   
-  const isEditable = canEditStory(currentUserData, story);
+  const isEditable = (currentUserData && (isAdmin(currentUserData) || (hasGroup(currentUserData) && story.groupId === currentUserData.privileges?.groupId)));
   const isMod = canModerate(currentUserData);
-  const canDel = canDeleteStory(currentUserData);
+  const canDel = isAdmin(currentUserData);
   
   document.getElementById("storyDetailContent").innerHTML = `
     <div class="story-detail-grid">
@@ -1462,20 +1626,30 @@ function loadCommentsRealtime(storyId) {
   });
 }
 
+let lastCommentText = "";
+let lastCommentTime = 0;
+
+function canSendComment(text) {
+  const now = Date.now();
+  if (text === lastCommentText && now - lastCommentTime < 30000) {
+    showNotification("Bạn vừa gửi nội dung này, vui lòng đợi 30 giây", true);
+    return false;
+  }
+  if (now - lastCommentTime < 5000) {
+    showNotification("Vui lòng đợi 5 giây trước khi gửi bình luận tiếp", true);
+    return false;
+  }
+  lastCommentText = text;
+  lastCommentTime = now;
+  return true;
+}
+
 async function postComment(storyId) {
   if (!currentUserData) { showNotification("Đăng nhập để bình luận", true); return; }
   const text = document.getElementById("commentText")?.value;
   if (!text) return;
   if (text.length > 500) { showNotification("Bình luận tối đa 500 ký tự", true); return; }
-  
-  // Anti-spam rate limit
-  const rateKey = `comment_${currentUserData.uid || "guest"}`;
-  const lastComment = localStorage.getItem(rateKey);
-  if (lastComment && Date.now() - parseInt(lastComment) < 5000) {
-    showNotification("⛔ Vui lòng đợi 5 giây trước khi gửi bình luận tiếp", true);
-    return;
-  }
-  localStorage.setItem(rateKey, Date.now().toString());
+  if (!canSendComment(text)) return;
   
   try {
     const commentsRef = ref(db, `comments/${storyId}`);
@@ -1599,7 +1773,10 @@ function renderUploadPanel() {
 }
 
 // ==================== PROFILE ====================
-window.openProfile = () => {
+window.openProfile = async () => {
+  const group = await getUserGroup(currentUserData.uid);
+  const groupName = group?.groupName || "";
+  
   document.getElementById("profileContent").innerHTML = `
     <div class="profile-field">
       <label>📧 Email</label>
@@ -1611,23 +1788,11 @@ window.openProfile = () => {
     </div>
     <div class="profile-field">
       <label>👑 Cấp bậc</label>
-      <input type="text" value="${getUserLevelText(currentUserData)}" disabled>
+      <input type="text" value="${isAdmin(currentUserData) ? 'Quản trị viên' : isModerator(currentUserData) ? 'Người kiểm duyệt' : hasGroup(currentUserData) ? 'Thành viên nhóm dịch' : 'Thành viên'}" disabled>
     </div>
-    ${currentUserData?.privileges?.groupId ? `<div class="profile-field"><label>📚 Nhóm dịch</label><input type="text" value="${escapeHtml(currentUserData.groupName || 'Đang tải...')}" disabled></div>` : ''}
+    ${groupName ? `<div class="profile-field"><label>📚 Nhóm dịch</label><input type="text" value="${escapeHtml(groupName)}" disabled></div>` : ''}
     <button onclick="saveProfile()">💾 Lưu thay đổi</button>
   `;
-  
-  // Load group name nếu có
-  if (currentUserData?.privileges?.groupId && !currentUserData.groupName) {
-    getUserGroup(currentUserData.uid).then(group => {
-      if (group) {
-        currentUserData.groupName = group.groupName;
-        const groupInput = document.querySelector("#profileContent input[value='Đang tải...']");
-        if (groupInput) groupInput.value = group.groupName;
-      }
-    });
-  }
-  
   document.getElementById("profileModal").style.display = "flex";
 };
 
@@ -1637,7 +1802,8 @@ window.saveProfile = async () => {
   
   try {
     await updateNickname(currentUserData.uid, newNickname);
-    await loadCurrentUser();
+    currentUserData.nickname = newNickname;
+    currentUserData.displayName = await getDisplayName(currentUserData.uid, currentUserData.email, currentUserData);
     await updateUserDisplay();
     showNotification("Đã cập nhật thông tin");
     closeModal("profileModal");
@@ -1654,13 +1820,17 @@ async function handleMainPassword() {
     return;
   }
   
-  saveGuestMode();
-  await loadCurrentUser();
-  await updateUserDisplay();
+  const guestName = generateRandomGuestName();
+  currentUserData = { 
+    role: "guest", 
+    displayName: guestName,
+    nickname: guestName
+  };
+  localStorage.setItem("userSession", JSON.stringify(currentUserData));
   
   document.getElementById("loginPage").style.display = "none";
   document.getElementById("mainContainer").style.display = "block";
-  showNotification(`👤 Chào mừng ${currentUserData?.displayName || "Khách"}`);
+  showNotification(`👤 Chào mừng ${guestName} (Khách)`);
   initApp();
 }
 
@@ -1673,9 +1843,18 @@ async function handleSendOTP() {
   
   showLoading(true);
   pendingEmail = email;
-  await sendOTP(email);
-  document.getElementById("otpGroup").style.display = "block";
+  const success = await sendOTPEmail(email);
+  if (success) {
+    document.getElementById("otpGroup").style.display = "block";
+    document.getElementById("loginMsg").innerHTML = "";
+  }
   showLoading(false);
+}
+
+async function handleResendOTP() {
+  if (pendingEmail) {
+    await handleSendOTP();
+  }
 }
 
 async function handleVerifyOTP() {
@@ -1688,25 +1867,49 @@ async function handleVerifyOTP() {
   }
   
   showLoading(true);
+  const result = await verifyOTP(email, otp);
+  
+  if (!result.success) {
+    showNotification(result.message, true);
+    showLoading(false);
+    return;
+  }
+  
   try {
-    const user = await loginWithOTP(email, otp);
-    await loadCurrentUser();
-    await updateUserDisplay();
+    const dummyPassword = "otp-temp-" + Date.now();
+    let userCred;
     
-    const userData = await getUserData(user.uid);
-    if (!userData?.nickname) {
+    try {
+      userCred = await signInWithEmailAndPassword(auth, email, dummyPassword);
+    } catch (e) {
+      if (e.code === "auth/user-not-found" || e.code === "auth/wrong-password") {
+        userCred = await createUserWithEmailAndPassword(auth, email, dummyPassword);
+        await createNewUser(userCred.user.uid, email, null);
+      } else {
+        throw e;
+      }
+    }
+    
+    const userData = await loadUserData(userCred.user.uid, email);
+    
+    if (!userData.nickname) {
       document.getElementById("loginPage").style.display = "none";
       document.getElementById("nicknamePage").style.display = "flex";
+      currentUserData = userData;
       showLoading(false);
       return;
     }
     
+    currentUserData = userData;
+    localStorage.setItem("userSession", JSON.stringify(currentUserData));
+    
     document.getElementById("loginPage").style.display = "none";
     document.getElementById("mainContainer").style.display = "block";
-    showNotification(`✅ Chào mừng ${currentUserData?.displayName}`);
+    showNotification(`✅ Chào mừng ${currentUserData.displayName}`);
     await initApp();
     
   } catch (err) {
+    console.error("Login error:", err);
     showNotification("Lỗi: " + err.message, true);
   }
   showLoading(false);
@@ -1724,8 +1927,9 @@ window.saveNickname = async () => {
   showLoading(true);
   try {
     await updateNickname(currentUserData.uid, nickname);
-    await loadCurrentUser();
-    await updateUserDisplay();
+    currentUserData.nickname = nickname;
+    currentUserData.displayName = await getDisplayName(currentUserData.uid, currentUserData.email, currentUserData);
+    localStorage.setItem("userSession", JSON.stringify(currentUserData));
     
     document.getElementById("nicknamePage").style.display = "none";
     document.getElementById("mainContainer").style.display = "block";
@@ -1744,7 +1948,18 @@ window.createNewGroup = async () => {
   
   showLoading(true);
   try {
-    await createGroup(currentUserData.uid, groupName, document.getElementById("groupDescInput")?.value || "");
+    const groupsRef = ref(db, 'groups');
+    const newGroupRef = push(groupsRef);
+    await set(newGroupRef, {
+      groupName: groupName,
+      description: document.getElementById("groupDescInput")?.value || "",
+      ownerId: currentUserData.uid,
+      members: [currentUserData.uid],
+      createdAt: Date.now()
+    });
+    
+    await update(ref(db, `users/${currentUserData.uid}/privileges`), { groupId: newGroupRef.key });
+    
     closeModal("groupModal");
     showNotification("✅ Tạo nhóm thành công! Vui lòng đăng nhập lại để cập nhật.");
     setTimeout(() => window.location.reload(), 1000);
@@ -1761,7 +1976,9 @@ window.showHome = () => {
 };
 
 window.logout = async () => {
-  await logout();
+  await signOut(auth);
+  localStorage.removeItem("userSession");
+  localStorage.removeItem("guestMode");
   window.location.reload();
 };
 
@@ -1771,11 +1988,52 @@ function closeModal(modalId) {
 }
 window.closeModal = closeModal;
 
+async function updateUserDisplay() {
+  const userDisplay = document.getElementById("userDisplay");
+  const profileBtn = document.getElementById("profileBtn");
+  const logoutBtn = document.getElementById("logoutBtn");
+  const createGroupBtn = document.getElementById("createGroupBtn");
+  const adminLink = document.getElementById("adminLink");
+  
+  if (!userDisplay) return;
+  
+  if (!currentUserData || currentUserData.role === "guest") {
+    const guestName = currentUserData?.displayName || generateRandomGuestName();
+    userDisplay.innerHTML = `👤 ${escapeHtml(guestName)}`;
+    if (profileBtn) profileBtn.style.display = "none";
+    if (logoutBtn) logoutBtn.style.display = "none";
+    if (createGroupBtn) createGroupBtn.style.display = "none";
+    if (adminLink) adminLink.style.display = "none";
+  } else {
+    userDisplay.innerHTML = `👤 ${escapeHtml(currentUserData.displayName || currentUserData.nickname)}`;
+    if (profileBtn) profileBtn.style.display = "inline-block";
+    if (logoutBtn) logoutBtn.style.display = "inline-block";
+    if (createGroupBtn) {
+      createGroupBtn.style.display = !hasGroup(currentUserData) ? "inline-block" : "none";
+    }
+    if (adminLink) {
+      adminLink.style.display = canModerate(currentUserData) ? "inline-block" : "none";
+    }
+  }
+}
+
 // ==================== INIT APP ====================
 async function initApp() {
   if (!document.getElementById("mainContainer")) return;
   
-  await loadCurrentUser();
+  const sessionStr = localStorage.getItem("userSession");
+  if (sessionStr) {
+    try {
+      const session = JSON.parse(sessionStr);
+      if (session.role === "guest") {
+        currentUserData = session;
+      } else if (session.uid) {
+        currentUserData = await loadUserData(session.uid, session.email);
+        localStorage.setItem("userSession", JSON.stringify(currentUserData));
+      }
+    } catch(e) {}
+  }
+  
   await updateUserDisplay();
   await loadFollows();
   renderUploadPanel();
@@ -1789,6 +2047,7 @@ window.addEventListener("DOMContentLoaded", () => {
   const enterMainBtn = document.getElementById("enterMainBtn");
   const sendOtpBtn = document.getElementById("sendOtpBtn");
   const verifyOtpBtn = document.getElementById("verifyOtpBtn");
+  const resendOtpBtn = document.getElementById("resendOtpBtn");
   const saveNicknameBtn = document.getElementById("saveNicknameBtn");
   const confirmGroupBtn = document.getElementById("confirmGroupBtn");
   const createGroupBtn = document.getElementById("createGroupBtn");
@@ -1811,6 +2070,7 @@ window.addEventListener("DOMContentLoaded", () => {
   if (enterMainBtn) enterMainBtn.addEventListener("click", handleMainPassword);
   if (sendOtpBtn) sendOtpBtn.addEventListener("click", handleSendOTP);
   if (verifyOtpBtn) verifyOtpBtn.addEventListener("click", handleVerifyOTP);
+  if (resendOtpBtn) resendOtpBtn.addEventListener("click", handleResendOTP);
   if (saveNicknameBtn) saveNicknameBtn.addEventListener("click", window.saveNickname);
   if (confirmGroupBtn) confirmGroupBtn.addEventListener("click", window.createNewGroup);
   if (createGroupBtn) {
@@ -1838,9 +2098,8 @@ window.addEventListener("DOMContentLoaded", () => {
   if (genreFilter) genreFilter.addEventListener("change", () => scheduleRender());
   if (sortFilter) sortFilter.addEventListener("change", () => scheduleRender());
   
-  // Kiểm tra session hiện tại
-  const session = getCurrentSession();
-  if (session && (session.role === "guest" || session.uid)) {
+  const session = localStorage.getItem("userSession");
+  if (session) {
     document.getElementById("warningOverlay").style.display = "none";
     document.getElementById("loginPage").style.display = "none";
     document.getElementById("mainContainer").style.display = "block";
@@ -1849,10 +2108,10 @@ window.addEventListener("DOMContentLoaded", () => {
 });
 
 // Auth state change
-onAuthChange(async (user) => {
+onAuthStateChanged(auth, async (user) => {
   if (user) {
-    await loadCurrentUser();
-    await updateUserDisplay();
+    currentUserData = await loadUserData(user.uid, user.email);
+    localStorage.setItem("userSession", JSON.stringify(currentUserData));
     document.getElementById("loginPage").style.display = "none";
     document.getElementById("mainContainer").style.display = "block";
     await initApp();
