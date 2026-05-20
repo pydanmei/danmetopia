@@ -7,8 +7,19 @@
 <meta name="description" content="Nền tảng đọc truyện tranh online miễn phí">
 <meta name="theme-color" content="#FF69B4">
 
-<!-- EmailJS -->
+<!-- EmailJS - KHỞI TẠO ĐÚNG CÁCH -->
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script type="text/javascript">
+  // Đợi script load xong mới init
+  window.addEventListener('load', function() {
+    if (typeof emailjs !== 'undefined') {
+      emailjs.init("fPq8fpw1OqzOtj-lk");
+      console.log("✅ EmailJS initialized");
+    } else {
+      console.error("❌ EmailJS failed to load - check internet connection");
+    }
+  });
+</script>
 
 <style>
 * {
@@ -771,8 +782,9 @@ body {
 </div>
 
 <script type="module">
-// ==================== EMAILJS INIT ====================
-emailjs.init("fPq8fpw1OqzOtj-lk");
+// ==================== EMAILJS INIT (đã được khởi tạo trong head) ====================
+// Kiểm tra EmailJS đã sẵn sàng
+console.log("EmailJS available:", typeof emailjs !== 'undefined');
 
 // ==================== FIREBASE IMPORTS ====================
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -896,11 +908,20 @@ async function sendOTPEmail(email) {
   
   // GỬI EMAIL THẬT QUA EMAILJS
   try {
+    // Kiểm tra emailjs có sẵn không
+    if (typeof emailjs === 'undefined') {
+      console.error("EmailJS not loaded!");
+      showNotification(`⚠️ EmailJS chưa sẵn sàng. Mã OTP demo: ${otp}`, true);
+      return true;
+    }
+    
     const templateParams = {
       to_email: email,
       otp: otp,
       to_name: email.split('@')[0],
     };
+    
+    console.log("Sending email with params:", templateParams);
     
     const response = await emailjs.send(
       "service_8bxh5mm",      // Service ID
@@ -915,7 +936,7 @@ async function sendOTPEmail(email) {
     
   } catch (error) {
     console.error('Failed to send email:', error);
-    showNotification(`❌ Không thể gửi email. Mã OTP demo: ${otp}`, true);
+    showNotification(`❌ Không thể gửi email. Mã OTP demo: ${otp} (kiểm tra console)`, true);
     return true; // Vẫn cho phép dùng demo OTP
   }
 }
