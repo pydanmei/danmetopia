@@ -684,8 +684,7 @@ if (typeof emailjs !== 'undefined') {
 // ==================== FIREBASE IMPORTS ====================
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import {
-  getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword,
-  onAuthStateChanged, signOut
+  getAuth, signInAnonymously, updateProfile, onAuthStateChanged, signOut
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import {
   getDatabase, ref, set, get, child, push, update, remove,
@@ -721,6 +720,7 @@ let userFollows = {};
 let renderTimeout = null;
 let pendingEmail = null;
 let lastOtpSentTime = 0;
+let otpVerified = false;
 
 let storiesUnsubscribe = null;
 let chaptersUnsubscribe = null;
@@ -840,7 +840,6 @@ async function verifyOTP(email, inputCode) {
       return { success: false, message: `Sai mã OTP. Vui lòng thử lại.` };
     }
     
-    // Xóa OTP sau khi dùng thành công
     await remove(ref(db, `otp_requests/${emailKey}`));
     console.log("✅ OTP verified and removed");
     
@@ -858,6 +857,7 @@ async function getUserData(uid) {
     const snapshot = await get(child(ref(db), `users/${uid}`));
     return snapshot.exists() ? snapshot.val() : null;
   } catch (err) {
+    console.error("getUserData error:", err);
     return null;
   }
 }
@@ -954,7 +954,8 @@ async function updateNickname(uid, newNickname) {
 async function createNewUser(uid, email, nickname) {
   const isAdminEmail = ADMIN_EMAILS.includes(email);
   await set(ref(db, `users/${uid}`), {
-    email, nickname: nickname || email.split("@")[0],
+    email: email,
+    nickname: nickname || email.split("@")[0],
     role: isAdminEmail ? "admin" : "user",
     privileges: { moderator: false, groupId: null },
     follows: {}, history: [], genrePref: {}, strike: 0, bannedUntil: 0,
@@ -962,7 +963,7 @@ async function createNewUser(uid, email, nickname) {
   });
 }
 
-// ==================== STORIES CRUD (Realtime Database) ====================
+// ==================== STORIES CRUD ====================
 function loadStoriesRealtime() {
   if (storiesUnsubscribe) storiesUnsubscribe();
   const storiesRef = ref(db, 'stories');
@@ -1356,7 +1357,7 @@ window.saveProfile = async () => {
   } catch (err) { showNotification(err.message, true); }
 };
 
-// ==================== AUTH FLOW ====================
+// ==================== AUTH FLOW (DÙNG ANONYMOUS AUTH) ====================
 async function handleMainPassword() {
   const mainPass = document.getElementById("mainPassword").value;
   if (mainPass !== MAIN_PASSWORD) { showNotification("❌ Sai mật khẩu chính", true); return; }
@@ -1370,20 +1371,85 @@ async function handleMainPassword() {
 }
 
 async function handleSendOTP() {
-  const email = document.getElementById("loginEmail").value;
-  if (!email) { showNotification("Nhập email", true); return; }
+  const email = document.getElementById("loginEmail").value?.trim();
+  if (!email) {
+    return showNotification("Nhập email", true);
+  }
+  
   showLoading(true);
-  pendingEmail = email;
-  await sendOTPEmail(email);
-  document.getElementById("otpGroup").style.display = "block";
-  showLoading(false);
+  try {
+    pendingEmail = email;
+    otpVerified = false;
+    
+    const success = await sendOTPEmail(email);
+    if (!success) {
+      throw new Error("Không gửi được OTP");
+    }
+    
+    document.getElementById("otpGroup").style.display = "block";
+    showNotification("📩 OTP đã gửi, vui lòng kiểm tra email");
+  } catch (err) {
+    console.error(err);
+    showNotification(err.message, true);
+  } finally {
+    showLoading(false);
+  }
 }
 
-async function handleResendOTP() { if (pendingEmail) await handleSendOTP(); }
+async function handleResendOTP() { 
+  if (pendingEmail) await handleSendOTP(); 
+}
+
+async function firebaseLoginWithEmail(email) {
+  console.log("🔥 [1] Firebase login with email:", email);
+  
+  try {
+    // Sign in anonymously
+    const userCred = await signInAnonymously(auth);
+    const uid = userCred.user.uid;
+    console.log("✅ [2] Anonymous sign in successful, UID:", uid);
+    
+    // Update display name
+    await updateProfile(userCred.user, { displayName: email });
+    console.log("✅ [3] Profile updated");
+    
+    // Check if user exists in database
+    const userData = await getUserData(uid);
+    console.log("📦 [4] User data from DB:", userData);
+    
+    if (!userData) {
+      // Create new user
+      await createNewUser(uid, email, null);
+      console.log("✅ [5] New user created");
+      
+      // Need nickname
+      currentUserData = await loadUserData(uid, email);
+      localStorage.setItem("userSession", JSON.stringify(currentUserData));
+      document.getElementById("loginPage").style.display = "none";
+      document.getElementById("nicknamePage").style.display = "flex";
+      return;
+    }
+    
+    // User exists
+    currentUserData = await loadUserData(uid, email);
+    localStorage.setItem("userSession", JSON.stringify(currentUserData));
+    localStorage.removeItem("guestMode");
+    
+    document.getElementById("loginPage").style.display = "none";
+    document.getElementById("mainContainer").style.display = "block";
+    showNotification(`✅ Chào mừng ${currentUserData.displayName}`);
+    await initApp();
+    
+  } catch (err) {
+    console.error("❌ Firebase login error:", err);
+    showNotification("Lỗi đăng nhập: " + err.message, true);
+    throw err;
+  }
+}
 
 async function handleVerifyOTP() {
-  const email = pendingEmail || document.getElementById("loginEmail").value;
-  const otp = document.getElementById("otpCode").value;
+  const email = pendingEmail;
+  const otp = document.getElementById("otpCode").value?.trim();
   
   console.log("🔘 [1] Verify OTP clicked - Email:", email, "OTP:", otp);
   
@@ -1399,7 +1465,7 @@ async function handleVerifyOTP() {
   showLoading(true);
   
   try {
-    // Bước 1: Xác thực OTP
+    // Step 1: Verify OTP
     console.log("🔍 [2] Verifying OTP...");
     const result = await verifyOTP(email, otp);
     console.log("📦 [3] OTP verify result:", result);
@@ -1410,80 +1476,22 @@ async function handleVerifyOTP() {
       return;
     }
     
+    otpVerified = true;
+    showNotification("✅ OTP hợp lệ, đang đăng nhập...");
     console.log("✅ [4] OTP verified successfully!");
     
-    // Bước 2: Tạo mật khẩu tạm
-    const dummyPassword = "otp-temp-" + Date.now();
-    console.log("🔑 [5] Using dummy password:", dummyPassword);
-    
-    let userCred;
-    try {
-      // Thử đăng nhập
-      userCred = await signInWithEmailAndPassword(auth, email, dummyPassword);
-      console.log("✅ [6] Sign in successful for existing user:", userCred.user.uid);
-    } catch (loginError) {
-      console.log("⚠️ [6] Sign in failed, error code:", loginError.code);
-      
-      // Xử lý tất cả các loại lỗi Firebase auth
-      if (loginError.code === "auth/user-not-found" || 
-          loginError.code === "auth/wrong-password" ||
-          loginError.code === "auth/invalid-credential") {
-        
-        console.log("📝 [7] User not found or invalid credential, creating new account...");
-        userCred = await createUserWithEmailAndPassword(auth, email, dummyPassword);
-        console.log("✅ [8] New user created:", userCred.user.uid);
-        
-        // Tạo user data trong Realtime Database
-        await createNewUser(userCred.user.uid, email, null);
-        console.log("✅ [9] User data created in database");
-        
-      } else if (loginError.code === "auth/too-many-requests") {
-        throw new Error("Quá nhiều yêu cầu, vui lòng thử lại sau");
-      } else if (loginError.code === "auth/network-request-failed") {
-        throw new Error("Lỗi kết nối mạng, vui lòng kiểm tra internet");
-      } else {
-        throw loginError;
-      }
-    }
-    
-    // Bước 3: Lấy user data
-    console.log("📦 [10] Loading user data...");
-    const userData = await loadUserData(userCred.user.uid, email);
-    console.log("📦 [11] User data loaded:", userData);
-    
-    // Bước 4: Kiểm tra nickname
-    if (!userData.nickname || userData.nickname === null) {
-      console.log("⚠️ [12] No nickname found, showing nickname page");
-      currentUserData = userData;
-      localStorage.setItem("userSession", JSON.stringify(currentUserData));
-      document.getElementById("loginPage").style.display = "none";
-      document.getElementById("nicknamePage").style.display = "flex";
-      showLoading(false);
-      return;
-    }
-    
-    // Bước 5: Đăng nhập thành công
-    console.log("✅ [13] Login successful! Navigating to home...");
-    currentUserData = userData;
-    localStorage.setItem("userSession", JSON.stringify(currentUserData));
-    localStorage.removeItem("guestMode");
-    
-    document.getElementById("loginPage").style.display = "none";
-    document.getElementById("mainContainer").style.display = "block";
-    showNotification(`✅ Chào mừng ${currentUserData.displayName}`);
-    
-    await initApp();
-    console.log("✅ [14] App initialized");
+    // Step 2: Login with Firebase (Anonymous)
+    await firebaseLoginWithEmail(email);
     
   } catch (err) {
     console.error("❌ [ERROR] Login error:", err);
-    console.error("❌ Error details:", err.code, err.message);
     showNotification("Lỗi: " + (err.message || "Đăng nhập thất bại"), true);
   } finally {
     showLoading(false);
-    console.log("🏁 [15] Login flow completed");
+    console.log("🏁 [5] Login flow completed");
   }
 }
+
 window.saveNickname = async () => {
   const nickname = document.getElementById("nicknameInput").value;
   if (!nickname) { document.getElementById("nicknameMsg").innerText = "Nhập nickname"; return; }
@@ -1585,8 +1593,11 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 onAuthStateChanged(auth, async (user) => {
-  if (user) {
-    currentUserData = await loadUserData(user.uid, user.email);
+  console.log("🔥 onAuthStateChanged:", user?.uid || "null");
+  if (user && !currentUserData) {
+    // Lấy email từ displayName (lưu ý: anonymous user không có email)
+    const email = user.displayName || pendingEmail || "user@anonymous.com";
+    currentUserData = await loadUserData(user.uid, email);
     localStorage.setItem("userSession", JSON.stringify(currentUserData));
     document.getElementById("loginPage").style.display = "none";
     document.getElementById("mainContainer").style.display = "block";
