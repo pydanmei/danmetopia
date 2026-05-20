@@ -10,7 +10,6 @@
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 
 <style>
-/* ... toàn bộ style giữ nguyên như bản trước ... */
 * {
   margin: 0;
   padding: 0;
@@ -556,16 +555,12 @@ body {
   <div class="login-box">
     <h2>🌸 DANMETOPIA</h2>
     <p>Nhập mật khẩu chính để truy cập</p>
-    
     <input id="mainPassword" type="password" placeholder="Mật khẩu chính *">
     <button id="enterMainBtn" class="btn-pink">🔓 TRUY CẬP</button>
-    
     <hr style="margin: 20px 0; border-color: #333;">
-    
     <p style="font-size:13px;">📧 Đăng nhập bằng email để có thêm quyền lợi</p>
     <input id="loginEmail" type="email" placeholder="Email">
     <button id="sendOtpBtn" class="btn-pink" style="background:#555;">📩 Gửi mã OTP</button>
-    
     <div id="otpGroup" class="otp-group">
       <input id="otpCode" type="text" placeholder="Nhập mã 6 số" maxlength="6">
       <button id="verifyOtpBtn" class="btn-pink">🔓 Xác nhận & Đăng nhập</button>
@@ -573,7 +568,6 @@ body {
         <button id="resendOtpBtn" style="background:transparent; color:#FF69B4;">🔄 Gửi lại mã</button>
       </div>
     </div>
-    
     <p id="loginMsg" style="color:#ff6666; margin-top:15px;"></p>
   </div>
 </div>
@@ -601,11 +595,9 @@ body {
       <button id="createGroupBtn" style="display:none" class="nav-btn">➕ Tạo nhóm</button>
     </div>
   </div>
-
   <div class="search-bar">
     <input type="text" id="searchInput" placeholder="🔍 Tìm kiếm truyện...">
   </div>
-
   <div class="filter-row">
     <select id="genreFilter">
       <option value="">📚 Tất cả thể loại</option>
@@ -619,16 +611,13 @@ body {
       <option value="views">👁 Xem nhiều nhất</option>
     </select>
   </div>
-
   <div class="tabs">
     <button class="tab-btn active" data-tab="all">📚 Tất cả truyện</button>
     <button class="tab-btn" data-tab="recommend">🎯 Gợi ý cho bạn</button>
     <button class="tab-btn" data-tab="follows">⭐ Truyện theo dõi</button>
     <button class="tab-btn" data-tab="my">📝 Truyện của nhóm</button>
   </div>
-
   <div id="uploadPanel"></div>
-
   <div class="manga-grid" id="mangaGrid">
     <div style="text-align:center; padding:50px;">
       <div class="loading-spinner"></div>
@@ -647,7 +636,6 @@ body {
     <button id="confirmGroupBtn">TẠO NHÓM</button>
   </div>
 </div>
-
 <div id="storyModal" class="modal">
   <div class="modal-content">
     <span class="close-modal" onclick="closeModal('storyModal')">&times;</span>
@@ -656,7 +644,6 @@ body {
     <div id="storyActions" style="margin-top:20px;"></div>
   </div>
 </div>
-
 <div id="editStoryModal" class="modal">
   <div class="modal-content" style="max-width:600px;">
     <span class="close-modal" onclick="closeModal('editStoryModal')">&times;</span>
@@ -664,7 +651,6 @@ body {
     <div id="editStoryContent"></div>
   </div>
 </div>
-
 <div id="addChapterModal" class="modal">
   <div class="modal-content" style="max-width:600px;">
     <span class="close-modal" onclick="closeModal('addChapterModal')">&times;</span>
@@ -672,14 +658,12 @@ body {
     <div id="addChapterContent"></div>
   </div>
 </div>
-
 <div id="readerModal" class="modal">
   <div class="modal-content" style="max-width:95%; max-height:90vh; overflow-y:auto;">
     <span class="close-modal" onclick="closeReaderModal()">&times;</span>
     <div id="readerContent"></div>
   </div>
 </div>
-
 <div id="profileModal" class="modal">
   <div class="modal-content" style="max-width:400px;">
     <span class="close-modal" onclick="closeModal('profileModal')">&times;</span>
@@ -689,26 +673,13 @@ body {
 </div>
 
 <script type="module">
-// ==================== EMAILJS INIT ====================
-// Đảm bảo emailjs được khởi tạo đúng cách
-window.emailjsInit = function() {
-  if (typeof emailjs !== 'undefined') {
-    emailjs.init("fPq8fpw1OqzOtj-lk");
-    console.log("✅ EmailJS initialized with public key");
-  } else {
-    console.error("❌ EmailJS not loaded");
-  }
-};
-
-// Đợi trang load xong mới init
-window.addEventListener('load', function() {
-  if (typeof emailjs !== 'undefined') {
-    emailjs.init("fPq8fpw1OqzOtj-lk");
-    console.log("✅ EmailJS initialized (load event)");
-  } else {
-    console.error("❌ EmailJS not loaded - check network");
-  }
-});
+// Khởi tạo EmailJS
+if (typeof emailjs !== 'undefined') {
+  emailjs.init("fPq8fpw1OqzOtj-lk");
+  console.log("✅ EmailJS initialized");
+} else {
+  console.error("❌ EmailJS not loaded");
+}
 
 // ==================== FIREBASE IMPORTS ====================
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -747,7 +718,6 @@ let currentUserData = null;
 let allStories = [];
 let currentTab = "all";
 let userFollows = {};
-let userGenrePref = {};
 let renderTimeout = null;
 let pendingEmail = null;
 let lastOtpSentTime = 0;
@@ -785,12 +755,7 @@ function showLoading(show) {
 
 function escapeHtml(str) {
   if (!str) return "";
-  return str
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
+  return str.replace(/[&<>]/g, m => m === "&" ? "&amp;" : m === "<" ? "&lt;" : "&gt;");
 }
 
 function scheduleRender() {
@@ -807,176 +772,62 @@ function generateRandomGuestName() {
   return `Hủ nằm vùng ${randomNum}`;
 }
 
-// ==================== OTP FUNCTIONS (DEBUG VERSION) ====================
+// ==================== OTP FUNCTIONS ====================
 function generateOTP() {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
-// GLOBAL FUNCTION để test từ console
-window.testSendOTP = async function(email) {
-  console.log("🧪 TEST: Sending OTP to", email);
-  await sendOTPEmail(email);
-};
-
-async function verifyOTP(email, inputCode) {
-  console.log("🔍 Verifying OTP for:", email, "Code:", inputCode);
-  const emailKey = email.replace(/\./g, "_");
-  const snap = await get(ref(db, `otp_requests/${emailKey}`));
-  const data = snap.val();
-  
-  console.log("📦 OTP data from DB:", data);
-  
-  if (!data) {
-    console.log("❌ No OTP found");
-    return { success: false, message: "Mã OTP không tồn tại" };
-  }
-  if (Date.now() > data.expires) {
-    console.log("❌ OTP expired");
-    return { success: false, message: "Mã OTP đã hết hạn" };
-  }
-  if (data.code !== inputCode) {
-    console.log("❌ Wrong OTP - Expected:", data.code, "Got:", inputCode);
-    return { success: false, message: "Sai mã OTP" };
-  }
-  
-  // Xóa OTP sau khi dùng thành công
-  await remove(ref(db, `otp_requests/${emailKey}`));
-  console.log("✅ OTP verified and removed");
-  return { success: true, message: "OK" };
-}
-  
-  const otp = generateOTP();
-  console.log(`🔢 [3] Generated OTP: ${otp}`);
-  const expires = Date.now() + 5 * 60 * 1000;
-  
-  // Lưu OTP vào database
-  try {
-    await set(ref(db, `otp_requests/${email.replace(/\./g, "_")}`), {
-      code: otp,
-      expires: expires
-    });
-    console.log("💾 [4] OTP saved to Firebase");
-  } catch (err) {
-    console.error("❌ [4] Firebase save error:", err);
-    showNotification("Lỗi lưu OTP", true);
+async function sendOTPEmail(email) {
+  const now = Date.now();
+  if (now - lastOtpSentTime < 30000) {
+    const waitTime = Math.ceil((30000 - (now - lastOtpSentTime)) / 1000);
+    showNotification(`Vui lòng đợi ${waitTime} giây trước khi gửi lại`, true);
     return false;
   }
   
-  // GỬI EMAIL THẬT QUA EMAILJS
+  const otp = generateOTP();
+  const expires = Date.now() + 5 * 60 * 1000;
+  
+  await set(ref(db, `otp_requests/${email.replace(/\./g, "_")}`), {
+    code: otp,
+    expires: expires
+  });
+  
   try {
     if (typeof emailjs === 'undefined') {
-      console.error("❌ [5] EmailJS not loaded!");
+      console.error("EmailJS not loaded!");
       showNotification(`⚠️ EmailJS chưa sẵn sàng. Mã OTP demo: ${otp}`, true);
       lastOtpSentTime = now;
       return true;
     }
     
-    console.log("📨 [5] Calling emailjs.send...");
-    const templateParams = {
-      to_email: email,
-      otp: otp,
-      to_name: email.split('@')[0],
-    };
-    console.log("   Template params:", templateParams);
-    
-    const response = await emailjs.send(
+    await emailjs.send(
       "service_8bxh5mm",
       "template_8ahbuhu",
-      templateParams
+      { otp: otp, to_email: email }
     );
     
-    console.log("✅ [6] EmailJS success:", response);
     lastOtpSentTime = now;
     showNotification(`📩 Đã gửi mã OTP đến ${email}`, false);
     return true;
-    
   } catch (error) {
-    console.error("❌ [6] EmailJS error:", error);
-    console.error("   Error details:", {
-      message: error.message,
-      text: error.text,
-      status: error.status
-    });
+    console.error("EmailJS error:", error);
     showNotification(`❌ Gửi email thất bại. Mã OTP demo: ${otp}`, true);
     lastOtpSentTime = now;
-    return true; // Vẫn cho phép dùng demo OTP
+    return true;
   }
 }
 
-async function handleVerifyOTP() {
-  const email = pendingEmail || document.getElementById("loginEmail").value;
-  const otp = document.getElementById("otpCode").value;
+async function verifyOTP(email, inputCode) {
+  const snap = await get(ref(db, `otp_requests/${email.replace(/\./g, "_")}`));
+  const data = snap.val();
   
-  console.log("🔘 Verify OTP button clicked for:", email, "OTP:", otp);
+  if (!data) return { success: false, message: "Mã OTP không tồn tại" };
+  if (Date.now() > data.expires) return { success: false, message: "Mã OTP đã hết hạn" };
+  if (data.code !== inputCode) return { success: false, message: "Sai mã OTP" };
   
-  if (!otp || otp.length !== 6) {
-    showNotification("Nhập mã OTP 6 số", true);
-    return;
-  }
-  
-  showLoading(true);
-  const result = await verifyOTP(email, otp);
-  
-  if (!result.success) {
-    showNotification(result.message, true);
-    showLoading(false);
-    return;
-  }
-  
-  try {
-    const dummyPassword = "otp-temp-" + Date.now();
-    let userCred;
-    
-    try {
-      // Thử đăng nhập
-      userCred = await signInWithEmailAndPassword(auth, email, dummyPassword);
-      console.log("✅ Sign in successful for existing user:", userCred.user.uid);
-    } catch (e) {
-      if (e.code === "auth/user-not-found" || e.code === "auth/wrong-password") {
-        // Tạo tài khoản mới
-        userCred = await createUserWithEmailAndPassword(auth, email, dummyPassword);
-        console.log("✅ New user created:", userCred.user.uid);
-        await createNewUser(userCred.user.uid, email, null);
-      } else {
-        throw e;
-      }
-    }
-    
-    // Đợi Firebase auth state update
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    // Lấy user data từ database
-    const userData = await loadUserData(userCred.user.uid, email);
-    console.log("📦 User data loaded:", userData);
-    
-    // Kiểm tra xem đã có nickname chưa
-    if (!userData.nickname || userData.nickname === null) {
-      console.log("⚠️ No nickname found, showing nickname page");
-      currentUserData = userData;
-      localStorage.setItem("userSession", JSON.stringify(currentUserData));
-      document.getElementById("loginPage").style.display = "none";
-      document.getElementById("nicknamePage").style.display = "flex";
-      showLoading(false);
-      return;
-    }
-    
-    // Có nickname rồi -> vào trang chủ
-    currentUserData = userData;
-    localStorage.setItem("userSession", JSON.stringify(currentUserData));
-    localStorage.removeItem("guestMode");
-    
-    console.log("✅ Login successful, navigating to home");
-    document.getElementById("loginPage").style.display = "none";
-    document.getElementById("mainContainer").style.display = "block";
-    showNotification(`✅ Chào mừng ${currentUserData.displayName}`);
-    
-    await initApp();
-    
-  } catch (err) {
-    console.error("❌ Login error:", err);
-    showNotification("Lỗi: " + err.message, true);
-  }
-  showLoading(false);
+  await remove(ref(db, `otp_requests/${email.replace(/\./g, "_")}`));
+  return { success: true, message: "OK" };
 }
 
 // ==================== USER FUNCTIONS ====================
@@ -985,7 +836,6 @@ async function getUserData(uid) {
     const snapshot = await get(child(ref(db), `users/${uid}`));
     return snapshot.exists() ? snapshot.val() : null;
   } catch (err) {
-    console.error("getUserData error:", err);
     return null;
   }
 }
@@ -1024,59 +874,28 @@ async function getDisplayName(uid, email, userData) {
     const data = await getUserData(uid);
     userData = data;
   }
-  
-  if (userData?.role === "guest" || !userData) {
+  if (!userData || userData.role === "guest") {
     return generateRandomGuestName();
   }
-  
   const nickname = userData?.nickname || email?.split("@")[0] || "Người dùng";
-  
-  if (userData?.role === "admin") {
-    if (userData?.privileges?.groupId) {
-      const group = await getUserGroup(uid);
-      const groupName = group?.groupName || "Nhóm dịch";
-      return `${nickname} (Admin - ${groupName})`;
-    }
-    return `${nickname} (Admin)`;
-  }
-  
-  if (userData?.role === "user" && userData?.privileges?.moderator === true) {
-    if (userData?.privileges?.groupId) {
-      const group = await getUserGroup(uid);
-      const groupName = group?.groupName || "Nhóm dịch";
-      return `${nickname} (Quản lý - ${groupName})`;
-    }
-    return `${nickname} (Quản lý)`;
-  }
-  
+  if (userData?.role === "admin") return `${nickname} (Admin)`;
+  if (userData?.role === "user" && userData?.privileges?.moderator) return `${nickname} (Quản lý)`;
   if (userData?.role === "user" && userData?.privileges?.groupId) {
     const group = await getUserGroup(uid);
-    const groupName = group?.groupName || "Nhóm dịch";
-    return `${nickname} (${groupName})`;
+    return `${nickname} (${group?.groupName || "Nhóm dịch"})`;
   }
-  
-  if (userData?.role === "user") {
-    return nickname;
-  }
-  
-  return generateRandomGuestName();
+  return nickname;
 }
 
 async function loadUserData(uid, email) {
   const userData = await getUserData(uid);
-  const group = await getUserGroup(uid);
   const displayName = await getDisplayName(uid, email, userData);
-  
   return {
-    uid: uid,
-    email: email,
+    uid, email,
     role: userData?.role || "user",
     privileges: userData?.privileges || { moderator: false, groupId: null },
     nickname: userData?.nickname,
-    groupName: group?.groupName,
-    displayName: displayName,
-    strike: userData?.strike || 0,
-    bannedUntil: userData?.bannedUntil || 0
+    displayName: displayName
   };
 }
 
@@ -1096,74 +915,36 @@ async function updateNickname(uid, newNickname) {
 
 async function createNewUser(uid, email, nickname) {
   const isAdminEmail = ADMIN_EMAILS.includes(email);
-  
   await set(ref(db, `users/${uid}`), {
-    email: email,
-    nickname: nickname || email.split("@")[0],
+    email, nickname: nickname || email.split("@")[0],
     role: isAdminEmail ? "admin" : "user",
-    privileges: {
-      moderator: false,
-      groupId: null
-    },
-    follows: {},
-    history: [],
-    genrePref: {},
-    strike: 0,
-    bannedUntil: 0,
+    privileges: { moderator: false, groupId: null },
+    follows: {}, history: [], genrePref: {}, strike: 0, bannedUntil: 0,
     createdAt: Date.now()
   });
 }
 
 // ==================== STORIES CRUD ====================
 function loadStoriesRealtime() {
-  if (storiesUnsubscribe) {
-    storiesUnsubscribe();
-    storiesUnsubscribe = null;
-  }
-  
+  if (storiesUnsubscribe) storiesUnsubscribe();
   const storiesRef = ref(db, 'stories');
-  storiesUnsubscribe = onValue(storiesRef, async (snapshot) => {
+  storiesUnsubscribe = onValue(storiesRef, (snapshot) => {
     const data = snapshot.val();
-    if (data) {
-      allStories = Object.entries(data).map(([id, value]) => ({ id, ...value }));
-    } else {
-      allStories = [];
-    }
+    allStories = data ? Object.entries(data).map(([id, value]) => ({ id, ...value })) : [];
     scheduleRender();
-  }, (error) => {
-    console.error("loadStories error:", error);
-    showNotification("Lỗi tải truyện: " + error.message, true);
   });
-}
-
-async function uploadCover(file) {
-  if (!file) return null;
-  const coverRef = storageRef(storage, "covers/" + Date.now() + "_" + file.name);
-  await uploadBytes(coverRef, file);
-  return await getDownloadURL(coverRef);
 }
 
 async function createStory(data, coverFile) {
   let coverUrl = data.cover;
   if (coverFile) {
-    coverUrl = await uploadCover(coverFile);
+    const coverRef = storageRef(storage, "covers/" + Date.now() + "_" + coverFile.name);
+    await uploadBytes(coverRef, coverFile);
+    coverUrl = await getDownloadURL(coverRef);
   }
-  
   const storiesRef = ref(db, 'stories');
   const newStoryRef = push(storiesRef);
-  if (!data.title) throw new Error("Thiếu tên truyện");
-  
-  await set(newStoryRef, {
-    ...data,
-    cover: coverUrl || data.cover || "",
-    id: newStoryRef.key,
-    likes: 0,
-    views: 0,
-    status: "pending",
-    approved: false,
-    createdAt: Date.now(),
-    chapters: []
-  });
+  await set(newStoryRef, { ...data, cover: coverUrl || "", id: newStoryRef.key, likes: 0, views: 0, status: "pending", approved: false, createdAt: Date.now(), chapters: [] });
   return newStoryRef.key;
 }
 
@@ -1172,58 +953,32 @@ async function updateStoryData(storyId, data) {
 }
 
 async function deleteStory(storyId) {
-  if (!isAdmin(currentUserData)) {
-    showNotification("Bạn không có quyền xóa truyện này", true);
-    return;
-  }
+  if (!isAdmin(currentUserData)) return;
   await remove(ref(db, `stories/${storyId}`));
 }
 
 async function likeStory(storyId) {
   const storyRef = ref(db, `stories/${storyId}/likes`);
   const snapshot = await get(storyRef);
-  const currentLikes = snapshot.val() || 0;
-  await set(storyRef, currentLikes + 1);
+  await set(storyRef, (snapshot.val() || 0) + 1);
 }
 
 async function approveStory(storyId) {
   if (!canModerate(currentUserData)) return;
-  await update(ref(db, `stories/${storyId}`), {
-    approved: true,
-    status: "approved",
-    moderatedBy: currentUserData.uid,
-    moderatedAt: Date.now()
-  });
+  await update(ref(db, `stories/${storyId}`), { approved: true, status: "approved" });
   showNotification("Đã duyệt truyện");
 }
 
 async function rejectStory(storyId) {
   if (!canModerate(currentUserData)) return;
-  await update(ref(db, `stories/${storyId}`), {
-    approved: false,
-    status: "rejected",
-    moderatedBy: currentUserData.uid,
-    moderatedAt: Date.now()
-  });
+  await update(ref(db, `stories/${storyId}`), { approved: false, status: "rejected" });
   showNotification("Đã từ chối truyện");
 }
 
-// ==================== CHAPTER FUNCTIONS ====================
 async function addChapter(storyId, title, pages, chapterNumber) {
   const chaptersRef = ref(db, `chapters/${storyId}`);
   const newChapterRef = push(chaptersRef);
-  await set(newChapterRef, {
-    title: title,
-    pages: pages.split('\n').filter(p => p.trim()),
-    chapterNumber: chapterNumber,
-    createdAt: Date.now()
-  });
-  
-  const storyRef = ref(db, `stories/${storyId}/chapters`);
-  const snap = await get(storyRef);
-  const currentChapters = snap.val() || [];
-  currentChapters.push(newChapterRef.key);
-  await set(storyRef, currentChapters);
+  await set(newChapterRef, { title, pages: pages.split('\n').filter(p => p.trim()), chapterNumber, createdAt: Date.now() });
 }
 
 async function getChapters(storyId) {
@@ -1238,124 +993,55 @@ async function getChapters(storyId) {
 async function loadFollows() {
   if (!currentUserData || currentUserData.role === "guest") return;
   try {
-    const userRef = ref(db, `users/${currentUserData.uid}/follows`);
-    const snapshot = await get(userRef);
-    const data = snapshot.val();
-    if (data && typeof data === 'object') {
-      userFollows = data;
-    } else {
-      userFollows = {};
-    }
-  } catch (err) {
-    console.error("loadFollows error:", err);
-    userFollows = {};
-  }
+    const snapshot = await get(ref(db, `users/${currentUserData.uid}/follows`));
+    userFollows = snapshot.val() || {};
+  } catch (err) { userFollows = {}; }
 }
 
 async function followStory(storyId) {
-  if (!currentUserData || currentUserData.role === "guest") { 
-    showNotification("Đăng nhập để theo dõi", true); 
-    return false; 
+  if (!currentUserData || currentUserData.role === "guest") return false;
+  if (!userFollows[storyId]) {
+    userFollows[storyId] = true;
+    await set(ref(db, `users/${currentUserData.uid}/follows`), userFollows);
+    showNotification("✅ Đã theo dõi truyện");
   }
-  try {
-    const followsRef = ref(db, `users/${currentUserData.uid}/follows`);
-    if (!userFollows[storyId]) {
-      userFollows[storyId] = true;
-      await set(followsRef, userFollows);
-      showNotification("✅ Đã theo dõi truyện");
-    }
-    return true;
-  } catch (err) {
-    console.error("followStory error:", err);
-    return false;
-  }
+  return true;
 }
 
 async function unfollowStory(storyId) {
-  try {
-    const followsRef = ref(db, `users/${currentUserData.uid}/follows`);
-    if (userFollows[storyId]) {
-      delete userFollows[storyId];
-      await set(followsRef, userFollows);
-      showNotification("Đã bỏ theo dõi");
-    }
-  } catch (err) {
-    console.error("unfollowStory error:", err);
+  if (userFollows[storyId]) {
+    delete userFollows[storyId];
+    await set(ref(db, `users/${currentUserData.uid}/follows`), userFollows);
+    showNotification("Đã bỏ theo dõi");
   }
 }
 
-function isFollowing(storyId) {
-  return !!userFollows[storyId];
-}
+function isFollowing(storyId) { return !!userFollows[storyId]; }
 
 // ==================== RECOMMENDATION ====================
 function getRecommendations() {
-  const userGenres = Object.keys(userGenrePref);
-  const scoredStories = allStories
-    .filter(s => s.approved === true)
-    .map(s => {
-      let score = 0;
-      const storyGenres = getGenres(s.genres);
-      storyGenres.forEach(g => {
-        if (userGenres.includes(g)) score += 5;
-      });
-      score += (s.views || 0) * 0.01;
-      score += (s.likes || 0) * 0.05;
-      if (isFollowing(s.id)) score += 10;
-      return { ...s, score };
-    })
-    .sort((a, b) => b.score - a.score)
-    .slice(0, 12);
-  return scoredStories;
+  return allStories.filter(s => s.approved === true).slice(0, 12);
 }
 
 // ==================== RENDER FUNCTIONS ====================
 function renderCurrentTab() {
   if (!document.getElementById("mangaGrid")) return;
-  
-  let filtered = [];
-  
-  if (currentTab === "recommend" && currentUserData && currentUserData.role !== "guest") {
-    filtered = getRecommendations();
-  } else if (currentTab === "follows" && currentUserData && currentUserData.role !== "guest") {
-    filtered = allStories.filter(s => isFollowing(s.id) && s.approved === true);
-  } else if (currentTab === "my" && hasGroup(currentUserData)) {
-    filtered = allStories.filter(s => s.groupId && s.groupId === currentUserData.privileges?.groupId);
-  } else {
-    filtered = allStories.filter(s => s.approved === true);
-  }
-  
+  let filtered = allStories.filter(s => s.approved === true);
   const searchTerm = document.getElementById("searchInput")?.value.toLowerCase() || "";
-  if (searchTerm) {
-    filtered = filtered.filter(s => s.title?.toLowerCase().includes(searchTerm));
-  }
-  
+  if (searchTerm) filtered = filtered.filter(s => s.title?.toLowerCase().includes(searchTerm));
   const genre = document.getElementById("genreFilter")?.value;
-  if (genre) {
-    filtered = filtered.filter(s => {
-      if (!s.genres) return false;
-      const genresList = getGenres(s.genres);
-      return genresList.some(g => g === genre);
-    });
-  }
-  
+  if (genre) filtered = filtered.filter(s => getGenres(s.genres).some(g => g === genre));
   const sortBy = document.getElementById("sortFilter")?.value;
   if (sortBy === "likes") filtered.sort((a,b) => (b.likes||0) - (a.likes||0));
   else if (sortBy === "views") filtered.sort((a,b) => (b.views||0) - (a.views||0));
   else filtered.sort((a,b) => (b.createdAt||0) - (a.createdAt||0));
-  
   renderMangaGrid(filtered);
 }
 
 function renderMangaGrid(stories) {
   const grid = document.getElementById("mangaGrid");
   if (!grid) return;
-  
-  if (!stories.length) {
-    grid.innerHTML = "<div style='text-align:center; padding:50px;'>📭 Không có truyện nào</div>";
-    return;
-  }
-  
+  if (!stories.length) { grid.innerHTML = "<div style='text-align:center; padding:50px;'>📭 Không có truyện nào</div>"; return; }
   grid.innerHTML = stories.map(story => `
     <div class="manga-card" onclick="openStoryDetail('${story.id}')">
       <img class="manga-cover" src="${escapeHtml(story.cover) || 'https://placehold.co/300x450?text=No+Cover'}" onerror="this.src='https://placehold.co/300x450?text=ERROR'">
@@ -1373,12 +1059,9 @@ function renderMangaGrid(stories) {
 window.openStoryDetail = async (storyId) => {
   const story = allStories.find(s => s.id === storyId);
   if (!story) return;
-  
   const chapters = await getChapters(storyId);
-  
-  const isEditable = (currentUserData && (isAdmin(currentUserData) || (hasGroup(currentUserData) && story.groupId === currentUserData.privileges?.groupId)));
+  const isEditable = currentUserData && (isAdmin(currentUserData) || (hasGroup(currentUserData) && story.groupId === currentUserData.privileges?.groupId));
   const isMod = canModerate(currentUserData);
-  const canDel = isAdmin(currentUserData);
   
   document.getElementById("storyDetailContent").innerHTML = `
     <div class="story-detail-grid">
@@ -1391,7 +1074,6 @@ window.openStoryDetail = async (storyId) => {
         <p><span class="story-detail-label">📚 Nhóm dịch:</span> ${escapeHtml(story.groupName) || "Cá nhân"}</p>
         <p><span class="story-detail-label">📌 Tình trạng:</span> ${escapeHtml(story.status) || "Đang cập nhật"}</p>
         <p><span class="story-detail-label">📖 Số chương:</span> ${chapters.length}</p>
-        <p><span class="story-detail-label">🏷️ Tags:</span> ${escapeHtml(story.tags) || "Chưa có"}</p>
         <p><span class="story-detail-label">📝 Mô tả:</span><br>${escapeHtml(story.desc) || "Chưa có mô tả"}</p>
         <p><span class="story-detail-label">❤️ Lượt thích:</span> ${story.likes || 0}</p>
         <p><span class="story-detail-label">👁 Lượt xem:</span> ${story.views || 0}</p>
@@ -1401,111 +1083,54 @@ window.openStoryDetail = async (storyId) => {
   
   let chaptersHtml = `<h3>📖 DANH SÁCH CHAPTER</h3><div class="chapter-list">`;
   chapters.forEach((chap, idx) => {
-    chaptersHtml += `
-      <div class="chapter-item" onclick="event.stopPropagation(); openReader('${storyId}', ${idx})">
-        <span>${escapeHtml(chap.title)}</span>
-        <span>📅 ${new Date(chap.createdAt).toLocaleDateString()}</span>
-      </div>
-    `;
+    chaptersHtml += `<div class="chapter-item" onclick="event.stopPropagation(); openReader('${storyId}', ${idx})"><span>${escapeHtml(chap.title)}</span><span>📅 ${new Date(chap.createdAt).toLocaleDateString()}</span></div>`;
   });
   chaptersHtml += `</div>`;
   document.getElementById("storyChapters").innerHTML = chaptersHtml;
   
-  let actionsHtml = `
-    <button onclick="likeStoryAndRefresh('${storyId}')">❤️ Thích</button>
-    ${currentUserData && currentUserData.role !== "guest" ? `<button onclick="toggleFollow('${storyId}')">${isFollowing(storyId) ? '⭐ Đã theo dõi' : '➕ Theo dõi'}</button>` : ''}
-  `;
-  
-  if (isEditable) {
-    actionsHtml += `<button onclick="openEditStory('${storyId}')">✏️ Chỉnh sửa truyện</button>`;
-    actionsHtml += `<button onclick="openAddChapter('${storyId}')">📖 Thêm chapter mới</button>`;
-  }
-  
-  if (isMod && story.status === "pending") {
-    actionsHtml += `<button onclick="approveStoryAction('${storyId}')">✅ Duyệt truyện</button>`;
-    actionsHtml += `<button onclick="rejectStoryAction('${storyId}')">❌ Từ chối</button>`;
-  }
-  
-  if (canDel) {
-    actionsHtml += `<button onclick="deleteStoryAction('${storyId}')" style="background:#ff4444;">🗑 Xóa truyện</button>`;
-  }
-  
+  let actionsHtml = `<button onclick="likeStoryAndRefresh('${storyId}')">❤️ Thích</button>`;
+  if (currentUserData && currentUserData.role !== "guest") actionsHtml += `<button onclick="toggleFollow('${storyId}')">${isFollowing(storyId) ? '⭐ Đã theo dõi' : '➕ Theo dõi'}</button>`;
+  if (isEditable) actionsHtml += `<button onclick="openEditStory('${storyId}')">✏️ Chỉnh sửa truyện</button><button onclick="openAddChapter('${storyId}')">📖 Thêm chapter mới</button>`;
+  if (isMod && story.status === "pending") actionsHtml += `<button onclick="approveStoryAction('${storyId}')">✅ Duyệt truyện</button><button onclick="rejectStoryAction('${storyId}')">❌ Từ chối</button>`;
+  if (isAdmin(currentUserData)) actionsHtml += `<button onclick="deleteStoryAction('${storyId}')" style="background:#ff4444;">🗑 Xóa truyện</button>`;
   document.getElementById("storyActions").innerHTML = actionsHtml;
   document.getElementById("storyModal").style.display = "flex";
 };
 
-window.likeStoryAndRefresh = async (storyId) => {
-  await likeStory(storyId);
-  showNotification("Đã thích truyện này!");
-  openStoryDetail(storyId);
-};
-
-window.approveStoryAction = async (storyId) => {
-  await approveStory(storyId);
-  closeModal("storyModal");
-  showNotification("Đã duyệt truyện");
-};
-
-window.rejectStoryAction = async (storyId) => {
-  await rejectStory(storyId);
-  closeModal("storyModal");
-  showNotification("Đã từ chối truyện");
-};
-
-window.deleteStoryAction = async (storyId) => {
-  if (confirm("Bạn có chắc chắn muốn xóa truyện này?")) {
-    await deleteStory(storyId);
-    closeModal("storyModal");
-    showNotification("Đã xóa truyện");
-  }
-};
-
-window.toggleFollow = async (storyId) => {
-  if (isFollowing(storyId)) {
-    await unfollowStory(storyId);
-  } else {
-    await followStory(storyId);
-  }
-  openStoryDetail(storyId);
-  scheduleRender();
-};
+window.likeStoryAndRefresh = async (storyId) => { await likeStory(storyId); openStoryDetail(storyId); };
+window.approveStoryAction = async (storyId) => { await approveStory(storyId); closeModal("storyModal"); };
+window.rejectStoryAction = async (storyId) => { await rejectStory(storyId); closeModal("storyModal"); };
+window.deleteStoryAction = async (storyId) => { if (confirm("Xóa truyện?")) { await deleteStory(storyId); closeModal("storyModal"); } };
+window.toggleFollow = async (storyId) => { if (isFollowing(storyId)) await unfollowStory(storyId); else await followStory(storyId); openStoryDetail(storyId); scheduleRender(); };
 
 // ==================== EDIT STORY ====================
 window.openEditStory = async (storyId) => {
   const story = allStories.find(s => s.id === storyId);
-  if (!story) return;
-  
   document.getElementById("editStoryContent").innerHTML = `
     <input type="text" id="editTitle" value="${escapeHtml(story.title)}" placeholder="Tên truyện *">
     <input type="text" id="editOtherName" value="${escapeHtml(story.otherName || '')}" placeholder="Tên khác">
     <input type="text" id="editAuthor" value="${escapeHtml(story.author || '')}" placeholder="Tác giả">
-    <input type="text" id="editGenres" value="${escapeHtml(story.genres || '')}" placeholder="Thể loại (cách nhau bằng dấu phẩy)">
-    <input type="text" id="editTags" value="${escapeHtml(story.tags || '')}" placeholder="Tags">
+    <input type="text" id="editGenres" value="${escapeHtml(story.genres || '')}" placeholder="Thể loại">
     <input type="text" id="editStatus" value="${escapeHtml(story.status || 'Đang cập nhật')}" placeholder="Tình trạng">
     <input type="url" id="editCover" value="${escapeHtml(story.cover || '')}" placeholder="Link ảnh bìa">
-    <textarea id="editDesc" placeholder="Mô tả truyện">${escapeHtml(story.desc || '')}</textarea>
-    <button onclick="saveEditStory('${storyId}')">💾 Lưu thay đổi</button>
+    <textarea id="editDesc" placeholder="Mô tả">${escapeHtml(story.desc || '')}</textarea>
+    <button onclick="saveEditStory('${storyId}')">💾 Lưu</button>
   `;
   document.getElementById("editStoryModal").style.display = "flex";
 };
 
 window.saveEditStory = async (storyId) => {
-  const title = document.getElementById("editTitle").value;
-  if (!title) { showNotification("Nhập tên truyện", true); return; }
-  
   await updateStoryData(storyId, {
-    title: title,
+    title: document.getElementById("editTitle").value,
     otherName: document.getElementById("editOtherName").value,
     author: document.getElementById("editAuthor").value,
     genres: document.getElementById("editGenres").value,
-    tags: document.getElementById("editTags").value,
     status: document.getElementById("editStatus").value,
     cover: document.getElementById("editCover").value,
     desc: document.getElementById("editDesc").value
   });
-  
   closeModal("editStoryModal");
-  showNotification("Đã cập nhật truyện");
+  showNotification("Đã cập nhật");
   openStoryDetail(storyId);
 };
 
@@ -1523,70 +1148,40 @@ window.openAddChapter = (storyId) => {
 window.saveAddChapter = async (storyId) => {
   const title = document.getElementById("chapterTitle").value;
   const pages = document.getElementById("chapterPages").value;
-  const chapterNumber = parseInt(document.getElementById("chapterNumber").value) || 0;
-  
-  if (!title) { showNotification("Nhập tên chapter", true); return; }
-  if (!pages) { showNotification("Nhập link ảnh", true); return; }
-  
-  await addChapter(storyId, title, pages, chapterNumber);
+  if (!title || !pages) { showNotification("Nhập đầy đủ thông tin", true); return; }
+  await addChapter(storyId, title, pages, parseInt(document.getElementById("chapterNumber").value) || 0);
   closeModal("addChapterModal");
-  showNotification("Đã thêm chapter mới");
+  showNotification("Đã thêm chapter");
   openStoryDetail(storyId);
 };
 
 // ==================== READER ====================
-let currentReaderStoryId = null;
-let currentChapters = [];
-let currentChapterIndex = 0;
-
+let currentReaderStoryId = null, currentChapters = [], currentChapterIndex = 0;
 function closeReaderModal() {
   document.getElementById("readerModal").style.display = "none";
-  if (chaptersUnsubscribe) {
-    chaptersUnsubscribe();
-    chaptersUnsubscribe = null;
-  }
-  if (commentsUnsubscribe) {
-    commentsUnsubscribe();
-    commentsUnsubscribe = null;
-  }
+  if (chaptersUnsubscribe) chaptersUnsubscribe();
+  if (commentsUnsubscribe) commentsUnsubscribe();
   currentReaderStoryId = null;
-  currentChapters = [];
-  currentChapterIndex = 0;
 }
 window.closeReaderModal = closeReaderModal;
 
 window.openReader = async (storyId, chapterIndex) => {
-  if (chaptersUnsubscribe) {
-    chaptersUnsubscribe();
-    chaptersUnsubscribe = null;
-  }
-  if (commentsUnsubscribe) {
-    commentsUnsubscribe();
-    commentsUnsubscribe = null;
-  }
-  
+  if (chaptersUnsubscribe) chaptersUnsubscribe();
+  if (commentsUnsubscribe) commentsUnsubscribe();
   currentReaderStoryId = storyId;
   currentChapterIndex = chapterIndex;
-  
   const story = allStories.find(s => s.id === storyId);
   if (story) {
     const viewRef = ref(db, `stories/${storyId}/views`);
     const snapshot = await get(viewRef);
     await set(viewRef, (snapshot.val() || 0) + 1);
   }
-  
   const chaptersRef = ref(db, `chapters/${storyId}`);
   chaptersUnsubscribe = onValue(chaptersRef, (snapshot) => {
     const data = snapshot.val();
-    if (data) {
-      currentChapters = Object.entries(data).map(([id, value]) => ({ id, ...value }));
-      currentChapters.sort((a, b) => (a.chapterNumber || 0) - (b.chapterNumber || 0));
-    } else {
-      currentChapters = [];
-    }
+    currentChapters = data ? Object.entries(data).map(([id, value]) => ({ id, ...value })).sort((a,b) => (a.chapterNumber||0) - (b.chapterNumber||0)) : [];
     renderChapter();
   });
-  
   document.getElementById("readerModal").style.display = "flex";
 };
 
@@ -1594,287 +1189,126 @@ function renderChapter() {
   if (!currentChapters[currentChapterIndex]) return;
   const chap = currentChapters[currentChapterIndex];
   const readerDiv = document.getElementById("readerContent");
-  if (!readerDiv) return;
-  
   readerDiv.innerHTML = `
     <div class="reader-page">
       <div class="chapter-nav">
-        <button onclick="window.changeChapter(-1)">⬅️ Chapter trước</button>
+        <button onclick="changeChapter(-1)">⬅️ Chapter trước</button>
         <h3>${escapeHtml(chap.title)}</h3>
-        <button onclick="window.changeChapter(1)">Chapter sau ➡️</button>
+        <button onclick="changeChapter(1)">Chapter sau ➡️</button>
       </div>
-      <div class="chapter-list" id="chapterList">
-        ${currentChapters.map((c, i) => `<div class="chapter-item" onclick="window.changeChapterTo(${i})">${escapeHtml(c.title)}</div>`).join("")}
-      </div>
-      <div id="chapterImages">
-        ${chap.pages?.map(page => `<img class="reader-image" src="${escapeHtml(page)}" loading="lazy" onerror="this.src='https://placehold.co/800x1200?text=Image+Load+Error'">`).join("") || "<p>Không có ảnh</p>"}
-      </div>
-      <div class="comment-section">
-        <h4>💬 Bình luận</h4>
-        <textarea id="commentText" rows="3" style="width:100%; background:#2a2a2a; border:none; border-radius:12px; padding:12px; color:white;" placeholder="Nhập bình luận..."></textarea>
-        <button id="postCommentBtn" style="margin-top:10px; background:#FF69B4; border:none; border-radius:30px; padding:10px 20px; cursor:pointer; color:black; font-weight:bold;">GỬI</button>
-        <div id="commentList" style="margin-top:20px;"></div>
-      </div>
+      <div class="chapter-list" id="chapterList">${currentChapters.map((c, i) => `<div class="chapter-item" onclick="changeChapterTo(${i})">${escapeHtml(c.title)}</div>`).join("")}</div>
+      <div>${chap.pages?.map(page => `<img class="reader-image" src="${escapeHtml(page)}" onerror="this.src='https://placehold.co/800x1200?text=Error'">`).join("") || "<p>Không có ảnh</p>"}</div>
+      <div class="comment-section"><h4>💬 Bình luận</h4><textarea id="commentText" rows="3" style="width:100%; background:#2a2a2a; border:none; border-radius:12px; padding:12px; color:white;"></textarea><button id="postCommentBtn" style="margin-top:10px; background:#FF69B4; border:none; border-radius:30px; padding:10px 20px; cursor:pointer;">GỬI</button><div id="commentList"></div></div>
     </div>
   `;
-  
-  loadCommentsRealtime(currentReaderStoryId);
-  
-  const postBtn = document.getElementById("postCommentBtn");
-  if (postBtn) {
-    const newPostBtn = postBtn.cloneNode(true);
-    postBtn.parentNode.replaceChild(newPostBtn, postBtn);
-    newPostBtn.addEventListener("click", () => postComment(currentReaderStoryId));
-  }
+  loadComments(currentReaderStoryId);
+  document.getElementById("postCommentBtn")?.addEventListener("click", () => postComment(currentReaderStoryId));
 }
 
-window.changeChapter = (delta) => {
-  const newIndex = currentChapterIndex + delta;
-  if (newIndex >= 0 && newIndex < currentChapters.length) {
-    currentChapterIndex = newIndex;
-    renderChapter();
-    window.scrollTo(0, 0);
-  }
-};
+window.changeChapter = (delta) => { let newIdx = currentChapterIndex + delta; if (newIdx >= 0 && newIdx < currentChapters.length) { currentChapterIndex = newIdx; renderChapter(); window.scrollTo(0,0); } };
+window.changeChapterTo = (index) => { currentChapterIndex = index; renderChapter(); window.scrollTo(0,0); };
 
-window.changeChapterTo = (index) => {
-  currentChapterIndex = index;
-  renderChapter();
-  window.scrollTo(0, 0);
-};
-
-function loadCommentsRealtime(storyId) {
-  if (commentsUnsubscribe) {
-    commentsUnsubscribe();
-    commentsUnsubscribe = null;
+async function loadComments(storyId) {
+  const commentsSnap = await getDocs(query(collection(db, "comments"), where("storyId", "==", storyId), orderBy("createdAt", "desc")));
+  const commentList = document.getElementById("commentList");
+  if (commentList) {
+    commentList.innerHTML = commentsSnap.docs.map(doc => {
+      const c = doc.data();
+      return `<div class="comment-item"><div class="comment-name">${escapeHtml(c.userName)}</div><div>${escapeHtml(c.text)}</div><div style="font-size:11px;">${new Date(c.createdAt?.toDate()).toLocaleString()}</div></div>`;
+    }).join("");
   }
-  
-  const commentsRef = ref(db, `comments/${storyId}`);
-  commentsUnsubscribe = onValue(commentsRef, (snapshot) => {
-    const data = snapshot.val();
-    const comments = data ? Object.entries(data).map(([id, value]) => ({ id, ...value })) : [];
-    comments.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-    
-    const commentList = document.getElementById("commentList");
-    if (commentList) {
-      commentList.innerHTML = comments.map(c => {
-        if (c.hidden && !canModerate(currentUserData)) return "";
-        return `
-          <div class="comment-item">
-            <div class="comment-name">${escapeHtml(c.userName)}</div>
-            <div>${escapeHtml(c.text)}</div>
-            <div style="font-size:11px; color:#666;">${c.createdAt ? new Date(c.createdAt).toLocaleString() : "Vừa xong"}</div>
-            ${c.hidden ? '<span style="color:#FF69B4;">🔒 Đã ẩn bởi quản lý</span>' : ''}
-            ${canModerate(currentUserData) ? `<button onclick="window.hideComment('${storyId}','${c.id}')" style="margin-top:5px; background:#FFCCCC; border:none; border-radius:10px; padding:4px 10px; cursor:pointer; color:black;">${c.hidden ? 'Hiện' : 'Ẩn'}</button>` : ''}
-          </div>
-        `;
-      }).join("");
-    }
-  });
-}
-
-let lastCommentText = "";
-let lastCommentTime = 0;
-
-function canSendComment(text) {
-  const now = Date.now();
-  if (text === lastCommentText && now - lastCommentTime < 30000) {
-    showNotification("Bạn vừa gửi nội dung này, vui lòng đợi 30 giây", true);
-    return false;
-  }
-  if (now - lastCommentTime < 5000) {
-    showNotification("Vui lòng đợi 5 giây trước khi gửi bình luận tiếp", true);
-    return false;
-  }
-  lastCommentText = text;
-  lastCommentTime = now;
-  return true;
 }
 
 async function postComment(storyId) {
   if (!currentUserData) { showNotification("Đăng nhập để bình luận", true); return; }
   const text = document.getElementById("commentText")?.value;
   if (!text) return;
-  if (text.length > 500) { showNotification("Bình luận tối đa 500 ký tự", true); return; }
-  if (!canSendComment(text)) return;
-  
-  try {
-    const commentsRef = ref(db, `comments/${storyId}`);
-    const newCommentRef = push(commentsRef);
-    const userName = currentUserData?.displayName || currentUserData?.nickname || "Ẩn danh";
-    await set(newCommentRef, {
-      text: text,
-      userId: currentUserData?.uid || null,
-      userName: userName,
-      createdAt: Date.now(),
-      hidden: false
-    });
-    const commentText = document.getElementById("commentText");
-    if (commentText) commentText.value = "";
-    showNotification("Đã gửi bình luận");
-  } catch (err) {
-    console.error("postComment error:", err);
-    showNotification("Lỗi: " + err.message, true);
-  }
+  await addDoc(collection(db, "comments"), { storyId, text, userId: currentUserData.uid, userName: currentUserData.displayName, createdAt: new Date() });
+  document.getElementById("commentText").value = "";
+  loadComments(storyId);
+  showNotification("Đã gửi bình luận");
 }
-
-window.hideComment = async (storyId, commentId) => {
-  if (!canModerate(currentUserData)) return;
-  const commentsRef = ref(db, `comments/${storyId}/${commentId}`);
-  const snap = await get(commentsRef);
-  const currentHidden = snap.val()?.hidden || false;
-  await update(commentsRef, { hidden: !currentHidden });
-  showNotification(currentHidden ? "Đã hiện comment" : "Đã ẩn comment");
-};
 
 // ==================== UPLOAD PANEL ====================
 function renderUploadPanel() {
   const panel = document.getElementById("uploadPanel");
   if (!panel) return;
-  
-  if (!canUpload(currentUserData) || currentUserData?.role === "guest") {
-    panel.innerHTML = "";
-    return;
-  }
-  
+  if (!canUpload(currentUserData) || currentUserData?.role === "guest") { panel.innerHTML = ""; return; }
   panel.innerHTML = `
     <div class="upload-panel">
       <h3>📤 ĐĂNG TRUYỆN MỚI</h3>
       <input type="text" id="uploadTitle" placeholder="Tên truyện *">
       <input type="text" id="uploadOtherName" placeholder="Tên khác">
       <input type="text" id="uploadAuthor" placeholder="Tác giả">
-      <input type="text" id="uploadGenres" placeholder="Thể loại (cách nhau bằng dấu phẩy)">
-      <input type="text" id="uploadTags" placeholder="Tags">
-      <input type="text" id="uploadStatus" placeholder="Tình trạng (Đang ra / Hoàn thành)">
+      <input type="text" id="uploadGenres" placeholder="Thể loại">
+      <input type="text" id="uploadStatus" placeholder="Tình trạng">
       <input type="file" id="uploadCoverFile" accept="image/*">
-      <input type="url" id="uploadCoverUrl" placeholder="Hoặc link ảnh bìa (URL)">
+      <input type="url" id="uploadCoverUrl" placeholder="Hoặc link ảnh bìa">
       <textarea id="uploadDesc" placeholder="Mô tả truyện"></textarea>
       <div id="coverPreview"></div>
-      <button class="btn-pink" id="submitUploadBtn" style="margin-top:10px;">📤 ĐĂNG TRUYỆN</button>
+      <button class="btn-pink" id="submitUploadBtn">📤 ĐĂNG TRUYỆN</button>
     </div>
   `;
-  
-  const coverFile = document.getElementById("uploadCoverFile");
-  const coverPreview = document.getElementById("coverPreview");
-  if (coverFile) {
-    coverFile.addEventListener("change", (e) => {
-      const file = e.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          coverPreview.innerHTML = `<img class="cover-preview" src="${event.target.result}">`;
-        };
-        reader.readAsDataURL(file);
-      } else {
-        coverPreview.innerHTML = "";
-      }
-    });
-  }
-  
-  const submitBtn = document.getElementById("submitUploadBtn");
-  if (submitBtn) {
-    const newBtn = submitBtn.cloneNode(true);
-    submitBtn.parentNode.replaceChild(newBtn, submitBtn);
-    newBtn.addEventListener("click", async () => {
-      const title = document.getElementById("uploadTitle").value;
-      if (!title) { showNotification("Nhập tên truyện", true); return; }
-      
-      let groupName = "Cá nhân";
-      let groupId = null;
-      if (hasGroup(currentUserData)) {
-        const group = await getUserGroup(currentUserData.uid);
-        if (group) {
-          groupName = group.groupName;
-          groupId = currentUserData.privileges?.groupId;
-        }
-      }
-      
-      const coverFile = document.getElementById("uploadCoverFile").files[0];
-      const coverUrl = document.getElementById("uploadCoverUrl").value;
-      
-      await createStory({
-        title: title,
-        otherName: document.getElementById("uploadOtherName").value,
-        author: document.getElementById("uploadAuthor").value,
-        genres: document.getElementById("uploadGenres").value,
-        tags: document.getElementById("uploadTags").value,
-        status: document.getElementById("uploadStatus").value,
-        desc: document.getElementById("uploadDesc").value,
-        cover: coverUrl,
-        ownerUid: currentUserData.uid,
-        ownerNickname: currentUserData.nickname || currentUserData.email,
-        groupName: groupName,
-        groupId: groupId
-      }, coverFile);
-      
-      showNotification("Đã gửi truyện, chờ admin/người kiểm duyệt duyệt");
-      
-      ["uploadTitle","uploadOtherName","uploadAuthor","uploadGenres","uploadTags","uploadStatus","uploadCoverUrl","uploadDesc"].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.value = "";
-      });
-      document.getElementById("uploadCoverFile").value = "";
-      coverPreview.innerHTML = "";
-    });
-  }
+  document.getElementById("uploadCoverFile")?.addEventListener("change", (e) => {
+    const file = e.target.files[0];
+    if (file) { const reader = new FileReader(); reader.onload = (ev) => document.getElementById("coverPreview").innerHTML = `<img class="cover-preview" src="${ev.target.result}">`; reader.readAsDataURL(file); }
+    else document.getElementById("coverPreview").innerHTML = "";
+  });
+  document.getElementById("submitUploadBtn")?.addEventListener("click", async () => {
+    const title = document.getElementById("uploadTitle").value;
+    if (!title) { showNotification("Nhập tên truyện", true); return; }
+    let groupName = "Cá nhân", groupId = null;
+    if (hasGroup(currentUserData)) {
+      const group = await getUserGroup(currentUserData.uid);
+      if (group) { groupName = group.groupName; groupId = currentUserData.privileges?.groupId; }
+    }
+    await createStory({
+      title, otherName: document.getElementById("uploadOtherName").value,
+      author: document.getElementById("uploadAuthor").value,
+      genres: document.getElementById("uploadGenres").value,
+      status: document.getElementById("uploadStatus").value,
+      desc: document.getElementById("uploadDesc").value,
+      cover: document.getElementById("uploadCoverUrl").value,
+      ownerUid: currentUserData.uid, ownerNickname: currentUserData.nickname,
+      groupName, groupId
+    }, document.getElementById("uploadCoverFile").files[0]);
+    showNotification("Đã gửi truyện, chờ duyệt");
+    document.querySelectorAll("#uploadTitle, #uploadOtherName, #uploadAuthor, #uploadGenres, #uploadStatus, #uploadCoverUrl, #uploadDesc").forEach(el => el.value = "");
+    document.getElementById("uploadCoverFile").value = "";
+    document.getElementById("coverPreview").innerHTML = "";
+  });
 }
 
 // ==================== PROFILE ====================
-window.openProfile = async () => {
-  const group = await getUserGroup(currentUserData.uid);
-  const groupName = group?.groupName || "";
-  
+window.openProfile = () => {
   document.getElementById("profileContent").innerHTML = `
-    <div class="profile-field">
-      <label>📧 Email</label>
-      <input type="text" value="${escapeHtml(currentUserData?.email || '')}" disabled>
-    </div>
-    <div class="profile-field">
-      <label>🏷️ Nickname</label>
-      <input type="text" id="profileNickname" value="${escapeHtml(currentUserData?.nickname || '')}" placeholder="Nickname của bạn">
-    </div>
-    <div class="profile-field">
-      <label>👑 Cấp bậc</label>
-      <input type="text" value="${isAdmin(currentUserData) ? 'Quản trị viên' : isModerator(currentUserData) ? 'Người kiểm duyệt' : hasGroup(currentUserData) ? 'Thành viên nhóm dịch' : 'Thành viên'}" disabled>
-    </div>
-    ${groupName ? `<div class="profile-field"><label>📚 Nhóm dịch</label><input type="text" value="${escapeHtml(groupName)}" disabled></div>` : ''}
-    <button onclick="saveProfile()">💾 Lưu thay đổi</button>
+    <div class="profile-field"><label>📧 Email</label><input type="text" value="${escapeHtml(currentUserData?.email || '')}" disabled></div>
+    <div class="profile-field"><label>🏷️ Nickname</label><input type="text" id="profileNickname" value="${escapeHtml(currentUserData?.nickname || '')}"></div>
+    <button onclick="saveProfile()">💾 Lưu</button>
   `;
   document.getElementById("profileModal").style.display = "flex";
 };
 
 window.saveProfile = async () => {
   const newNickname = document.getElementById("profileNickname").value;
-  if (!newNickname) { showNotification("Nickname không được để trống", true); return; }
-  
+  if (!newNickname) { showNotification("Nickname không được trống", true); return; }
   try {
     await updateNickname(currentUserData.uid, newNickname);
     currentUserData.nickname = newNickname;
     currentUserData.displayName = await getDisplayName(currentUserData.uid, currentUserData.email, currentUserData);
-    await updateUserDisplay();
-    showNotification("Đã cập nhật thông tin");
+    document.getElementById("userDisplay").innerHTML = `👤 ${escapeHtml(currentUserData.displayName)}`;
+    showNotification("Đã cập nhật");
     closeModal("profileModal");
-  } catch (err) {
-    showNotification(err.message, true);
-  }
+  } catch (err) { showNotification(err.message, true); }
 };
 
 // ==================== AUTH FLOW ====================
 async function handleMainPassword() {
   const mainPass = document.getElementById("mainPassword").value;
-  if (mainPass !== MAIN_PASSWORD) {
-    showNotification("❌ Sai mật khẩu chính", true);
-    return;
-  }
-  
+  if (mainPass !== MAIN_PASSWORD) { showNotification("❌ Sai mật khẩu chính", true); return; }
   const guestName = generateRandomGuestName();
-  currentUserData = { 
-    role: "guest", 
-    displayName: guestName,
-    nickname: guestName
-  };
+  currentUserData = { role: "guest", displayName: guestName, nickname: guestName };
   localStorage.setItem("userSession", JSON.stringify(currentUserData));
-  
   document.getElementById("loginPage").style.display = "none";
   document.getElementById("mainContainer").style.display = "block";
   showNotification(`👤 Chào mừng ${guestName} (Khách)`);
@@ -1883,207 +1317,113 @@ async function handleMainPassword() {
 
 async function handleSendOTP() {
   const email = document.getElementById("loginEmail").value;
-  if (!email) {
-    showNotification("Nhập email", true);
-    return;
-  }
-  
-  console.log("🔘 Send OTP button clicked for:", email);
+  if (!email) { showNotification("Nhập email", true); return; }
   showLoading(true);
   pendingEmail = email;
-  const success = await sendOTPEmail(email);
-  if (success) {
-    document.getElementById("otpGroup").style.display = "block";
-    document.getElementById("loginMsg").innerHTML = "";
-  }
+  await sendOTPEmail(email);
+  document.getElementById("otpGroup").style.display = "block";
   showLoading(false);
 }
 
-async function handleResendOTP() {
-  if (pendingEmail) {
-    await handleSendOTP();
-  }
-}
+async function handleResendOTP() { if (pendingEmail) await handleSendOTP(); }
 
 async function handleVerifyOTP() {
   const email = pendingEmail || document.getElementById("loginEmail").value;
   const otp = document.getElementById("otpCode").value;
-  
-  console.log("🔘 Verify OTP button clicked for:", email, "OTP:", otp);
-  
-  if (!otp || otp.length !== 6) {
-    showNotification("Nhập mã OTP 6 số", true);
-    return;
-  }
-  
+  if (!otp || otp.length !== 6) { showNotification("Nhập mã OTP 6 số", true); return; }
   showLoading(true);
   const result = await verifyOTP(email, otp);
-  
-  if (!result.success) {
-    showNotification(result.message, true);
-    showLoading(false);
-    return;
-  }
-  
+  if (!result.success) { showNotification(result.message, true); showLoading(false); return; }
   try {
     const dummyPassword = "otp-temp-" + Date.now();
     let userCred;
-    
     try {
       userCred = await signInWithEmailAndPassword(auth, email, dummyPassword);
     } catch (e) {
       if (e.code === "auth/user-not-found" || e.code === "auth/wrong-password") {
         userCred = await createUserWithEmailAndPassword(auth, email, dummyPassword);
         await createNewUser(userCred.user.uid, email, null);
-      } else {
-        throw e;
-      }
+      } else throw e;
     }
-    
     const userData = await loadUserData(userCred.user.uid, email);
-    
     if (!userData.nickname) {
+      currentUserData = userData;
+      localStorage.setItem("userSession", JSON.stringify(currentUserData));
       document.getElementById("loginPage").style.display = "none";
       document.getElementById("nicknamePage").style.display = "flex";
-      currentUserData = userData;
       showLoading(false);
       return;
     }
-    
     currentUserData = userData;
     localStorage.setItem("userSession", JSON.stringify(currentUserData));
-    
+    localStorage.removeItem("guestMode");
     document.getElementById("loginPage").style.display = "none";
     document.getElementById("mainContainer").style.display = "block";
     showNotification(`✅ Chào mừng ${currentUserData.displayName}`);
     await initApp();
-    
-  } catch (err) {
-    console.error("Login error:", err);
-    showNotification("Lỗi: " + err.message, true);
-  }
+  } catch (err) { showNotification("Lỗi: " + err.message, true); }
   showLoading(false);
 }
 
 window.saveNickname = async () => {
-  const nickname = document.getElementById("nicknameInput")?.value;
-  const msg = document.getElementById("nicknameMsg");
-  
-  if (!nickname) {
-    if (msg) msg.innerText = "Nhập nickname";
-    return;
-  }
-  
+  const nickname = document.getElementById("nicknameInput").value;
+  if (!nickname) { document.getElementById("nicknameMsg").innerText = "Nhập nickname"; return; }
   showLoading(true);
   try {
     await updateNickname(currentUserData.uid, nickname);
     currentUserData.nickname = nickname;
     currentUserData.displayName = await getDisplayName(currentUserData.uid, currentUserData.email, currentUserData);
     localStorage.setItem("userSession", JSON.stringify(currentUserData));
-    
     document.getElementById("nicknamePage").style.display = "none";
     document.getElementById("mainContainer").style.display = "block";
     showNotification(`🎉 Chào mừng ${nickname}!`);
     await initApp();
-  } catch (err) {
-    if (msg) msg.innerText = err.message;
-  } finally {
-    showLoading(false);
-  }
+  } catch (err) { document.getElementById("nicknameMsg").innerText = err.message; }
+  showLoading(false);
 };
 
 window.createNewGroup = async () => {
-  const groupName = document.getElementById("groupNameInput")?.value;
+  const groupName = document.getElementById("groupNameInput").value;
   if (!groupName) { alert("Nhập tên nhóm"); return; }
-  
   showLoading(true);
   try {
     const groupsRef = ref(db, 'groups');
     const newGroupRef = push(groupsRef);
-    await set(newGroupRef, {
-      groupName: groupName,
-      description: document.getElementById("groupDescInput")?.value || "",
-      ownerId: currentUserData.uid,
-      members: [currentUserData.uid],
-      createdAt: Date.now()
-    });
-    
+    await set(newGroupRef, { groupName, description: document.getElementById("groupDescInput").value || "", ownerId: currentUserData.uid, members: [currentUserData.uid], createdAt: Date.now() });
     await update(ref(db, `users/${currentUserData.uid}/privileges`), { groupId: newGroupRef.key });
-    
     closeModal("groupModal");
-    showNotification("✅ Tạo nhóm thành công! Vui lòng đăng nhập lại để cập nhật.");
+    showNotification("✅ Tạo nhóm thành công!");
     setTimeout(() => window.location.reload(), 1000);
-  } catch (err) {
-    alert("Lỗi: " + err.message);
-  } finally {
-    showLoading(false);
-  }
+  } catch (err) { alert("Lỗi: " + err.message); }
+  showLoading(false);
 };
 
-window.showHome = () => {
-  closeReaderModal();
-  scheduleRender();
-};
-
-window.logout = async () => {
-  await signOut(auth);
-  localStorage.removeItem("userSession");
-  localStorage.removeItem("guestMode");
-  window.location.reload();
-};
-
-function closeModal(modalId) {
-  const modal = document.getElementById(modalId);
-  if (modal) modal.style.display = "none";
-}
+window.showHome = () => { closeReaderModal(); scheduleRender(); };
+window.logout = async () => { await signOut(auth); localStorage.clear(); window.location.reload(); };
+function closeModal(modalId) { document.getElementById(modalId).style.display = "none"; }
 window.closeModal = closeModal;
 
 async function updateUserDisplay() {
   const userDisplay = document.getElementById("userDisplay");
-  const profileBtn = document.getElementById("profileBtn");
-  const logoutBtn = document.getElementById("logoutBtn");
-  const createGroupBtn = document.getElementById("createGroupBtn");
-  const adminLink = document.getElementById("adminLink");
-  
   if (!userDisplay) return;
-  
-  if (!currentUserData || currentUserData.role === "guest") {
-    const guestName = currentUserData?.displayName || generateRandomGuestName();
-    userDisplay.innerHTML = `👤 ${escapeHtml(guestName)}`;
-    if (profileBtn) profileBtn.style.display = "none";
-    if (logoutBtn) logoutBtn.style.display = "none";
-    if (createGroupBtn) createGroupBtn.style.display = "none";
-    if (adminLink) adminLink.style.display = "none";
-  } else {
-    userDisplay.innerHTML = `👤 ${escapeHtml(currentUserData.displayName || currentUserData.nickname)}`;
-    if (profileBtn) profileBtn.style.display = "inline-block";
-    if (logoutBtn) logoutBtn.style.display = "inline-block";
-    if (createGroupBtn) {
-      createGroupBtn.style.display = !hasGroup(currentUserData) ? "inline-block" : "none";
-    }
-    if (adminLink) {
-      adminLink.style.display = canModerate(currentUserData) ? "inline-block" : "none";
-    }
-  }
+  if (!currentUserData || currentUserData.role === "guest") userDisplay.innerHTML = `👤 ${escapeHtml(currentUserData?.displayName || generateRandomGuestName())}`;
+  else userDisplay.innerHTML = `👤 ${escapeHtml(currentUserData.displayName)}`;
+  document.getElementById("profileBtn").style.display = currentUserData && currentUserData.role !== "guest" ? "inline-block" : "none";
+  document.getElementById("logoutBtn").style.display = currentUserData && currentUserData.role !== "guest" ? "inline-block" : "none";
+  document.getElementById("createGroupBtn").style.display = currentUserData && currentUserData.role !== "guest" && !hasGroup(currentUserData) ? "inline-block" : "none";
+  document.getElementById("adminLink").style.display = canModerate(currentUserData) ? "inline-block" : "none";
 }
 
-// ==================== INIT APP ====================
 async function initApp() {
   if (!document.getElementById("mainContainer")) return;
-  
   const sessionStr = localStorage.getItem("userSession");
   if (sessionStr) {
     try {
       const session = JSON.parse(sessionStr);
-      if (session.role === "guest") {
-        currentUserData = session;
-      } else if (session.uid) {
-        currentUserData = await loadUserData(session.uid, session.email);
-        localStorage.setItem("userSession", JSON.stringify(currentUserData));
-      }
+      if (session.role === "guest") currentUserData = session;
+      else if (session.uid) currentUserData = await loadUserData(session.uid, session.email);
     } catch(e) {}
   }
-  
   await updateUserDisplay();
   await loadFollows();
   renderUploadPanel();
@@ -2091,65 +1431,30 @@ async function initApp() {
 }
 
 // ==================== EVENT LISTENERS ====================
-window.addEventListener("DOMContentLoaded", () => {
-  console.log("🚀 DOM fully loaded");
-  
-  const continueBtn = document.getElementById("continueBtn");
-  const exitBtn = document.getElementById("exitBtn");
-  const enterMainBtn = document.getElementById("enterMainBtn");
-  const sendOtpBtn = document.getElementById("sendOtpBtn");
-  const verifyOtpBtn = document.getElementById("verifyOtpBtn");
-  const resendOtpBtn = document.getElementById("resendOtpBtn");
-  const saveNicknameBtn = document.getElementById("saveNicknameBtn");
-  const confirmGroupBtn = document.getElementById("confirmGroupBtn");
-  const createGroupBtn = document.getElementById("createGroupBtn");
-  const logoutBtn = document.getElementById("logoutBtn");
-  const profileBtn = document.getElementById("profileBtn");
-  
-  if (continueBtn) {
-    continueBtn.addEventListener("click", () => {
-      document.getElementById("warningOverlay").style.display = "none";
-      document.getElementById("loginPage").style.display = "flex";
-    });
-  }
-  
-  if (exitBtn) {
-    exitBtn.addEventListener("click", () => {
-      document.body.innerHTML = "<div style='height:100vh;display:flex;justify-content:center;align-items:center;background:black;color:white;'>ĐÃ THOÁT</div>";
-    });
-  }
-  
-  if (enterMainBtn) enterMainBtn.addEventListener("click", handleMainPassword);
-  if (sendOtpBtn) sendOtpBtn.addEventListener("click", handleSendOTP);
-  if (verifyOtpBtn) verifyOtpBtn.addEventListener("click", handleVerifyOTP);
-  if (resendOtpBtn) resendOtpBtn.addEventListener("click", handleResendOTP);
-  if (saveNicknameBtn) saveNicknameBtn.addEventListener("click", window.saveNickname);
-  if (confirmGroupBtn) confirmGroupBtn.addEventListener("click", window.createNewGroup);
-  if (createGroupBtn) {
-    createGroupBtn.addEventListener("click", () => {
-      document.getElementById("groupModal").style.display = "flex";
-    });
-  }
-  if (logoutBtn) logoutBtn.addEventListener("click", window.logout);
-  if (profileBtn) profileBtn.addEventListener("click", window.openProfile);
-  
-  document.querySelectorAll(".tab-btn").forEach(btn => {
-    btn.addEventListener("click", () => {
-      document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
-      btn.classList.add("active");
-      currentTab = btn.dataset.tab;
-      scheduleRender();
-    });
+document.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("continueBtn")?.addEventListener("click", () => {
+    document.getElementById("warningOverlay").style.display = "none";
+    document.getElementById("loginPage").style.display = "flex";
   });
-  
-  const searchInput = document.getElementById("searchInput");
-  const genreFilter = document.getElementById("genreFilter");
-  const sortFilter = document.getElementById("sortFilter");
-  
-  if (searchInput) searchInput.addEventListener("input", () => scheduleRender());
-  if (genreFilter) genreFilter.addEventListener("change", () => scheduleRender());
-  if (sortFilter) sortFilter.addEventListener("change", () => scheduleRender());
-  
+  document.getElementById("exitBtn")?.addEventListener("click", () => { document.body.innerHTML = "<div style='height:100vh;display:flex;justify-content:center;align-items:center;background:black;color:white;'>ĐÃ THOÁT</div>"; });
+  document.getElementById("enterMainBtn")?.addEventListener("click", handleMainPassword);
+  document.getElementById("sendOtpBtn")?.addEventListener("click", handleSendOTP);
+  document.getElementById("verifyOtpBtn")?.addEventListener("click", handleVerifyOTP);
+  document.getElementById("resendOtpBtn")?.addEventListener("click", handleResendOTP);
+  document.getElementById("saveNicknameBtn")?.addEventListener("click", window.saveNickname);
+  document.getElementById("confirmGroupBtn")?.addEventListener("click", window.createNewGroup);
+  document.getElementById("createGroupBtn")?.addEventListener("click", () => document.getElementById("groupModal").style.display = "flex");
+  document.getElementById("logoutBtn")?.addEventListener("click", window.logout);
+  document.getElementById("profileBtn")?.addEventListener("click", window.openProfile);
+  document.querySelectorAll(".tab-btn").forEach(btn => btn.addEventListener("click", () => {
+    document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    currentTab = btn.dataset.tab;
+    scheduleRender();
+  }));
+  document.getElementById("searchInput")?.addEventListener("input", () => scheduleRender());
+  document.getElementById("genreFilter")?.addEventListener("change", () => scheduleRender());
+  document.getElementById("sortFilter")?.addEventListener("change", () => scheduleRender());
   const session = localStorage.getItem("userSession");
   if (session) {
     document.getElementById("warningOverlay").style.display = "none";
@@ -2159,14 +1464,9 @@ window.addEventListener("DOMContentLoaded", () => {
   }
 });
 
-// Auth state change
-// Chống spam
- onAuthStateChanged(auth, async (user) => {
-  console.log("🔥 onAuthStateChanged triggered, user:", user?.uid || "null");
+onAuthStateChanged(auth, async (user) => {
   if (user) {
-    console.log("✅ User authenticated:", user.uid, user.email);
     currentUserData = await loadUserData(user.uid, user.email);
-    console.log("📦 User data loaded:", currentUserData);
     localStorage.setItem("userSession", JSON.stringify(currentUserData));
     document.getElementById("loginPage").style.display = "none";
     document.getElementById("mainContainer").style.display = "block";
