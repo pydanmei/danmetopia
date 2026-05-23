@@ -1,14 +1,12 @@
-import { db, ref, get, set, update, remove, onValue } from '../core/firebase.js';
+import { FirebaseService } from '../core/firebaseService.js';
 import { GENRE_LIST } from '../core/constants.js';
-import { currentUserData, refreshUserSession } from './auth.js';
+import { state, setState } from '../core/state.js';
+import { refreshUserSession } from './auth.js';
 import { isAdmin, canModerate, showNotification, escapeHtml } from './utils.js';
 
-export let allStories = [];
-export let allGroups = [];
-export let userFollows = {};
-export let renderTimeout = null;
-export let selectedGenre = "";
-export let storiesUnsubscribe = null;
+const { db, ref, get, set, update, remove, onValue } = FirebaseService;
+
+let storiesUnsubscribe = null;
 
 // Load stories realtime
 export function loadStoriesRealtime() {
@@ -16,7 +14,8 @@ export function loadStoriesRealtime() {
   const storiesRef = ref(db, 'stories');
   storiesUnsubscribe = onValue(storiesRef, (snapshot) => {
     const data = snapshot.val();
-    allStories = data ? Object.entries(data).map(([id, value]) => ({ id, ...value })) : [];
+    const stories = data ? Object.entries(data).map(([id, value]) => ({ id, ...value })) : [];
+    setState('stories', stories);
     scheduleRender();
   });
 }
@@ -24,41 +23,48 @@ export function loadStoriesRealtime() {
 // Load all groups
 export async function loadAllGroups() {
   const groupsSnap = await get(ref(db, "groups"));
-  allGroups = groupsSnap.val() ? Object.entries(groupsSnap.val()).map(([id, g]) => ({ id, ...g })) : [];
+  const groups = groupsSnap.val() ? Object.entries(groupsSnap.val()).map(([id, g]) => ({ id, ...g })) : [];
+  setState('groups', groups);
 }
 
 // Load follows
 export async function loadFollows() {
-  if (!currentUserData || currentUserData.role === "guest") return;
+  if (!state.currentUser || state.currentUser.role === "guest") return;
   try {
-    const snapshot = await get(ref(db, `users/${currentUserData.uid}/follows`));
-    userFollows = snapshot.val() || {};
-  } catch (err) { userFollows = {}; }
+    const snapshot = await get(ref(db, `users/${state.currentUser.uid}/follows`));
+    const follows = snapshot.val() || {};
+    setState('follows', follows);
+  } catch (err) { 
+    setState('follows', {});
+  }
 }
 
 // Follow/unfollow
 export async function followStory(storyId) {
-  if (!currentUserData || currentUserData.role === "guest") {
+  if (!state.currentUser || state.currentUser.role === "guest") {
     showNotification("Đăng nhập để theo dõi", true);
     return false;
   }
-  if (!userFollows[storyId]) {
-    userFollows[storyId] = true;
-    await set(ref(db, `users/${currentUserData.uid}/follows`), userFollows);
+  if (!state.follows[storyId]) {
+    const newFollows = { ...state.follows, [storyId]: true };
+    await set(ref(db, `users/${state.currentUser.uid}/follows`), newFollows);
+    setState('follows', newFollows);
     showNotification("✅ Đã theo dõi truyện");
   }
   return true;
 }
 
 export async function unfollowStory(storyId) {
-  if (userFollows[storyId]) {
-    delete userFollows[storyId];
-    await set(ref(db, `users/${currentUserData.uid}/follows`), userFollows);
+  if (state.follows[storyId]) {
+    const newFollows = { ...state.follows };
+    delete newFollows[storyId];
+    await set(ref(db, `users/${state.currentUser.uid}/follows`), newFollows);
+    setState('follows', newFollows);
     showNotification("Đã bỏ theo dõi");
   }
 }
 
-export function isFollowing(storyId) { return !!userFollows[storyId]; }
+export function isFollowing(storyId) { return !!state.follows[storyId]; }
 
 // Like story
 export async function likeStory(storyId) { 
@@ -69,20 +75,20 @@ export async function likeStory(storyId) {
 
 // Approve/Reject story
 export async function approveStory(storyId) { 
-  if (!canModerate(currentUserData)) return;
+  if (!canModerate(state.currentUser)) return;
   await update(ref(db, `stories/${storyId}`), { approved: true }); 
   showNotification("Đã duyệt truyện");
 }
 
 export async function rejectStory(storyId) { 
-  if (!canModerate(currentUserData)) return;
+  if (!canModerate(state.currentUser)) return;
   await update(ref(db, `stories/${storyId}`), { approved: false }); 
   showNotification("Đã từ chối truyện");
 }
 
 // Delete story
 export async function deleteStory(storyId) { 
-  if (!isAdmin(currentUserData)) {
+  if (!isAdmin(state.currentUser)) {
     showNotification("Bạn không có quyền xóa truyện", true);
     return;
   }
@@ -98,65 +104,6 @@ export async function getChapters(storyId) {
   return chapters;
 }
 
-// Get single chapter
-export async function getChapter(storyId, chapterId) {
-  const snap = await get(ref(db, `chapters/${storyId}/${chapterId}`));
-  return snap.exists() ? { id: chapterId, ...snap.val() } : null;
-}
-
-// Add chapter
-export async function addChapter(storyId, title, pages, chapterNumber) {
-  if (!title) {
-    showNotification("Thiếu tên chapter", true);
-    throw new Error("Thiếu title");
-  }
-  
-  const existingChapters = await getChapters(storyId);
-  const newChapterNumber = chapterNumber || existingChapters.length + 1;
-  
-  const chaptersRef = ref(db, `chapters/${storyId}`);
-  const newChapterRef = push(chaptersRef);
-  
-  const chapterData = {
-    title: title,
-    pages: pages,
-    chapterNumber: newChapterNumber,
-    createdAt: Date.now()
-  };
-  
-  await set(newChapterRef, chapterData);
-  
-  const storyRef = ref(db, `stories/${storyId}/chapters`);
-  const snap = await get(storyRef);
-  const currentChapters = snap.val() || {};
-  currentChapters[newChapterRef.key] = true;
-  await set(storyRef, currentChapters);
-}
-
-// Update chapter
-export async function updateChapter(storyId, chapterId, data) {
-  await update(ref(db, `chapters/${storyId}/${chapterId}`), data);
-  showNotification("✅ Đã cập nhật chapter");
-}
-
-// Delete chapter
-export async function deleteChapter(storyId, chapterId) {
-  if (!currentUserData || !isAdmin(currentUserData)) {
-    showNotification("⚠️ Chỉ Admin mới có quyền xóa chapter!", true);
-    return;
-  }
-  
-  if (!confirm("Xóa chapter này? Hành động không thể hoàn tác!")) return;
-  
-  await remove(ref(db, `chapters/${storyId}/${chapterId}`));
-  const storyRef = ref(db, `stories/${storyId}/chapters`);
-  const snap = await get(storyRef);
-  const chapters = snap.val() || {};
-  delete chapters[chapterId];
-  await set(storyRef, chapters);
-  showNotification("✅ Đã xóa chapter thành công!");
-}
-
 // Render functions
 export function renderGenreFilter() {
   const container = document.getElementById("genreFilterContainer");
@@ -169,12 +116,12 @@ export function renderGenreFilter() {
   document.querySelectorAll('.filter-genre-item').forEach(el => {
     el.addEventListener('click', () => {
       const genre = el.dataset.genre;
-      if (selectedGenre === genre) {
-        selectedGenre = "";
+      if (state.selectedGenre === genre) {
+        setState('selectedGenre', "");
         el.classList.remove("active");
       } else {
         document.querySelectorAll('.filter-genre-item').forEach(g => g.classList.remove("active"));
-        selectedGenre = genre;
+        setState('selectedGenre', genre);
         el.classList.add("active");
       }
       scheduleRender();
@@ -182,6 +129,7 @@ export function renderGenreFilter() {
   });
 }
 
+let renderTimeout = null;
 export function scheduleRender() {
   if (renderTimeout) clearTimeout(renderTimeout);
   renderTimeout = setTimeout(() => renderCurrentTab(), 150);
@@ -191,38 +139,16 @@ export function renderCurrentTab() {
   if (!document.getElementById("mangaGrid")) return;
   let filtered = [];
   
-  if (isAdmin(currentUserData)) {
-    filtered = [...allStories];
+  if (isAdmin(state.currentUser)) {
+    filtered = [...state.stories];
   } else {
-    filtered = allStories.filter(s => s.approved === true);
+    filtered = state.stories.filter(s => s.approved === true);
   }
   
-  if (selectedGenre) {
-    filtered = filtered.filter(s => s.genres && s.genres.includes(selectedGenre));
+  if (state.selectedGenre) {
+    filtered = filtered.filter(s => s.genres && s.genres.includes(state.selectedGenre));
   }
   const searchTerm = document.getElementById("searchInput")?.value.toLowerCase() || "";
   if (searchTerm) filtered = filtered.filter(s => s.title?.toLowerCase().includes(searchTerm));
   const sortBy = document.getElementById("sortFilter")?.value;
-  if (sortBy === "likes") filtered.sort((a,b) => (b.likes||0) - (a.likes||0));
-  else if (sortBy === "views") filtered.sort((a,b) => (b.views||0) - (a.views||0));
-  else filtered.sort((a,b) => (b.createdAt||0) - (a.createdAt||0));
-  renderMangaGrid(filtered);
-}
-
-export function renderMangaGrid(stories) {
-  const grid = document.getElementById("mangaGrid");
-  if (!grid) return;
-  if (!stories.length) { grid.innerHTML = "<div style='text-align:center; padding:50px;'>📭 Không có truyện nào</div>"; return; }
-  grid.innerHTML = stories.map(story => `
-    <div class="manga-card" onclick="window.openStoryDetail('${story.id}')">
-      <img class="manga-cover" src="${escapeHtml(story.cover) || 'https://placehold.co/300x450?text=No+Cover'}" onerror="this.src='https://placehold.co/300x450?text=ERROR'">
-      <div class="manga-info">
-        <div class="manga-title">${escapeHtml(story.title)}</div>
-        <div class="manga-meta">📚 ${escapeHtml(story.groupName) || "Cá nhân"}</div>
-        <div class="manga-meta">❤️ ${story.likes || 0} | 👁 ${story.views || 0}</div>
-        ${story.approved === false ? '<div class="manga-meta" style="color:#FFCC00;">⏳ Chờ duyệt</div>' : ''}
-        <div class="manga-meta">${story.status === "Đã hoàn thành" ? "✅ Hoàn thành" : story.status === "Tạm ngưng" ? "⏸ Tạm ngưng" : "📖 Đang ra"}</div>
-      </div>
-    </div>
-  `).join("");
-}
+  if (sortBy === "likes")
