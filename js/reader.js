@@ -1,8 +1,11 @@
-// IMPORT ĐẦY ĐỦ - QUAN TRỌNG
-import { db, ref, onValue, get, set, push } from './db.js';
+// IMPORT ĐẦY ĐỦ
+import { initFirebase, db, ref, onValue, get, set, push } from './db.js';
 import { currentUserData, refreshUserSession } from './auth.js';
 import { escapeHtml, loadImageWithSkeleton, imageCache, showNotification } from './utils.js';
 import { allStories } from './data.js';
+
+// Đảm bảo Firebase đã init
+initFirebase();
 
 console.log("✅ reader.js loaded");
 
@@ -112,7 +115,7 @@ function renderChapter() {
       
       <div id="chapterImagesContainer">
         ${chap.pages?.map((page, idx) => `
-          <img class="reader-image" data-src="${escapeHtml(page)}" loading="lazy" onerror="this.src='https://placehold.co/800x1200?text=Error'">
+          <img class="reader-image" src="${escapeHtml(page)}" loading="lazy" onerror="this.src='https://placehold.co/800x1200?text=Error'">
         `).join("") || "<p>Không có ảnh</p>"}
       </div>
       
@@ -144,24 +147,6 @@ function renderChapter() {
       </div>
     </div>
   `;
-  
-  // Lazy load images
-  const imageObserver = new IntersectionObserver((entries, observer) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        const img = entry.target;
-        const src = img.dataset.src;
-        if (src) {
-          loadImageWithSkeleton(img, src);
-        }
-        observer.unobserve(img);
-      }
-    });
-  }, { rootMargin: "200px" });
-  
-  document.querySelectorAll("#chapterImagesContainer .reader-image").forEach(img => {
-    imageObserver.observe(img);
-  });
   
   loadCommentsRealtime(currentReaderStoryId);
   preloadNextChapter();
