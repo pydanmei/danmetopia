@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>🌸 DANMETOPIA - Đọc truyện tranh online 🌸</title>
+<title>DANMETOPIA - Đọc truyện tranh online</title>
 <meta name="theme-color" content="#FF69B4">
 
 <!-- EmailJS -->
@@ -209,6 +209,8 @@ body {
   font-size: 22px;
   font-weight: bold;
   cursor: pointer;
+  text-decoration: none;
+  color: black;
 }
 .user-area {
   display: flex;
@@ -381,16 +383,71 @@ body {
 }
 .filter-row {
   display: flex;
+  flex-direction: column;
   gap: 10px;
   padding: 0 20px 15px;
-  flex-wrap: wrap;
 }
 .filter-row select {
+  width: 200px;
   padding: 8px 15px;
   background: #1c1c1c;
   border: 1px solid #333;
   border-radius: 30px;
   color: white;
+}
+.filter-genres {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+.filter-genre-item {
+  display: inline-block;
+  margin: 0;
+  padding: 6px 14px;
+  background: #2a2a2a;
+  border-radius: 30px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: 0.2s;
+}
+.filter-genre-item:hover {
+  background: #FF69B4;
+  color: black;
+}
+.filter-genre-item.active {
+  background: #FF69B4;
+  color: black;
+}
+.genre-tooltip {
+  position: relative;
+  display: inline-block;
+  cursor: help;
+}
+.genre-tooltip .tooltip-text {
+  visibility: hidden;
+  width: 260px;
+  background-color: #1c1c1c;
+  color: #FF69B4;
+  text-align: center;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid #FF69B4;
+  position: absolute;
+  z-index: 100;
+  bottom: 125%;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 11px;
+  white-space: normal;
+  word-wrap: break-word;
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+}
+.genre-tooltip:hover .tooltip-text {
+  visibility: visible;
+  opacity: 1;
 }
 .modal {
   display: none;
@@ -588,7 +645,7 @@ body {
 </head>
 <body>
 
-<!-- ==================== WARNING 18+ ==================== -->
+<!-- WARNING 18+ -->
 <div id="warningOverlay">
   <div class="warning-box">
     <h2>⚠️ CẢNH BÁO 18+ ⚠️</h2>
@@ -600,7 +657,7 @@ body {
   </div>
 </div>
 
-<!-- ==================== LOGIN PAGE ==================== -->
+<!-- LOGIN PAGE -->
 <div id="loginPage">
   <div class="login-box">
     <h2>🌸 DANMETOPIA 🌸</h2>
@@ -623,7 +680,7 @@ body {
   </div>
 </div>
 
-<!-- ==================== REGISTER PAGE ==================== -->
+<!-- REGISTER PAGE -->
 <div id="registerPage">
   <div class="login-box" style="max-width:380px;">
     <h2>🎉 HOÀN TẤT ĐĂNG KÝ</h2>
@@ -636,10 +693,10 @@ body {
   </div>
 </div>
 
-<!-- ==================== MAIN CONTAINER ==================== -->
+<!-- MAIN CONTAINER -->
 <div id="mainContainer">
   <div class="topbar">
-    <div class="logo" onclick="showHome()">🌸 DANMETOPIA 🌸</div>
+    <div class="logo" onclick="showHome()">🌸 DANMETOPIA</div>
     <div class="user-area">
       <span id="userDisplay">👤 Đang tải...</span>
       <a href="groups.html" id="groupsLink" class="nav-link" style="display:none">📚 Nhóm</a>
@@ -653,17 +710,12 @@ body {
     <input type="text" id="searchInput" placeholder="🔍 Tìm kiếm truyện...">
   </div>
   <div class="filter-row">
-    <select id="genreFilter">
-      <option value="">📚 Tất cả thể loại</option>
-      <option>Hành động</option><option>Lãng mạn</option><option>Hài hước</option>
-      <option>Kinh dị</option><option>Fantasy</option><option>Đam mỹ</option>
-      <option>Học đường</option><option>Viễn tưởng</option><option>Trinh thám</option>
-    </select>
     <select id="sortFilter">
       <option value="likes">🔥 Hot nhất</option>
       <option value="newest">📅 Mới nhất</option>
       <option value="views">👁 Xem nhiều nhất</option>
     </select>
+    <div class="filter-genres" id="genreFilterContainer"></div>
   </div>
   <div class="tabs">
     <button class="tab-btn active" data-tab="all">📚 Tất cả truyện</button>
@@ -686,11 +738,55 @@ body {
 <div id="profileModal" class="modal"><div class="modal-content"><span class="close-modal" onclick="closeModal('profileModal')">&times;</span><h2>👤 THÔNG TIN</h2><div id="profileContent"></div></div></div>
 
 <script type="module">
+// ==================== IMGBB CONFIG ====================
+const IMGBB_API_KEY = "d16b5595d7f6044476d254c8f428cc28";
+
+// ==================== GENRE LIST ====================
+const GENRE_LIST = [
+  { name: "Action", icon: "⚔️", desc: "Truyện có nhiều cảnh đánh nhau, hành động" },
+  { name: "Comedy", icon: "😂", desc: "Truyện hài hước, mang lại tiếng cười" },
+  { name: "Romance", icon: "💕", desc: "Truyện tập trung vào tình cảm lãng mạn" },
+  { name: "Danmei", icon: "🌸", desc: "Truyện tình cảm nam-nam (Trung Quốc)" },
+  { name: "Yaoi", icon: "🔥", desc: "Truyện BL có yếu tố 18+" },
+  { name: "Shounen Ai", icon: "💖", desc: "Truyện BL nhẹ nhàng, thuần khiết" },
+  { name: "Horror", icon: "👻", desc: "Truyện kinh dị, rùng rợn" },
+  { name: "Fantasy", icon: "🐉", desc: "Truyện giả tưởng, ma thuật" },
+  { name: "Sci-fi", icon: "🚀", desc: "Truyện khoa học viễn tưởng" },
+  { name: "School Life", icon: "📚", desc: "Truyện bối cảnh trường học" },
+  { name: "Drama", icon: "💗", desc: "Truyện tình cảm, nhiều cung bậc" },
+  { name: "Mystery", icon: "🔍", desc: "Truyện trinh thám, bí ẩn" }
+];
+
+// ==================== SESSION MANAGEMENT ====================
+const MAIN_PASSWORD_SESSION_KEY = "mainPasswordExpiry";
+
+function checkMainPasswordSession() {
+  const expiry = localStorage.getItem(MAIN_PASSWORD_SESSION_KEY);
+  if (!expiry) return false;
+  const now = Date.now();
+  const expiryTime = parseInt(expiry);
+  const lastDate = new Date(expiryTime).toDateString();
+  const today = new Date().toDateString();
+  if (now > expiryTime || lastDate !== today) {
+    localStorage.removeItem(MAIN_PASSWORD_SESSION_KEY);
+    return false;
+  }
+  return true;
+}
+
+function setMainPasswordSession() {
+  const expiry = Date.now() + 24 * 60 * 60 * 1000;
+  localStorage.setItem(MAIN_PASSWORD_SESSION_KEY, expiry.toString());
+}
+
+function clearMainPasswordSession() {
+  localStorage.removeItem(MAIN_PASSWORD_SESSION_KEY);
+}
+
 // ==================== FIREBASE & EMAILJS ====================
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import { getDatabase, ref, set, get, child, push, update, remove, onValue, off } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
-import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCDQk9DlMNKwn_508fDMI_3IB_dgpgHujA",
@@ -705,7 +801,6 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getDatabase(app);
-const storage = getStorage(app);
 emailjs.init("fPq8fpw1OqzOtj-lk");
 
 // ==================== CONSTANTS ====================
@@ -719,6 +814,7 @@ let currentTab = "all";
 let userFollows = {};
 let renderTimeout = null;
 let pendingRegisterEmail = null;
+let selectedGenre = "";
 
 let storiesUnsubscribe = null;
 let chaptersUnsubscribe = null;
@@ -766,8 +862,38 @@ function scheduleRender() {
   renderTimeout = setTimeout(() => renderCurrentTab(), 150);
 }
 
-function getGenres(str) {
-  return (str || "").split(",").map(s => s.trim()).filter(s => s);
+// ==================== IMGBB UPLOAD ====================
+async function uploadImage(file) {
+  if (!file) return null;
+  if (file.size > 10 * 1024 * 1024) {
+    showNotification("Ảnh quá lớn (tối đa 10MB)", true);
+    return null;
+  }
+  try {
+    const formData = new FormData();
+    formData.append("image", file);
+    formData.append("key", IMGBB_API_KEY);
+    const response = await fetch("https://api.imgbb.com/1/upload", { method: "POST", body: formData });
+    const result = await response.json();
+    if (result.success) {
+      return result.data.url;
+    } else {
+      throw new Error(result.error?.message || "Upload thất bại");
+    }
+  } catch (err) {
+    console.error("Upload error:", err);
+    showNotification("Lỗi upload: " + err.message, true);
+    return null;
+  }
+}
+
+async function uploadMultipleImages(files) {
+  const urls = [];
+  for (const file of files) {
+    const url = await uploadImage(file);
+    if (url) urls.push(url);
+  }
+  return urls;
 }
 
 // ==================== OTP FUNCTIONS ====================
@@ -844,16 +970,6 @@ function isModerator(userData) { return userData?.role === "user" && userData?.p
 function hasGroup(userData) { return userData?.privileges?.groupId !== null; }
 function canModerate(userData) { return isAdmin(userData) || isModerator(userData); }
 function canUpload(userData) { return userData && (userData.role === "admin" || userData.role === "user"); }
-
-// Kiểm tra quyền gán truyện vào nhóm
-function canAssignToGroup(userData, story, targetGroupId) {
-  if (isAdmin(userData) || isModerator(userData)) return true;
-  // Chủ nhóm/thành viên nhóm chỉ được gán khi truyện chưa có nhóm HOẶC truyện do chính họ tạo
-  const isOwner = story?.ownerUid === userData?.uid;
-  const hasNoGroup = !story?.groupId;
-  if (isOwner || hasNoGroup) return true;
-  return false;
-}
 
 async function getDisplayName(uid, email, userData) {
   if (!userData) userData = await getUserData(uid);
@@ -936,13 +1052,10 @@ async function handleCheckEmail() {
 async function handleVerifyOTP() {
   const otp = document.getElementById("otpCode").value.trim();
   if (!otp || otp.length !== 6) { showNotification("Nhập mã OTP 6 số", true); return; }
-  
   showLoading(true);
   const result = await verifyOTP(pendingRegisterEmail, otp);
   showLoading(false);
-  
   if (!result.success) { showNotification(result.message, true); return; }
-  
   document.getElementById("verifiedEmail").innerText = pendingRegisterEmail;
   document.getElementById("loginPage").style.display = "none";
   document.getElementById("registerPage").style.display = "flex";
@@ -952,7 +1065,6 @@ async function handlePasswordLogin() {
   const email = document.getElementById("loginEmail").value.trim();
   const password = document.getElementById("loginPassword").value;
   if (!email || !password) { showNotification("Nhập email và mật khẩu", true); return; }
-  
   showLoading(true);
   try {
     const userCred = await signInWithEmailAndPassword(auth, email, password);
@@ -990,11 +1102,9 @@ async function handleCompleteRegistration() {
   const password = document.getElementById("newPassword").value;
   const confirm = document.getElementById("confirmPassword").value;
   const msg = document.getElementById("registerMsg");
-  
   if (!nickname) { msg.innerText = "Nhập nickname"; return; }
   if (!password || password.length < 6) { msg.innerText = "Mật khẩu phải có ít nhất 6 ký tự"; return; }
   if (password !== confirm) { msg.innerText = "Mật khẩu không khớp"; return; }
-  
   showLoading(true);
   try {
     const userCred = await createUserWithEmailAndPassword(auth, pendingRegisterEmail, password);
@@ -1009,6 +1119,23 @@ async function handleCompleteRegistration() {
   } catch (err) {
     msg.innerText = "Lỗi: " + err.message;
   } finally { showLoading(false); }
+}
+
+async function handleMainPassword() {
+  const mainPass = document.getElementById("mainPassword").value;
+  if (mainPass !== MAIN_PASSWORD) {
+    showNotification("❌ Sai mật khẩu chính", true);
+    return;
+  }
+  setMainPasswordSession();
+  const guestName = generateRandomGuestName();
+  currentUserData = { role: "guest", displayName: guestName, nickname: guestName };
+  localStorage.setItem("userSession", JSON.stringify(currentUserData));
+  document.getElementById("warningOverlay").style.display = "none";
+  document.getElementById("loginPage").style.display = "none";
+  document.getElementById("mainContainer").style.display = "block";
+  showNotification(`👤 Chào mừng ${guestName} (Khách)`);
+  initApp();
 }
 
 async function restoreSession() {
@@ -1038,6 +1165,7 @@ async function restoreSession() {
 
 async function logout() {
   await signOut(auth);
+  clearMainPasswordSession();
   localStorage.removeItem("userSession");
   window.location.reload();
 }
@@ -1065,38 +1193,18 @@ async function loadStoriesRealtime() {
   });
 }
 
-async function uploadImage(file, path = "covers") {
-  if (!file) return null;
-  const fileRef = storageRef(storage, `${path}/${Date.now()}_${file.name}`);
-  await uploadBytes(fileRef, file);
-  return await getDownloadURL(fileRef);
-}
-
-async function uploadMultipleImages(files, path = "chapters") {
-  const urls = [];
-  for (const file of files) {
-    const url = await uploadImage(file, path);
-    if (url) urls.push(url);
-  }
-  return urls;
-}
-
 async function createStory(data, coverFile, chapterImages) {
-  console.log("📤 createStory called");
-  
   let coverUrl = data.cover;
   if (coverFile) {
-    coverUrl = await uploadImage(coverFile, "covers");
+    coverUrl = await uploadImage(coverFile);
   }
-  
   if (!data.title) {
     showNotification("Thiếu tên truyện", true);
     throw new Error("Thiếu title");
   }
-  
   const storiesRef = ref(db, 'stories');
   const newStoryRef = push(storiesRef);
-  
+  const isAdminUser = isAdmin(currentUserData);
   const storyData = {
     title: data.title,
     otherName: data.otherName || "",
@@ -1112,14 +1220,11 @@ async function createStory(data, coverFile, chapterImages) {
     groupName: data.groupName || "",
     likes: 0,
     views: 0,
-    approved: false,
+    approved: isAdminUser ? true : false,
     createdAt: data.createdAt || Date.now(),
     chapters: []
   };
-  
   await set(newStoryRef, storyData);
-  
-  // Nếu có chapter images, tạo chapter đầu tiên
   if (chapterImages && chapterImages.length > 0) {
     const chapterData = {
       title: "Chapter 1",
@@ -1132,8 +1237,8 @@ async function createStory(data, coverFile, chapterImages) {
     await set(newChapterRef, chapterData);
     await update(ref(db, `stories/${newStoryRef.key}/chapters`), { [newChapterRef.key]: true });
   }
-  
-  console.log("✅ Story created, ID:", newStoryRef.key);
+  const notifyMsg = isAdminUser ? "✅ Đã đăng truyện thành công (Admin - tự động duyệt)" : "📤 Đã gửi truyện, chờ admin duyệt";
+  showNotification(notifyMsg, false);
   return newStoryRef.key;
 }
 
@@ -1173,19 +1278,15 @@ async function addChapter(storyId, title, pages, chapterNumber) {
     showNotification("Thiếu tên chapter", true);
     throw new Error("Thiếu title");
   }
-  
   const chaptersRef = ref(db, `chapters/${storyId}`);
   const newChapterRef = push(chaptersRef);
-  
   const chapterData = {
     title: title,
     pages: pages,
     chapterNumber: chapterNumber || 0,
     createdAt: Date.now()
   };
-  
   await set(newChapterRef, chapterData);
-  
   const storyRef = ref(db, `stories/${storyId}/chapters`);
   const snap = await get(storyRef);
   const currentChapters = snap.val() || {};
@@ -1232,19 +1333,46 @@ async function unfollowStory(storyId) {
 }
 
 function isFollowing(storyId) { return !!userFollows[storyId]; }
-
-function getRecommendations() { 
-  return allStories.filter(s => s.approved === true).slice(0, 12); 
-}
+function getRecommendations() { return allStories.filter(s => s.approved === true).slice(0, 12); }
 
 // ==================== RENDER FUNCTIONS ====================
+function renderGenreFilter() {
+  const container = document.getElementById("genreFilterContainer");
+  if (!container) return;
+  let html = '';
+  for (const genre of GENRE_LIST) {
+    html += `<div class="genre-tooltip filter-genre-item" data-genre="${genre.name}">${genre.icon} ${genre.name}<span class="tooltip-text">${genre.desc}</span></div>`;
+  }
+  container.innerHTML = html;
+  document.querySelectorAll('.filter-genre-item').forEach(el => {
+    el.addEventListener('click', () => {
+      const genre = el.dataset.genre;
+      if (selectedGenre === genre) {
+        selectedGenre = "";
+        el.classList.remove("active");
+      } else {
+        document.querySelectorAll('.filter-genre-item').forEach(g => g.classList.remove("active"));
+        selectedGenre = genre;
+        el.classList.add("active");
+      }
+      scheduleRender();
+    });
+  });
+}
+
 function renderCurrentTab() {
   if (!document.getElementById("mangaGrid")) return;
-  let filtered = allStories.filter(s => s.approved === true);
+  let filtered = [];
+  if (isAdmin(currentUserData)) {
+    filtered = [...allStories];
+  } else {
+    filtered = allStories.filter(s => s.approved === true);
+  }
+  if (selectedGenre) {
+    filtered = filtered.filter(s => s.genres && s.genres.includes(selectedGenre));
+  }
   const searchTerm = document.getElementById("searchInput")?.value.toLowerCase() || "";
   if (searchTerm) filtered = filtered.filter(s => s.title?.toLowerCase().includes(searchTerm));
-  const genre = document.getElementById("genreFilter")?.value;
-  if (genre) filtered = filtered.filter(s => getGenres(s.genres).some(g => g === genre));
   const sortBy = document.getElementById("sortFilter")?.value;
   if (sortBy === "likes") filtered.sort((a,b) => (b.likes||0) - (a.likes||0));
   else if (sortBy === "views") filtered.sort((a,b) => (b.views||0) - (a.views||0));
@@ -1264,10 +1392,7 @@ function renderMangaGrid(stories) {
         <div class="manga-meta">📚 ${escapeHtml(story.groupName) || "Cá nhân"}</div>
         <div class="manga-meta">❤️ ${story.likes || 0} | 👁 ${story.views || 0}</div>
         ${story.approved === false ? '<div class="manga-meta" style="color:#FFCC00;">⏳ Chờ duyệt</div>' : ''}
-        <div class="manga-meta">${
-          story.status === "Đã hoàn thành" ? "✅ Hoàn thành" : 
-          story.status === "Tạm ngưng" ? "⏸ Tạm ngưng" : "📖 Đang ra"
-        }</div>
+        <div class="manga-meta">${story.status === "Đã hoàn thành" ? "✅ Hoàn thành" : story.status === "Tạm ngưng" ? "⏸ Tạm ngưng" : "📖 Đang ra"}</div>
       </div>
     </div>
   `).join("");
@@ -1280,7 +1405,6 @@ window.openStoryDetail = async (storyId) => {
   const chapters = await getChapters(storyId);
   const isEditable = currentUserData && (isAdmin(currentUserData) || (currentUserData.privileges?.groupId && story.groupId === currentUserData.privileges?.groupId) || story.ownerUid === currentUserData?.uid);
   const isMod = canModerate(currentUserData);
-  
   document.getElementById("storyDetailContent").innerHTML = `
     <div class="story-detail-grid">
       <img class="story-detail-cover" src="${escapeHtml(story.cover) || 'https://placehold.co/300x450?text=No+Cover'}" onerror="this.src='https://placehold.co/300x450?text=ERROR'">
@@ -1290,10 +1414,7 @@ window.openStoryDetail = async (storyId) => {
         <p><span class="story-detail-label">✍️ Tác giả:</span> ${escapeHtml(story.author) || "Chưa rõ"}</p>
         <p><span class="story-detail-label">🏷️ Thể loại:</span> ${escapeHtml(story.genres) || "Chưa cập nhật"}</p>
         <p><span class="story-detail-label">📚 Nhóm dịch:</span> ${escapeHtml(story.groupName) || "Cá nhân"}</p>
-        <p><span class="story-detail-label">📌 Tình trạng:</span> ${
-          story.status === "Đã hoàn thành" ? "✅ " : 
-          story.status === "Tạm ngưng" ? "⏸ " : "📖 "
-        }${escapeHtml(story.status) || "Đang tiến hành"}</p>
+        <p><span class="story-detail-label">📌 Tình trạng:</span> ${story.status === "Đã hoàn thành" ? "✅ " : story.status === "Tạm ngưng" ? "⏸ " : "📖 "}${escapeHtml(story.status) || "Đang tiến hành"}</p>
         <p><span class="story-detail-label">📖 Số chương:</span> ${chapters.length}</p>
         <p><span class="story-detail-label">🏷️ Tags:</span> ${escapeHtml(story.tags) || "Chưa có"}</p>
         <p><span class="story-detail-label">📝 Mô tả:</span><br>${escapeHtml(story.desc) || "Chưa có mô tả"}</p>
@@ -1302,14 +1423,12 @@ window.openStoryDetail = async (storyId) => {
       </div>
     </div>
   `;
-  
   let chaptersHtml = `<h3>📖 DANH SÁCH CHAPTER</h3><div class="chapter-list">`;
   chapters.forEach((chap, idx) => {
     chaptersHtml += `<div class="chapter-item" onclick="event.stopPropagation(); openReader('${storyId}', ${idx})"><span>${escapeHtml(chap.title)}</span><span>📅 ${new Date(chap.createdAt).toLocaleDateString()}</span></div>`;
   });
   chaptersHtml += `</div>`;
   document.getElementById("storyChapters").innerHTML = chaptersHtml;
-  
   let actionsHtml = `<button onclick="likeStoryAndRefresh('${storyId}')">❤️ Thích</button>`;
   if (currentUserData && currentUserData.role !== "guest") actionsHtml += `<button onclick="toggleFollow('${storyId}')">${isFollowing(storyId) ? '⭐ Đã theo dõi' : '➕ Theo dõi'}</button>`;
   if (isEditable) actionsHtml += `<button onclick="openEditStory('${storyId}')">✏️ Chỉnh sửa truyện</button><button onclick="openAddChapter('${storyId}')">📖 Thêm chapter mới</button>`;
@@ -1329,33 +1448,45 @@ window.toggleFollow = async (storyId) => { if (isFollowing(storyId)) await unfol
 window.openEditStory = async (storyId) => {
   const story = allStories.find(s => s.id === storyId);
   const userGroups = await getUserGroupOptions();
-  
   let groupOptions = '<option value="">-- Không có nhóm --</option>';
   for (const group of userGroups) {
     groupOptions += `<option value="${group.id}" ${story.groupId === group.id ? 'selected' : ''}>${escapeHtml(group.groupName)}</option>`;
   }
-  
+  let mainGenre = story.genres || "";
+  let subGenre = "";
+  if (mainGenre.includes(",")) {
+    const parts = mainGenre.split(",");
+    mainGenre = parts[0].trim();
+    subGenre = parts.slice(1).join(",").trim();
+  }
+  let genreOptions = '<option value="">-- Chọn thể loại --</option>';
+  for (const genre of GENRE_LIST) {
+    genreOptions += `<option value="${genre.name}" ${mainGenre === genre.name ? 'selected' : ''}>${genre.icon} ${genre.name}</option>`;
+  }
   document.getElementById("editStoryContent").innerHTML = `
     <input id="editTitle" value="${escapeHtml(story.title)}" placeholder="Tên truyện *">
     <input id="editOtherName" value="${escapeHtml(story.otherName || '')}" placeholder="Tên khác">
     <input id="editAuthor" value="${escapeHtml(story.author || '')}" placeholder="Tác giả">
-    <input id="editGenres" value="${escapeHtml(story.genres || '')}" placeholder="Thể loại">
-    <input id="editTags" value="${escapeHtml(story.tags || '')}" placeholder="Tags">
+    <label style="color:#FF69B4; margin-top:10px; display:block;">📖 Thể loại</label>
+    <select id="editGenre">${genreOptions}</select>
+    <input id="editGenre2" value="${escapeHtml(subGenre)}" placeholder="Thể loại phụ (không bắt buộc)">
+    <label style="color:#FF69B4; margin-top:10px; display:block;">🏷️ Tags</label>
+    <input id="editTags" value="${escapeHtml(story.tags || '')}" placeholder="Tags cách nhau bằng dấu phẩy">
     <select id="editStatus">
       <option value="Đang tiến hành" ${story.status === "Đang tiến hành" ? "selected" : ""}>📖 Đang tiến hành</option>
       <option value="Đã hoàn thành" ${story.status === "Đã hoàn thành" ? "selected" : ""}>✅ Đã hoàn thành</option>
       <option value="Tạm ngưng" ${story.status === "Tạm ngưng" ? "selected" : ""}>⏸ Tạm ngưng</option>
     </select>
-    <select id="editGroupId">
-      ${groupOptions}
-    </select>
+    <select id="editGroupId">${groupOptions}</select>
     <input type="file" id="editCoverFile" accept="image/*">
     <input id="editCover" value="${escapeHtml(story.cover || '')}" placeholder="Hoặc link ảnh bìa">
     <div id="editCoverPreview"></div>
-    <textarea id="editDesc" placeholder="Mô tả">${escapeHtml(story.desc || '')}</textarea>
+    <textarea id="editDesc" placeholder="Mô tả truyện">${escapeHtml(story.desc || '')}</textarea>
     <button onclick="saveEditStory('${storyId}')">💾 Lưu</button>
   `;
-  
+  if (story.cover) {
+    document.getElementById("editCoverPreview").innerHTML = `<img class="cover-preview" src="${escapeHtml(story.cover)}">`;
+  }
   document.getElementById("editCoverFile")?.addEventListener("change", (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -1364,7 +1495,6 @@ window.openEditStory = async (storyId) => {
       reader.readAsDataURL(file);
     }
   });
-  
   document.getElementById("editStoryModal").style.display = "flex";
 };
 
@@ -1372,27 +1502,32 @@ window.saveEditStory = async (storyId) => {
   const newGroupId = document.getElementById("editGroupId").value;
   const coverFile = document.getElementById("editCoverFile").files[0];
   let coverUrl = document.getElementById("editCover").value;
-  
+  const desc = document.getElementById("editDesc").value;
   if (coverFile) {
-    coverUrl = await uploadImage(coverFile, "covers");
+    coverUrl = await uploadImage(coverFile);
   }
-  
   let groupName = "";
   if (newGroupId) {
     const groupSnap = await get(ref(db, `groups/${newGroupId}`));
     if (groupSnap.exists()) groupName = groupSnap.val().groupName;
   }
-  
+  const mainGenre = document.getElementById("editGenre").value;
+  const subGenre = document.getElementById("editGenre2").value;
+  let genres = mainGenre;
+  if (subGenre && subGenre !== mainGenre) {
+    genres = `${mainGenre}, ${subGenre}`;
+  }
   await updateStoryData(storyId, {
     title: document.getElementById("editTitle").value,
     otherName: document.getElementById("editOtherName").value,
     author: document.getElementById("editAuthor").value,
-    genres: document.getElementById("editGenres").value,
+    genres: genres,
     tags: document.getElementById("editTags").value,
     status: document.getElementById("editStatus").value,
     groupId: newGroupId || null,
     groupName: groupName,
-    cover: coverUrl
+    cover: coverUrl,
+    desc: desc
   });
   closeModal("editStoryModal");
   showNotification("Đã cập nhật truyện");
@@ -1412,13 +1547,11 @@ window.openAddChapter = (storyId) => {
     <textarea id="chapterPages" placeholder="Hoặc nhập link ảnh (mỗi dòng 1 link)" rows="5"></textarea>
     <button onclick="saveAddChapter('${storyId}')">📤 Đăng chapter</button>
   `;
-  
   document.getElementById("chapterImages")?.addEventListener("change", async (e) => {
     const files = Array.from(e.target.files);
     const previewDiv = document.getElementById("chapterImagesPreview");
     previewDiv.innerHTML = "";
-    selectedChapterImages = [];
-    
+    selectedChapterImages = files;
     for (const file of files) {
       const reader = new FileReader();
       reader.onload = (ev) => {
@@ -1429,10 +1562,8 @@ window.openAddChapter = (storyId) => {
         previewDiv.appendChild(imgDiv);
       };
       reader.readAsDataURL(file);
-      selectedChapterImages.push(file);
     }
   });
-  
   document.getElementById("addChapterModal").style.display = "flex";
 };
 
@@ -1440,29 +1571,21 @@ window.saveAddChapter = async (storyId) => {
   const title = document.getElementById("chapterTitle").value;
   const pagesText = document.getElementById("chapterPages").value;
   const chapterNumber = parseInt(document.getElementById("chapterNumber").value) || 0;
-  
   if (!title) { showNotification("Nhập tên chapter", true); return; }
-  
   let pages = [];
-  
-  // Upload ảnh nếu có
   if (selectedChapterImages.length > 0) {
     showLoading(true);
-    pages = await uploadMultipleImages(selectedChapterImages, `chapters/${storyId}`);
+    pages = await uploadMultipleImages(selectedChapterImages);
     showLoading(false);
   }
-  
-  // Thêm link ảnh từ textarea
   if (pagesText.trim()) {
     const linkPages = pagesText.split('\n').filter(p => p.trim());
     pages = [...pages, ...linkPages];
   }
-  
   if (pages.length === 0) {
     showNotification("Thêm ít nhất 1 ảnh hoặc link ảnh", true);
     return;
   }
-  
   await addChapter(storyId, title, pages, chapterNumber);
   closeModal("addChapterModal");
   showNotification("Đã thêm chapter");
@@ -1567,15 +1690,21 @@ function renderUploadPanel() {
   const panel = document.getElementById("uploadPanel");
   if (!panel) return;
   if (!canUpload(currentUserData) || currentUserData?.role === "guest") { panel.innerHTML = ""; return; }
-  
+  let genreOptions = '<option value="">-- Chọn thể loại --</option>';
+  for (const genre of GENRE_LIST) {
+    genreOptions += `<option value="${genre.name}">${genre.icon} ${genre.name}</option>`;
+  }
   panel.innerHTML = `
     <div class="upload-panel">
       <h3>📤 ĐĂNG TRUYỆN MỚI</h3>
       <input id="uploadTitle" placeholder="Tên truyện *">
       <input id="uploadOtherName" placeholder="Tên khác">
       <input id="uploadAuthor" placeholder="Tác giả">
-      <input id="uploadGenres" placeholder="Thể loại (cách nhau bằng dấu phẩy)">
-      <input id="uploadTags" placeholder="Tags (cách nhau bằng dấu phẩy)">
+      <label style="color:#FF69B4; margin-top:10px; display:block;">📖 Thể loại</label>
+      <select id="uploadGenre">${genreOptions}</select>
+      <input id="uploadGenre2" placeholder="Thể loại phụ (không bắt buộc)">
+      <label style="color:#FF69B4; margin-top:10px; display:block;">🏷️ Tags</label>
+      <input id="uploadTags" placeholder="Ví dụ: School, Omegaverse, One Shot">
       <select id="uploadStatus">
         <option value="Đang tiến hành">📖 Đang tiến hành</option>
         <option value="Đã hoàn thành">✅ Đã hoàn thành</option>
@@ -1594,8 +1723,6 @@ function renderUploadPanel() {
       <button class="btn-pink" id="submitUploadBtn">📤 ĐĂNG TRUYỆN</button>
     </div>
   `;
-  
-  // Load user's groups
   (async () => {
     const userGroups = await getUserGroupOptions();
     const groupSelect = document.getElementById("uploadGroupId");
@@ -1605,8 +1732,6 @@ function renderUploadPanel() {
       }
     }
   })();
-  
-  // Cover preview
   document.getElementById("uploadCoverFile")?.addEventListener("change", (e) => {
     const file = e.target.files[0];
     selectedCoverFile = file;
@@ -1619,8 +1744,6 @@ function renderUploadPanel() {
       previewDiv.innerHTML = "";
     }
   });
-  
-  // Chapter images preview
   document.getElementById("uploadChapterImages")?.addEventListener("change", (e) => {
     const files = Array.from(e.target.files);
     selectedChapterFiles = files;
@@ -1638,13 +1761,10 @@ function renderUploadPanel() {
       reader.readAsDataURL(file);
     }
   });
-  
   document.getElementById("submitUploadBtn")?.addEventListener("click", async () => {
     const title = document.getElementById("uploadTitle").value;
     if (!title) { showNotification("Nhập tên truyện", true); return; }
-    
     showLoading(true);
-    
     try {
       const groupId = document.getElementById("uploadGroupId").value;
       let groupName = "";
@@ -1652,18 +1772,21 @@ function renderUploadPanel() {
         const groupSnap = await get(ref(db, `groups/${groupId}`));
         if (groupSnap.exists()) groupName = groupSnap.val().groupName;
       }
-      
-      // Upload chapter images if any
+      const mainGenre = document.getElementById("uploadGenre").value;
+      const subGenre = document.getElementById("uploadGenre2").value;
+      let genres = mainGenre;
+      if (subGenre && subGenre !== mainGenre) {
+        genres = `${mainGenre}, ${subGenre}`;
+      }
       let chapterImageUrls = [];
       if (selectedChapterFiles.length > 0) {
-        chapterImageUrls = await uploadMultipleImages(selectedChapterFiles, "temp");
+        chapterImageUrls = await uploadMultipleImages(selectedChapterFiles);
       }
-      
       await createStory({
         title: title,
         otherName: document.getElementById("uploadOtherName").value,
         author: document.getElementById("uploadAuthor").value,
-        genres: document.getElementById("uploadGenres").value,
+        genres: genres,
         tags: document.getElementById("uploadTags").value,
         status: document.getElementById("uploadStatus").value,
         desc: document.getElementById("uploadDesc").value,
@@ -1674,14 +1797,11 @@ function renderUploadPanel() {
         groupName: groupName,
         createdAt: Date.now()
       }, selectedCoverFile, chapterImageUrls);
-      
-      showNotification("Đã gửi truyện, chờ duyệt");
-      
-      // Clear form
       document.getElementById("uploadTitle").value = "";
       document.getElementById("uploadOtherName").value = "";
       document.getElementById("uploadAuthor").value = "";
-      document.getElementById("uploadGenres").value = "";
+      document.getElementById("uploadGenre").value = "";
+      document.getElementById("uploadGenre2").value = "";
       document.getElementById("uploadTags").value = "";
       document.getElementById("uploadStatus").value = "Đang tiến hành";
       document.getElementById("uploadCoverUrl").value = "";
@@ -1692,7 +1812,6 @@ function renderUploadPanel() {
       document.getElementById("uploadChapterPreview").innerHTML = "";
       selectedCoverFile = null;
       selectedChapterFiles = [];
-      
     } catch (err) {
       console.error("Upload error:", err);
       showNotification("Lỗi: " + err.message, true);
@@ -1742,7 +1861,6 @@ window.createNewGroup = async () => {
 };
 
 window.showHome = () => { closeReaderModal(); scheduleRender(); };
-
 function closeModal(modalId) { document.getElementById(modalId).style.display = "none"; }
 window.closeModal = closeModal;
 
@@ -1753,9 +1871,7 @@ async function updateUserDisplay() {
   const logoutBtn = document.getElementById("logoutBtn");
   const createGroupBtn = document.getElementById("createGroupBtn");
   const adminLink = document.getElementById("adminLink");
-  
   if (!userDisplay) return;
-  
   if (!currentUserData || currentUserData.role === "guest") {
     userDisplay.innerHTML = `👤 ${escapeHtml(currentUserData?.displayName || generateRandomGuestName())}`;
     if (groupsLink) groupsLink.style.display = "inline-block";
@@ -1779,33 +1895,36 @@ async function initApp() {
   await loadFollows();
   await loadAllGroups();
   renderUploadPanel();
+  renderGenreFilter();
   loadStoriesRealtime();
 }
 
 // ==================== EVENT LISTENERS ====================
 document.addEventListener("DOMContentLoaded", async () => {
   console.log("🚀 DOM ready");
-  
   document.getElementById("warningContinueBtn")?.addEventListener("click", async () => {
-    const mainPass = document.getElementById("mainPassword").value;
-    if (mainPass !== MAIN_PASSWORD) {
-      showNotification("❌ Sai mật khẩu chính", true);
-      return;
+    if (checkMainPasswordSession()) {
+      const guestName = generateRandomGuestName();
+      currentUserData = { role: "guest", displayName: guestName, nickname: guestName };
+      localStorage.setItem("userSession", JSON.stringify(currentUserData));
+      document.getElementById("warningOverlay").style.display = "none";
+      document.getElementById("loginPage").style.display = "none";
+      document.getElementById("mainContainer").style.display = "block";
+      showNotification(`👤 Chào mừng ${guestName} (Khách)`);
+      initApp();
+    } else {
+      document.getElementById("warningOverlay").style.display = "none";
+      document.getElementById("loginPage").style.display = "flex";
     }
-    document.getElementById("warningOverlay").style.display = "none";
-    document.getElementById("loginPage").style.display = "flex";
   });
-  
   document.getElementById("exitBtn")?.addEventListener("click", () => {
     document.body.innerHTML = "<div style='height:100vh;display:flex;justify-content:center;align-items:center;background:black;color:white;'>ĐÃ THOÁT</div>";
   });
-  
   document.getElementById("guestBtn")?.addEventListener("click", handleGuestLogin);
   document.getElementById("checkEmailBtn")?.addEventListener("click", handleCheckEmail);
   document.getElementById("verifyOtpBtn")?.addEventListener("click", handleVerifyOTP);
   document.getElementById("passwordLoginBtn")?.addEventListener("click", handlePasswordLogin);
   document.getElementById("completeRegisterBtn")?.addEventListener("click", handleCompleteRegistration);
-  
   document.getElementById("backToEmailBtn")?.addEventListener("click", () => {
     document.getElementById("otpGroup").style.display = "none";
     document.getElementById("loginMsg").innerHTML = "";
@@ -1814,12 +1933,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     document.getElementById("passwordGroup").style.display = "none";
     document.getElementById("loginMsg").innerHTML = "";
   });
-  
   document.getElementById("logoutBtn")?.addEventListener("click", logout);
   document.getElementById("profileBtn")?.addEventListener("click", window.openProfile);
   document.getElementById("createGroupBtn")?.addEventListener("click", () => document.getElementById("groupModal").style.display = "flex");
   document.getElementById("confirmGroupBtn")?.addEventListener("click", window.createNewGroup);
-  
   document.querySelectorAll(".tab-btn").forEach(btn => {
     btn.addEventListener("click", () => {
       document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
@@ -1828,11 +1945,8 @@ document.addEventListener("DOMContentLoaded", async () => {
       scheduleRender();
     });
   });
-  
   document.getElementById("searchInput")?.addEventListener("input", () => scheduleRender());
-  document.getElementById("genreFilter")?.addEventListener("change", () => scheduleRender());
   document.getElementById("sortFilter")?.addEventListener("change", () => scheduleRender());
-  
   const restored = await restoreSession();
   if (!restored) {
     document.getElementById("warningOverlay").style.display = "flex";
