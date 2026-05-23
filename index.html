@@ -9,7 +9,7 @@
 </head>
 <body>
 
-<!-- GLOBAL ERROR HANDLER - BẮT LỖI NGAY TỪ ĐẦU -->
+<!-- GLOBAL ERROR HANDLER -->
 <script>
   window.onerror = function(msg, url, line, col, error) {
     console.error("🔥 GLOBAL ERROR:", { msg, url, line, col, error });
@@ -100,7 +100,7 @@
   <div id="footer-placeholder"></div>
 </div>
 
-<!-- READER MODAL - QUAN TRỌNG: PHẢI CÓ -->
+<!-- READER MODAL -->
 <div id="readerModal" class="modal">
   <div class="modal-content fullscreen-reader">
     <button class="reader-close-btn close-modal" onclick="window.closeReaderModal && window.closeReaderModal()">✕</button>
@@ -142,7 +142,7 @@
   
   // Import all modules
   import { initFirebase, db, auth, ref, get, set, push, update, remove, onValue } from './js/db.js';
-  import { initAuth, handleGuestLogin, handleCheckEmail, handleVerifyOTP, handlePasswordLogin, handleCompleteRegistration, logout, restoreSession, currentUserData, setUserSession } from './js/auth.js';
+  import { initAuth, handleGuestLogin, handleCheckEmail, handleVerifyOTP, handlePasswordLogin, handleCompleteRegistration, logout, restoreSession, currentUserData, setUserSession, refreshUserSession } from './js/auth.js';
   import { loadStoriesRealtime, loadAllGroups, loadFollows, renderGenreFilter, renderCurrentTab, scheduleRender, allStories } from './js/data.js';
   import { initUI, closeModal, showNotification, showLoading } from './js/ui.js';
   import { initUploadPanel } from './js/upload.js';
@@ -155,13 +155,18 @@
   window.allStories = allStories;
   window.isAdmin = isAdmin;
   window.canModerate = canModerate;
+  window.refreshUserSession = refreshUserSession;
   
   // EmailJS init
   emailjs.init("fPq8fpw1OqzOtj-lk");
   
   // Initialize Firebase
-  initFirebase();
-  console.log("✅ Firebase initialized");
+  const firebase = initFirebase();
+  console.log("✅ Firebase initialized", firebase);
+  
+  // Initialize auth module
+  initAuth();
+  console.log("✅ Auth module initialized");
   
   // Load header and footer
   async function loadComponents() {
@@ -261,7 +266,7 @@
       console.log("🔐 Checking session...");
       const restored = await Promise.race([
         restoreSession(),
-        new Promise((_, reject) => setTimeout(() => reject(new Error('Session restore timeout')), 5000))
+        new Promise((resolve) => setTimeout(() => resolve(false), 5000))
       ]);
       
       if (!restored) {
