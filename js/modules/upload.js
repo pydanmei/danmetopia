@@ -1,10 +1,10 @@
-import { initFirebase, db, ref, push, set, update, IMGBB_API_KEY } from './db.js';
-import { currentUserData } from './auth.js';
+import { FirebaseService } from '../core/firebaseService.js';
+import { IMGBB_API_KEY } from '../core/constants.js';
+import { state } from '../core/state.js';
+import { refreshUserSession } from './auth.js';
 import { isAdmin, canUpload, showNotification, showLoading, escapeHtml } from './utils.js';
-import { getUserGroupOptions } from './ui.js';
 
-// Initialize Firebase
-initFirebase();
+const { db, ref, get, push, set, update } = FirebaseService;
 
 let selectedCoverFile = null;
 let selectedChapterFiles = [];
@@ -57,7 +57,7 @@ export async function createStory(data, coverFile, chapterImages) {
   }
   const storiesRef = ref(db, 'stories');
   const newStoryRef = push(storiesRef);
-  const isAdminUser = isAdmin(currentUserData);
+  const isAdminUser = isAdmin(state.currentUser);
   const storyData = {
     title: data.title,
     otherName: data.otherName || "",
@@ -67,8 +67,8 @@ export async function createStory(data, coverFile, chapterImages) {
     status: data.status || "Đang tiến hành",
     desc: data.desc || "",
     cover: coverUrl || "",
-    ownerUid: data.ownerUid || currentUserData?.uid || "",
-    ownerNickname: data.ownerNickname || currentUserData?.nickname || "Người dùng",
+    ownerUid: data.ownerUid || state.currentUser?.uid || "",
+    ownerNickname: data.ownerNickname || state.currentUser?.nickname || "Người dùng",
     groupId: data.groupId || null,
     groupName: data.groupName || "",
     likes: 0,
@@ -99,7 +99,7 @@ export async function createStory(data, coverFile, chapterImages) {
 export function initUploadPanel() {
   const panel = document.getElementById("uploadPanel");
   if (!panel) return;
-  if (!canUpload(currentUserData) || currentUserData?.role === "guest") { panel.innerHTML = ""; return; }
+  if (!canUpload(state.currentUser) || state.currentUser?.role === "guest") { panel.innerHTML = ""; return; }
   
   const GENRE_LIST = [
     "3D", "Action", "Bara/Muscle", "Biography", "Cakeverse", "Comedy",
@@ -109,11 +109,6 @@ export function initUploadPanel() {
     "Shounen Ai", "Slice of Life", "Sports", "Supernatural", "Thriller",
     "Tragedy", "War", "Wuxia", "Yaoi", "Yuri"
   ];
-  
-  let genreOptions = '<option value="">-- Chọn thể loại --</option>';
-  for (const genre of GENRE_LIST) {
-    genreOptions += `<option value="${genre}">${genre}</option>`;
-  }
   
   panel.innerHTML = `
     <div class="upload-panel">
@@ -154,7 +149,7 @@ export function initUploadPanel() {
   
   // Load user groups
   (async () => {
-    const userGroups = await getUserGroupOptions();
+    const userGroups = await getUserGroups(state.currentUser?.uid);
     const groupSelect = document.getElementById("uploadGroupId");
     if (groupSelect) {
       for (const group of userGroups) {
@@ -227,8 +222,8 @@ export function initUploadPanel() {
         status: document.getElementById("uploadStatus").value,
         desc: document.getElementById("uploadDesc").value,
         cover: document.getElementById("uploadCoverUrl").value,
-        ownerUid: currentUserData.uid,
-        ownerNickname: currentUserData.nickname || currentUserData.email,
+        ownerUid: state.currentUser.uid,
+        ownerNickname: state.currentUser.nickname || state.currentUser.email,
         groupId: groupId || null,
         groupName: groupName,
         createdAt: Date.now()
