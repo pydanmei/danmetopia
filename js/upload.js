@@ -1,7 +1,10 @@
-import { db, ref, push, set, update, IMGBB_API_KEY } from './db.js';
+import { initFirebase, db, ref, push, set, update, IMGBB_API_KEY } from './db.js';
 import { currentUserData } from './auth.js';
 import { isAdmin, canUpload, showNotification, showLoading, escapeHtml } from './utils.js';
 import { getUserGroupOptions } from './ui.js';
+
+// Initialize Firebase
+initFirebase();
 
 let selectedCoverFile = null;
 let selectedChapterFiles = [];
