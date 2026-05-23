@@ -7,7 +7,7 @@
   <meta name="theme-color" content="#FF69B4">
   <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body data-page="home">
 
 <!-- GLOBAL ERROR HANDLER -->
 <script>
@@ -103,18 +103,18 @@
 <!-- READER MODAL -->
 <div id="readerModal" class="modal">
   <div class="modal-content fullscreen-reader">
-    <button class="reader-close-btn close-modal" onclick="window.closeReaderModal && window.closeReaderModal()">✕</button>
+    <button class="reader-close-btn close-modal" onclick="API.closeReaderModal()">✕</button>
     <div id="readerContent"></div>
   </div>
 </div>
 
 <!-- Other Modals -->
-<div id="groupModal" class="modal"><div class="modal-content"><span class="close-modal" onclick="closeModal('groupModal')">&times;</span><h3>📚 TẠO NHÓM DỊCH</h3><input id="groupNameInput" placeholder="Tên nhóm"><textarea id="groupDescInput" placeholder="Mô tả" rows="3"></textarea><button id="confirmGroupBtn">TẠO NHÓM</button></div></div>
-<div id="storyModal" class="modal"><div class="modal-content"><span class="close-modal" onclick="closeModal('storyModal')">&times;</span><div id="storyDetailContent"></div><div id="storyChapters"></div><div id="storyActions"></div></div></div>
-<div id="editStoryModal" class="modal"><div class="modal-content"><span class="close-modal" onclick="closeModal('editStoryModal')">&times;</span><h2>📝 CHỈNH SỬA TRUYỆN</h2><div id="editStoryContent"></div></div></div>
-<div id="addChapterModal" class="modal"><div class="modal-content"><span class="close-modal" onclick="closeModal('addChapterModal')">&times;</span><h2>📖 THÊM CHAPTER MỚI</h2><div id="addChapterContent"></div></div></div>
-<div id="editChapterModal" class="modal"><div class="modal-content"><span class="close-modal" onclick="closeModal('editChapterModal')">&times;</span><h2>✏️ CHỈNH SỬA CHAPTER</h2><div id="editChapterContent"></div></div></div>
-<div id="profileModal" class="modal"><div class="modal-content"><span class="close-modal" onclick="closeModal('profileModal')">&times;</span><h2>👤 THÔNG TIN</h2><div id="profileContent"></div></div></div>
+<div id="groupModal" class="modal"><div class="modal-content"><span class="close-modal" onclick="API.closeModal('groupModal')">&times;</span><h3>📚 TẠO NHÓM DỊCH</h3><input id="groupNameInput" placeholder="Tên nhóm"><textarea id="groupDescInput" placeholder="Mô tả" rows="3"></textarea><button id="confirmGroupBtn">TẠO NHÓM</button></div></div>
+<div id="storyModal" class="modal"><div class="modal-content"><span class="close-modal" onclick="API.closeModal('storyModal')">&times;</span><div id="storyDetailContent"></div><div id="storyChapters"></div><div id="storyActions"></div></div></div>
+<div id="editStoryModal" class="modal"><div class="modal-content"><span class="close-modal" onclick="API.closeModal('editStoryModal')">&times;</span><h2>📝 CHỈNH SỬA TRUYỆN</h2><div id="editStoryContent"></div></div></div>
+<div id="addChapterModal" class="modal"><div class="modal-content"><span class="close-modal" onclick="API.closeModal('addChapterModal')">&times;</span><h2>📖 THÊM CHAPTER MỚI</h2><div id="addChapterContent"></div></div></div>
+<div id="editChapterModal" class="modal"><div class="modal-content"><span class="close-modal" onclick="API.closeModal('editChapterModal')">&times;</span><h2>✏️ CHỈNH SỬA CHAPTER</h2><div id="editChapterContent"></div></div></div>
+<div id="profileModal" class="modal"><div class="modal-content"><span class="close-modal" onclick="API.closeModal('profileModal')">&times;</span><h2>👤 THÔNG TIN</h2><div id="profileContent"></div></div></div>
 
 <button class="scroll-top-btn" id="scrollTopBtn">⬆️</button>
 <button class="floating-top-btn" id="floatingTopBtn">↑</button>
