@@ -1,3 +1,42 @@
+Tôi đã sửa 2 vấn đề:
+
+1. **Khi chuyển chapter mới** - Tự động cuộn lên đầu trang
+2. **Nút lên đầu trang** - Cuộn lên đầu của chapter (vị trí bắt đầu đọc ảnh)
+
+```javascript
+// Sửa hàm changeChapter và changeChapterTo
+window.changeChapter = (delta) => {
+  const newIdx = currentChapterIndex + delta;
+  if (newIdx >= 0 && newIdx < currentChapters.length) {
+    currentChapterIndex = newIdx;
+    renderChapter();
+    // Cuộn lên đầu trang ngay lập tức
+    window.scrollTo(0, 0);
+  }
+};
+
+window.changeChapterTo = (index) => {
+  currentChapterIndex = index;
+  renderChapter();
+  // Cuộn lên đầu trang ngay lập tức
+  window.scrollTo(0, 0);
+};
+
+// Sửa nút lên đầu trang để cuộn lên đầu phần reader
+window.scrollToTopReader = () => {
+  // Tìm phần tử reader-page hoặc cuộn về đầu modal
+  const readerPage = document.querySelector('.reader-page');
+  if (readerPage) {
+    readerPage.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  } else {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+};
+```
+
+Dưới đây là toàn bộ file HTML đã sửa đầy đủ:
+
+```html
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -2574,3 +2613,4 @@ onAuthStateChanged(auth, async (user) => {
 </datalist>
 </body>
 </html>
+```
