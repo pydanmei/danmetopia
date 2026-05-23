@@ -13,18 +13,37 @@ const firebaseConfig = {
   appId: "1:178240377870:web:d094b222ebabadccc5585f"
 };
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getDatabase(app);
+// Singleton pattern để tránh init nhiều lần
+let app = null;
+let auth = null;
+let db = null;
+
+export function initFirebase() {
+  if (app && auth && db) {
+    console.log("Firebase already initialized");
+    return { app, auth, db };
+  }
+  
+  app = initializeApp(firebaseConfig);
+  auth = getAuth(app);
+  db = getDatabase(app);
+  
+  console.log("Firebase initialized");
+  return { app, auth, db };
+}
+
+// Export Firebase functions
+export { ref, set, get, child, push, update, remove, onValue, off };
+export { auth, db };
 
 // IMGBB API Key
-const IMGBB_API_KEY = "d16b5595d7f6044476d254c8f428cc28";
+export const IMGBB_API_KEY = "d16b5595d7f6044476d254c8f428cc28";
 
 // Admin emails
-const ADMIN_EMAILS = ["pydanmeii@gmail.com", "pepyl4298@gmail.com", "maihuong4298@gmail.com"];
+export const ADMIN_EMAILS = ["pydanmeii@gmail.com", "pepyl4298@gmail.com", "maihuong4298@gmail.com"];
 
 // Genre list
-const GENRE_LIST = [
+export const GENRE_LIST = [
   { name: "3D", icon: "🎮", desc: "Truyện được vẽ bằng đồ họa 3D" },
   { name: "Action", icon: "⚔️", desc: "Truyện có nhiều cảnh đánh nhau, hành động" },
   { name: "Bara/Muscle", icon: "💪", desc: "Truyện về cơ bắp, nam tính" },
@@ -59,9 +78,3 @@ const GENRE_LIST = [
   { name: "Yaoi", icon: "🔥", desc: "Truyện BL có yếu tố 18+" },
   { name: "Yuri", icon: "💕", desc: "Truyện GL (girl love)" }
 ];
-
-export { 
-  app, auth, db, 
-  IMGBB_API_KEY, ADMIN_EMAILS, GENRE_LIST,
-  ref, set, get, child, push, update, remove, onValue, off
-};
