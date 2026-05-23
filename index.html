@@ -215,6 +215,13 @@ body {
   text-decoration: none;
   color: black;
   white-space: nowrap;
+  overflow-x: auto;
+  max-width: 100%;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.logo::-webkit-scrollbar {
+  display: none;
 }
 .user-area {
   display: flex;
@@ -678,10 +685,11 @@ body {
   right: 30px;
   width: 50px;
   height: 50px;
-  background: #FF69B4;
+  background: rgba(255,105,180,0.7);
+  backdrop-filter: blur(4px);
   color: black;
   border: none;
-  border-radius: 50%;
+  border-radius: 12px;
   font-size: 24px;
   cursor: pointer;
   display: none;
@@ -695,6 +703,7 @@ body {
   background: #FF1493;
   color: white;
   transform: scale(1.1);
+  backdrop-filter: blur(0);
 }
 /* Footer Disclaimer */
 .footer-disclaimer {
@@ -751,10 +760,6 @@ body {
   color: #FF69B4;
   background: rgba(0,0,0,0.8);
 }
-/* Center chapter button style */
-.center-chapter-btn {
-  background: #FFCCCC !important;
-}
 @media (max-width: 600px) {
   .manga-grid {
     grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
@@ -772,17 +777,14 @@ body {
     align-items: flex-start;
   }
   .chapter-nav {
-    flex-direction: row;
-    justify-content: center;
-    flex-wrap: wrap;
+    flex-direction: column;
+    align-items: center;
   }
-  /* FIX: Logo không bị xuống dòng trên mobile */
   .logo {
-    font-size: 20px;
-    white-space: normal;
-    text-align: center;
-    word-break: keep-all;
-    display: inline-block;
+    font-size: 18px;
+    white-space: nowrap;
+    overflow-x: auto;
+    max-width: 100%;
   }
   .user-area {
     justify-content: center;
@@ -794,6 +796,7 @@ body {
     width: 40px;
     height: 40px;
     font-size: 18px;
+    border-radius: 10px;
   }
   .footer-disclaimer {
     padding: 15px;
@@ -825,7 +828,7 @@ body {
     <hr>
     <p>📧 Đăng nhập bằng email</p>
     <input type="email" id="loginEmail" placeholder="Email">
-    <button id="checkEmailBtn" class="btn-pink">TIẾP TỤC</button>
+    <button id="checkEmailBtn" class="btn-pink">TRUY CẬP</button>
     <div id="otpGroup" class="otp-group">
       <input type="text" id="otpCode" placeholder="Nhập mã OTP 6 số" maxlength="6">
       <button id="verifyOtpBtn" class="btn-pink">XÁC NHẬN OTP</button>
@@ -895,10 +898,10 @@ body {
 <div id="readerModal" class="modal"><div class="modal-content"><span class="close-modal close-reader" onclick="closeReaderModal()">&times;</span><div id="readerContent"></div></div></div>
 <div id="profileModal" class="modal"><div class="modal-content"><span class="close-modal" onclick="closeModal('profileModal')">&times;</span><h2>👤 THÔNG TIN</h2><div id="profileContent"></div></div></div>
 
-<!-- FLOAT SCROLL TO TOP BUTTON (floating bên phải) -->
+<!-- FLOAT SCROLL TO TOP BUTTON -->
 <button class="scroll-top-btn" id="scrollTopBtn">⬆️</button>
 
-<!-- FOOTER DISCLAIMER (đã có sẵn ở home) -->
+<!-- FOOTER DISCLAIMER -->
 <div class="footer-disclaimer">
   <div class="disclaimer-content">
     <p>🌸 <strong>DANMETOPIA</strong> là nền tảng phi lợi nhuận, hoạt động với mục đích <strong>tổng hợp và chia sẻ</strong> các bộ truyện tranh từ nhiều nguồn khác nhau.</p>
@@ -951,34 +954,22 @@ const GENRE_LIST = [
 
 // ==================== SESSION MANAGEMENT ====================
 const MAIN_PASSWORD_SESSION_KEY = "mainPasswordExpiry";
+const MAIN_PASSWORD = "danmei";
+const GUEST_SESSION_TIMEOUT = 60 * 60 * 1000; // 1 tiếng
 
-// Khác nhau cho guest và user/admin
-function getSessionExpiry(isGuest) {
-  if (isGuest) {
-    // Guest: 1 tiếng
-    return Date.now() + 60 * 60 * 1000;
-  } else {
-    // User/Admin: 1 tuần
-    return Date.now() + 7 * 24 * 60 * 60 * 1000;
-  }
-}
-
-function setMainPasswordSession(isGuest = true) {
-  const expiry = getSessionExpiry(isGuest);
+function setMainPasswordSession() {
+  const expiry = Date.now() + 24 * 60 * 60 * 1000;
   localStorage.setItem(MAIN_PASSWORD_SESSION_KEY, expiry.toString());
-}
-
-function isMainPasswordSessionValid() {
-  const expiry = localStorage.getItem(MAIN_PASSWORD_SESSION_KEY);
-  if (!expiry) return false;
-  return Date.now() < parseInt(expiry);
 }
 
 function clearMainPasswordSession() {
   localStorage.removeItem(MAIN_PASSWORD_SESSION_KEY);
 }
 
-const MAIN_PASSWORD = "danmei";
+function isGuestSessionExpired(loginTime) {
+  if (!loginTime) return true;
+  return Date.now() - loginTime > GUEST_SESSION_TIMEOUT;
+}
 
 // ==================== FIREBASE & EMAILJS ====================
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -1058,7 +1049,7 @@ function scheduleRender() {
   renderTimeout = setTimeout(() => renderCurrentTab(), 150);
 }
 
-// Float scroll to top - xuất hiện sớm hơn (từ 100px thay vì 300px)
+// Float scroll to top - xuất hiện khi scroll > 100px
 const scrollBtn = document.getElementById("scrollTopBtn");
 if (scrollBtn) {
   window.addEventListener("scroll", () => {
@@ -1223,9 +1214,10 @@ async function createNewUser(uid, email, nickname) {
 async function handleGuestLogin() {
   const guestName = generateRandomGuestName();
   currentUserData = { role: "guest", displayName: guestName, nickname: guestName };
-  // Set session cho guest - 1 tiếng
-  setMainPasswordSession(true);
-  localStorage.setItem("userSession", JSON.stringify(currentUserData));
+  localStorage.setItem("userSession", JSON.stringify({
+    ...currentUserData,
+    guestLoginTime: Date.now()
+  }));
   document.getElementById("loginPage").style.display = "none";
   document.getElementById("mainContainer").style.display = "block";
   showNotification(`👤 Chào mừng ${guestName} (Khách)`);
@@ -1284,8 +1276,6 @@ async function handlePasswordLogin() {
     const userCred = await signInWithEmailAndPassword(auth, email, password);
     const userData = await loadUserData(userCred.user.uid, email);
     currentUserData = userData;
-    // Set session cho user/admin - 1 tuần
-    setMainPasswordSession(false);
     localStorage.setItem("userSession", JSON.stringify(currentUserData));
     document.getElementById("loginPage").style.display = "none";
     document.getElementById("mainContainer").style.display = "block";
@@ -1327,8 +1317,6 @@ async function handleCompleteRegistration() {
     await createNewUser(userCred.user.uid, pendingRegisterEmail, nickname);
     const userData = await loadUserData(userCred.user.uid, pendingRegisterEmail);
     currentUserData = userData;
-    // Set session cho user mới - 1 tuần
-    setMainPasswordSession(false);
     localStorage.setItem("userSession", JSON.stringify(currentUserData));
     document.getElementById("registerPage").style.display = "none";
     document.getElementById("mainContainer").style.display = "block";
@@ -1340,18 +1328,16 @@ async function handleCompleteRegistration() {
 }
 
 async function restoreSession() {
-  // Kiểm tra session expiry trước
-  if (!isMainPasswordSessionValid()) {
-    clearMainPasswordSession();
-    localStorage.removeItem("userSession");
-    return false;
-  }
-  
   const session = localStorage.getItem("userSession");
   if (!session) return false;
   try {
     const data = JSON.parse(session);
     if (data.role === "guest") {
+      // Kiểm tra thời gian đăng nhập guest
+      if (data.guestLoginTime && isGuestSessionExpired(data.guestLoginTime)) {
+        localStorage.removeItem("userSession");
+        return false;
+      }
       currentUserData = data;
       document.getElementById("warningOverlay").style.display = "none";
       document.getElementById("loginPage").style.display = "none";
@@ -2134,10 +2120,10 @@ function renderChapter() {
         ${chap.pages?.map(page => `<img class="reader-image" src="${escapeHtml(page)}" loading="lazy" onerror="this.src='https://placehold.co/800x1200?text=Image+Load+Error'">`).join("") || "<p>Không có ảnh</p>"}
       </div>
       
-      <!-- Chapter navigation BOTTOM với nút lên đầu trang ở giữa -->
+      <!-- Chapter navigation BOTTOM -->
       <div class="chapter-nav" style="margin-top:30px; margin-bottom:30px;">
         ${hasPrev ? `<button onclick="window.changeChapter(-1)">⬅️ Chapter trước</button>` : '<button disabled style="opacity:0.5;">⬅️ Chapter trước</button>'}
-        <button onclick="window.scrollToTop()" class="center-chapter-btn" style="background:#FFCCCC;">⬆️ Lên đầu trang</button>
+        <button onclick="window.scrollToTop()" style="background:#FFCCCC;">⬆️ Lên đầu trang</button>
         ${hasNext ? `<button onclick="window.changeChapter(1)">Chapter sau ➡️</button>` : '<button disabled style="opacity:0.5;">Chapter sau ➡️</button>'}
       </div>
       
@@ -2179,16 +2165,14 @@ window.changeChapter = (delta) => {
   if (newIdx >= 0 && newIdx < currentChapters.length) {
     currentChapterIndex = newIdx;
     renderChapter();
-    // Tự động lên đầu trang khi chuyển chapter
-    window.scrollTo(0, 0);
+    window.scrollTo(0, 0); // Tự động lên đầu trang khi chuyển chapter
   }
 };
 
 window.changeChapterTo = (index) => {
   currentChapterIndex = index;
   renderChapter();
-  // Tự động lên đầu trang khi chọn chapter từ mục lục
-  window.scrollTo(0, 0);
+  window.scrollTo(0, 0); // Tự động lên đầu trang khi chọn chapter từ mục lục
 };
 
 window.scrollToTop = () => {
@@ -2477,11 +2461,14 @@ document.addEventListener("DOMContentLoaded", async () => {
       return;
     }
     
+    setMainPasswordSession();
+    
     const guestName = generateRandomGuestName();
     currentUserData = { role: "guest", displayName: guestName, nickname: guestName };
-    // Guest session: 1 tiếng
-    setMainPasswordSession(true);
-    localStorage.setItem("userSession", JSON.stringify(currentUserData));
+    localStorage.setItem("userSession", JSON.stringify({
+      ...currentUserData,
+      guestLoginTime: Date.now()
+    }));
     
     document.getElementById("warningOverlay").style.display = "none";
     document.getElementById("loginPage").style.display = "flex";
@@ -2532,8 +2519,6 @@ onAuthStateChanged(auth, async (user) => {
   if (user && !currentUserData) {
     const email = user.email || "user@anonymous.com";
     currentUserData = await loadUserData(user.uid, email);
-    // User session: 1 tuần
-    setMainPasswordSession(false);
     localStorage.setItem("userSession", JSON.stringify(currentUserData));
     document.getElementById("loginPage").style.display = "none";
     document.getElementById("mainContainer").style.display = "block";
