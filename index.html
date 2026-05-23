@@ -754,7 +754,10 @@ const GENRE_LIST = [
   { name: "Sci-fi", icon: "🚀", desc: "Truyện khoa học viễn tưởng" },
   { name: "School Life", icon: "📚", desc: "Truyện bối cảnh trường học" },
   { name: "Drama", icon: "💗", desc: "Truyện tình cảm, nhiều cung bậc" },
-  { name: "Mystery", icon: "🔍", desc: "Truyện trinh thám, bí ẩn" }
+  { name: "Mystery", icon: "🔍", desc: "Truyện trinh thám, bí ẩn" },
+  { name: "Manhwa", icon: "🇰🇷", desc: "Truyện tranh Hàn Quốc" },
+  { name: "Manhua", icon: "🇨🇳", desc: "Truyện tranh Trung Quốc" },
+  { name: "Manga", icon: "🇯🇵", desc: "Truyện tranh Nhật Bản" }
 ];
 
 // ==================== SESSION MANAGEMENT ====================
@@ -1459,19 +1462,18 @@ window.openEditStory = async (storyId) => {
     mainGenre = parts[0].trim();
     subGenre = parts.slice(1).join(",").trim();
   }
-  let genreOptions = '<option value="">-- Chọn thể loại --</option>';
-  for (const genre of GENRE_LIST) {
-    genreOptions += `<option value="${genre.name}" ${mainGenre === genre.name ? 'selected' : ''}>${genre.icon} ${genre.name}</option>`;
-  }
   document.getElementById("editStoryContent").innerHTML = `
     <input id="editTitle" value="${escapeHtml(story.title)}" placeholder="Tên truyện *">
     <input id="editOtherName" value="${escapeHtml(story.otherName || '')}" placeholder="Tên khác">
     <input id="editAuthor" value="${escapeHtml(story.author || '')}" placeholder="Tác giả">
-    <label style="color:#FF69B4; margin-top:10px; display:block;">📖 Thể loại</label>
-    <select id="editGenre">${genreOptions}</select>
-    <input id="editGenre2" value="${escapeHtml(subGenre)}" placeholder="Thể loại phụ (không bắt buộc)">
+    
+    <label style="color:#FF69B4; margin-top:10px; display:block;">📖 Thể loại (có thể chọn hoặc tự nhập)</label>
+    <input id="editGenre" list="genreDropdown" value="${escapeHtml(mainGenre)}" placeholder="Chọn hoặc nhập thể loại chính">
+    <input id="editGenre2" value="${escapeHtml(subGenre)}" placeholder="Thể loại phụ (không bắt buộc)" list="genreDropdown">
+    
     <label style="color:#FF69B4; margin-top:10px; display:block;">🏷️ Tags</label>
     <input id="editTags" value="${escapeHtml(story.tags || '')}" placeholder="Tags cách nhau bằng dấu phẩy">
+    
     <select id="editStatus">
       <option value="Đang tiến hành" ${story.status === "Đang tiến hành" ? "selected" : ""}>📖 Đang tiến hành</option>
       <option value="Đã hoàn thành" ${story.status === "Đã hoàn thành" ? "selected" : ""}>✅ Đã hoàn thành</option>
@@ -1514,7 +1516,7 @@ window.saveEditStory = async (storyId) => {
   const mainGenre = document.getElementById("editGenre").value;
   const subGenre = document.getElementById("editGenre2").value;
   let genres = mainGenre;
-  if (subGenre && subGenre !== mainGenre) {
+  if (subGenre && subGenre !== mainGenre && subGenre.trim() !== "") {
     genres = `${mainGenre}, ${subGenre}`;
   }
   await updateStoryData(storyId, {
@@ -1690,35 +1692,38 @@ function renderUploadPanel() {
   const panel = document.getElementById("uploadPanel");
   if (!panel) return;
   if (!canUpload(currentUserData) || currentUserData?.role === "guest") { panel.innerHTML = ""; return; }
-  let genreOptions = '<option value="">-- Chọn thể loại --</option>';
-  for (const genre of GENRE_LIST) {
-    genreOptions += `<option value="${genre.name}">${genre.icon} ${genre.name}</option>`;
-  }
   panel.innerHTML = `
     <div class="upload-panel">
       <h3>📤 ĐĂNG TRUYỆN MỚI</h3>
       <input id="uploadTitle" placeholder="Tên truyện *">
       <input id="uploadOtherName" placeholder="Tên khác">
       <input id="uploadAuthor" placeholder="Tác giả">
-      <label style="color:#FF69B4; margin-top:10px; display:block;">📖 Thể loại</label>
-      <select id="uploadGenre">${genreOptions}</select>
-      <input id="uploadGenre2" placeholder="Thể loại phụ (không bắt buộc)">
+      
+      <label style="color:#FF69B4; margin-top:10px; display:block;">📖 Thể loại (có thể chọn hoặc tự nhập)</label>
+      <input id="uploadGenre" list="genreDropdown" placeholder="Chọn hoặc nhập thể loại chính">
+      <input id="uploadGenre2" placeholder="Thể loại phụ (không bắt buộc)" list="genreDropdown">
+      
       <label style="color:#FF69B4; margin-top:10px; display:block;">🏷️ Tags</label>
       <input id="uploadTags" placeholder="Ví dụ: School, Omegaverse, One Shot">
+      
       <select id="uploadStatus">
         <option value="Đang tiến hành">📖 Đang tiến hành</option>
         <option value="Đã hoàn thành">✅ Đã hoàn thành</option>
         <option value="Tạm ngưng">⏸ Tạm ngưng</option>
       </select>
+      
       <select id="uploadGroupId">
         <option value="">-- Chọn nhóm dịch (không bắt buộc) --</option>
       </select>
+      
       <input type="file" id="uploadCoverFile" accept="image/*">
       <div id="uploadCoverPreview"></div>
       <input id="uploadCoverUrl" placeholder="Hoặc link ảnh bìa">
+      
       <h4>📷 Ảnh chapter đầu tiên (không bắt buộc)</h4>
       <input type="file" id="uploadChapterImages" accept="image/*" multiple>
       <div id="uploadChapterPreview" class="images-preview"></div>
+      
       <textarea id="uploadDesc" placeholder="Mô tả truyện"></textarea>
       <button class="btn-pink" id="submitUploadBtn">📤 ĐĂNG TRUYỆN</button>
     </div>
@@ -1775,7 +1780,7 @@ function renderUploadPanel() {
       const mainGenre = document.getElementById("uploadGenre").value;
       const subGenre = document.getElementById("uploadGenre2").value;
       let genres = mainGenre;
-      if (subGenre && subGenre !== mainGenre) {
+      if (subGenre && subGenre !== mainGenre && subGenre.trim() !== "") {
         genres = `${mainGenre}, ${subGenre}`;
       }
       let chapterImageUrls = [];
@@ -1964,5 +1969,14 @@ onAuthStateChanged(auth, async (user) => {
   }
 });
 </script>
+
+<!-- DATALIST CHO GENRE -->
+<datalist id="genreDropdown">
+  <option>Action</option><option>Comedy</option><option>Romance</option>
+  <option>Danmei</option><option>Yaoi</option><option>Shounen Ai</option>
+  <option>Horror</option><option>Fantasy</option><option>Sci-fi</option>
+  <option>School Life</option><option>Drama</option><option>Mystery</option>
+  <option>Manhwa</option><option>Manhua</option><option>Manga</option>
+</datalist>
 </body>
 </html>
