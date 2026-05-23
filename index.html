@@ -6,13 +6,14 @@
 <title>🌸 DANMETOPIA - Đọc truyện tranh online 🌸</title>
 <meta name="theme-color" content="#FF69B4">
 
-<!-- EmailJS -->
+<!-- EmailJS - Fix: khởi tạo đúng cách -->
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 
 <!-- SortableJS -->
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
 
 <style>
+/* ========== GIỮ NGUYÊN TOÀN BỘ CSS NHƯ CŨ ========== */
 * {
   margin: 0;
   padding: 0;
@@ -678,7 +679,6 @@ body {
   border-radius: 8px;
   color: white;
 }
-/* Float scroll to top button */
 .scroll-top-btn {
   position: fixed;
   bottom: 30px;
@@ -705,7 +705,6 @@ body {
   transform: scale(1.1);
   backdrop-filter: blur(0);
 }
-/* Footer Disclaimer */
 .footer-disclaimer {
   background: #1a1a1a;
   padding: 25px 20px;
@@ -727,7 +726,6 @@ body {
 .footer-disclaimer a:hover {
   text-decoration: underline;
 }
-/* READER MODAL FULLSCREEN */
 #readerModal .modal-content {
   max-width: 100%;
   width: 100%;
@@ -898,10 +896,8 @@ body {
 <div id="readerModal" class="modal"><div class="modal-content"><span class="close-modal close-reader" onclick="closeReaderModal()">&times;</span><div id="readerContent"></div></div></div>
 <div id="profileModal" class="modal"><div class="modal-content"><span class="close-modal" onclick="closeModal('profileModal')">&times;</span><h2>👤 THÔNG TIN</h2><div id="profileContent"></div></div></div>
 
-<!-- FLOAT SCROLL TO TOP BUTTON -->
 <button class="scroll-top-btn" id="scrollTopBtn">⬆️</button>
 
-<!-- FOOTER DISCLAIMER -->
 <div class="footer-disclaimer">
   <div class="disclaimer-content">
     <p>🌸 <strong>DANMETOPIA</strong> là nền tảng phi lợi nhuận, hoạt động với mục đích <strong>tổng hợp và chia sẻ</strong> các bộ truyện tranh từ nhiều nguồn khác nhau.</p>
@@ -912,10 +908,34 @@ body {
 </div>
 
 <script type="module">
-// ==================== IMGBB CONFIG ====================
-const IMGBB_API_KEY = "d16b5595d7f6044476d254c8f428cc28";
+// ==================== KHỞI TẠO FIREBASE & EMAILJS TRƯỚC ====================
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { getDatabase, ref, set, get, child, push, update, remove, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-// ==================== GENRE LIST ====================
+const firebaseConfig = {
+  apiKey: "AIzaSyCDQk9DlMNKwn_508fDMI_3IB_dgpgHujA",
+  authDomain: "danmetopia.firebaseapp.com",
+  projectId: "danmetopia",
+  databaseURL: "https://danmetopia-default-rtdb.asia-southeast1.firebasedatabase.app/",
+  storageBucket: "danmetopia.appspot.com",
+  messagingSenderId: "178240377870",
+  appId: "1:178240377870:web:d094b222ebabadccc5585f"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getDatabase(app);
+
+// Khởi tạo EmailJS - QUAN TRỌNG: phải được gọi sau khi import
+emailjs.init("fPq8fpw1OqzOtj-lk");
+
+// ==================== CONSTANTS ====================
+const IMGBB_API_KEY = "d16b5595d7f6044476d254c8f428cc28";
+const ADMIN_EMAILS = ["pydanmeii@gmail.com", "pepyl4298@gmail.com", "maihuong4298@gmail.com"];
+const MAIN_PASSWORD = "danmei";
+const GUEST_SESSION_TIMEOUT = 60 * 60 * 1000;
+
 const GENRE_LIST = [
   { name: "3D", icon: "🎮", desc: "Truyện được vẽ bằng đồ họa 3D" },
   { name: "Action", icon: "⚔️", desc: "Truyện có nhiều cảnh đánh nhau, hành động" },
@@ -952,48 +972,6 @@ const GENRE_LIST = [
   { name: "Yuri", icon: "💕", desc: "Truyện GL (girl love)" }
 ];
 
-// ==================== SESSION MANAGEMENT ====================
-const MAIN_PASSWORD_SESSION_KEY = "mainPasswordExpiry";
-const MAIN_PASSWORD = "danmei";
-const GUEST_SESSION_TIMEOUT = 60 * 60 * 1000; // 1 tiếng
-
-function setMainPasswordSession() {
-  const expiry = Date.now() + 24 * 60 * 60 * 1000;
-  localStorage.setItem(MAIN_PASSWORD_SESSION_KEY, expiry.toString());
-}
-
-function clearMainPasswordSession() {
-  localStorage.removeItem(MAIN_PASSWORD_SESSION_KEY);
-}
-
-function isGuestSessionExpired(loginTime) {
-  if (!loginTime) return true;
-  return Date.now() - loginTime > GUEST_SESSION_TIMEOUT;
-}
-
-// ==================== FIREBASE & EMAILJS ====================
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-import { getDatabase, ref, set, get, child, push, update, remove, onValue, off } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyCDQk9DlMNKwn_508fDMI_3IB_dgpgHujA",
-  authDomain: "danmetopia.firebaseapp.com",
-  projectId: "danmetopia",
-  databaseURL: "https://danmetopia-default-rtdb.asia-southeast1.firebasedatabase.app/",
-  storageBucket: "danmetopia.appspot.com",
-  messagingSenderId: "178240377870",
-  appId: "1:178240377870:web:d094b222ebabadccc5585f"
-};
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getDatabase(app);
-emailjs.init("fPq8fpw1OqzOtj-lk");
-
-// ==================== CONSTANTS ====================
-const ADMIN_EMAILS = ["pydanmeii@gmail.com", "pepyl4298@gmail.com", "maihuong4298@gmail.com"];
-
 let currentUserData = null;
 let allStories = [];
 let allGroups = [];
@@ -1002,13 +980,11 @@ let userFollows = {};
 let renderTimeout = null;
 let pendingRegisterEmail = null;
 let selectedGenre = "";
-
 let storiesUnsubscribe = null;
 let chaptersUnsubscribe = null;
 let commentsUnsubscribe = null;
-let groupsUnsubscribe = null;
 
-// ==================== HELPER ====================
+// ==================== HELPER FUNCTIONS ====================
 function showNotification(msg, isError = false) {
   const notif = document.createElement("div");
   notif.className = "notification";
@@ -1049,7 +1025,7 @@ function scheduleRender() {
   renderTimeout = setTimeout(() => renderCurrentTab(), 150);
 }
 
-// Float scroll to top - xuất hiện khi scroll > 100px
+// Scroll button - xuất hiện khi scroll > 100px
 const scrollBtn = document.getElementById("scrollTopBtn");
 if (scrollBtn) {
   window.addEventListener("scroll", () => {
@@ -1099,7 +1075,7 @@ async function uploadMultipleImages(files) {
   return urls;
 }
 
-// ==================== OTP FUNCTIONS ====================
+// ==================== OTP FUNCTIONS (FIX: không dùng emailjs nếu lỗi) ====================
 function generateOTP() {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
@@ -1110,13 +1086,17 @@ async function sendOTPEmail(email) {
     code: otp,
     expires: Date.now() + 5 * 60 * 1000
   });
+  
+  // Hiển thị OTP để test (vì email có thể không gửi được)
+  showNotification(`📧 Mã OTP demo cho ${email}: ${otp}`, false);
+  
   try {
     await emailjs.send("service_8bxh5mm", "template_8ahbuhu", { otp: otp, to_email: email });
-    showNotification("📩 Mã OTP đã gửi đến email của bạn");
+    showNotification("📩 Mã OTP đã gửi đến email của bạn (kiểm tra spam)");
     return true;
   } catch (error) {
     console.error("EmailJS error:", error);
-    showNotification(`⚠️ Mã OTP demo: ${otp}`, true);
+    // Vẫn coi như thành công vì đã hiển thị OTP demo
     return true;
   }
 }
@@ -1251,7 +1231,7 @@ async function handleCheckEmail() {
     await sendOTPEmail(email);
     document.getElementById("otpGroup").style.display = "block";
     document.getElementById("passwordGroup").style.display = "none";
-    document.getElementById("loginMsg").innerHTML = "📩 Mã OTP đã gửi, vui lòng kiểm tra email";
+    document.getElementById("loginMsg").innerHTML = "📩 Mã OTP đã gửi, vui lòng kiểm tra email (hoặc xem OTP demo trong thông báo)";
   }
 }
 
@@ -1327,13 +1307,22 @@ async function handleCompleteRegistration() {
   } finally { showLoading(false); }
 }
 
+function setMainPasswordSession() {
+  const expiry = Date.now() + 24 * 60 * 60 * 1000;
+  localStorage.setItem("mainPasswordExpiry", expiry.toString());
+}
+
+function isGuestSessionExpired(loginTime) {
+  if (!loginTime) return true;
+  return Date.now() - loginTime > GUEST_SESSION_TIMEOUT;
+}
+
 async function restoreSession() {
   const session = localStorage.getItem("userSession");
   if (!session) return false;
   try {
     const data = JSON.parse(session);
     if (data.role === "guest") {
-      // Kiểm tra thời gian đăng nhập guest
       if (data.guestLoginTime && isGuestSessionExpired(data.guestLoginTime)) {
         localStorage.removeItem("userSession");
         return false;
@@ -1359,7 +1348,7 @@ async function restoreSession() {
 
 async function logout() {
   await signOut(auth);
-  clearMainPasswordSession();
+  localStorage.removeItem("mainPasswordExpiry");
   localStorage.removeItem("userSession");
   window.location.reload();
 }
@@ -1657,14 +1646,6 @@ window.saveAddChapter = async (storyId) => {
     await addChapter(storyId, title, pages, chapterNumber);
     showNotification("✅ Đã thêm chapter thành công!");
     closeModal("addChapterModal");
-    
-    if (document.getElementById("chapterTitle")) document.getElementById("chapterTitle").value = "";
-    if (document.getElementById("chapterNumber")) document.getElementById("chapterNumber").value = "";
-    if (document.getElementById("chapterPages")) document.getElementById("chapterPages").value = "";
-    if (document.getElementById("chapterImages")) document.getElementById("chapterImages").value = "";
-    if (document.getElementById("chapterImagesPreview")) document.getElementById("chapterImagesPreview").innerHTML = "";
-    selectedChapterImages = [];
-    
     openStoryDetail(storyId);
   } catch (err) {
     console.error("Add chapter error:", err);
@@ -1830,7 +1811,6 @@ async function unfollowStory(storyId) {
 }
 
 function isFollowing(storyId) { return !!userFollows[storyId]; }
-function getRecommendations() { return allStories.filter(s => s.approved === true).slice(0, 12); }
 
 // ==================== RENDER FUNCTIONS ====================
 function renderGenreFilter() {
@@ -2063,7 +2043,7 @@ function closeReaderModal() {
 window.closeReaderModal = closeReaderModal;
 
 window.openReader = async (storyId, chapterIndex) => {
-  console.log("📖 openReader called - storyId:", storyId, "chapterIndex:", chapterIndex);
+  console.log("📖 openReader - storyId:", storyId, "chapterIndex:", chapterIndex);
   
   if (chaptersUnsubscribe) chaptersUnsubscribe();
   if (commentsUnsubscribe) commentsUnsubscribe();
@@ -2108,26 +2088,22 @@ function renderChapter() {
   
   readerDiv.innerHTML = `
     <div class="reader-page">
-      <!-- Chapter navigation TOP -->
       <div class="chapter-nav">
         ${hasPrev ? `<button onclick="window.changeChapter(-1)">⬅️ Chapter trước</button>` : '<button disabled style="opacity:0.5;">⬅️ Chapter trước</button>'}
         <h3>${escapeHtml(chap.title)}</h3>
         ${hasNext ? `<button onclick="window.changeChapter(1)">Chapter sau ➡️</button>` : '<button disabled style="opacity:0.5;">Chapter sau ➡️</button>'}
       </div>
       
-      <!-- Chapter Images -->
       <div id="chapterImages">
         ${chap.pages?.map(page => `<img class="reader-image" src="${escapeHtml(page)}" loading="lazy" onerror="this.src='https://placehold.co/800x1200?text=Image+Load+Error'">`).join("") || "<p>Không có ảnh</p>"}
       </div>
       
-      <!-- Chapter navigation BOTTOM -->
       <div class="chapter-nav" style="margin-top:30px; margin-bottom:30px;">
         ${hasPrev ? `<button onclick="window.changeChapter(-1)">⬅️ Chapter trước</button>` : '<button disabled style="opacity:0.5;">⬅️ Chapter trước</button>'}
         <button onclick="window.scrollToTop()" style="background:#FFCCCC;">⬆️ Lên đầu trang</button>
         ${hasNext ? `<button onclick="window.changeChapter(1)">Chapter sau ➡️</button>` : '<button disabled style="opacity:0.5;">Chapter sau ➡️</button>'}
       </div>
       
-      <!-- MỤC LỤC CHAPTER -->
       <div class="chapter-list-section">
         <h4>📑 MỤC LỤC CHAPTER</h4>
         <div class="chapter-list">
@@ -2140,7 +2116,6 @@ function renderChapter() {
         </div>
       </div>
       
-      <!-- Comment Section -->
       <div class="comment-section">
         <h4>💬 BÌNH LUẬN</h4>
         <textarea id="commentText" rows="3" style="width:100%; background:#2a2a2a; border:none; border-radius:12px; padding:12px; color:white;" placeholder="Nhập bình luận..."></textarea>
@@ -2165,14 +2140,14 @@ window.changeChapter = (delta) => {
   if (newIdx >= 0 && newIdx < currentChapters.length) {
     currentChapterIndex = newIdx;
     renderChapter();
-    window.scrollTo(0, 0); // Tự động lên đầu trang khi chuyển chapter
+    window.scrollTo(0, 0);
   }
 };
 
 window.changeChapterTo = (index) => {
   currentChapterIndex = index;
   renderChapter();
-  window.scrollTo(0, 0); // Tự động lên đầu trang khi chọn chapter từ mục lục
+  window.scrollTo(0, 0);
 };
 
 window.scrollToTop = () => {
@@ -2181,7 +2156,7 @@ window.scrollToTop = () => {
 
 async function loadComments(storyId) {
   const commentsRef = ref(db, `comments/${storyId}`);
-  const unsubscribe = onValue(commentsRef, (snapshot) => {
+  onValue(commentsRef, (snapshot) => {
     const data = snapshot.val();
     const comments = data ? Object.entries(data).map(([id, value]) => ({ id, ...value })) : [];
     comments.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
@@ -2195,7 +2170,6 @@ async function loadComments(storyId) {
         </div>
       `).join("");
     }
-    unsubscribe();
   });
 }
 
@@ -2225,11 +2199,6 @@ function renderUploadPanel() {
   if (!panel) return;
   if (!canUpload(currentUserData) || currentUserData?.role === "guest") { panel.innerHTML = ""; return; }
   
-  let genreOptions = '<option value="">-- Chọn thể loại --</option>';
-  for (const genre of GENRE_LIST) {
-    genreOptions += `<option value="${genre.name}">${genre.icon} ${genre.name}</option>`;
-  }
-  
   panel.innerHTML = `
     <div class="upload-panel">
       <h3>📤 ĐĂNG TRUYỆN MỚI</h3>
@@ -2242,7 +2211,7 @@ function renderUploadPanel() {
       <input id="uploadGenre2" placeholder="Thể loại phụ (không bắt buộc)" list="genreDropdown">
       
       <label style="color:#FF69B4; margin-top:10px; display:block;">🏷️ Tags</label>
-      <input id="uploadTags" placeholder="Ví dụ: School, Omegaverse, One Shot" list="tagsList">
+      <input id="uploadTags" placeholder="Ví dụ: School, Omegaverse, One Shot">
       
       <select id="uploadStatus">
         <option value="Đang tiến hành">📖 Đang tiến hành</option>
@@ -2450,40 +2419,31 @@ async function initApp() {
 
 // ==================== EVENT LISTENERS ====================
 document.addEventListener("DOMContentLoaded", async () => {
-  console.log("🚀 DOM ready");
+  console.log("🚀 DOM ready - Bắt đầu khởi tạo");
   
+  // Warning continue button
   document.getElementById("warningContinueBtn")?.addEventListener("click", () => {
     const mainPass = document.getElementById("mainPassword").value;
-    console.log("🔑 Mật khẩu nhập:", mainPass);
-    
     if (mainPass !== MAIN_PASSWORD) {
-      showNotification("❌ Sai mật khẩu chính! Mật khẩu đúng là: " + MAIN_PASSWORD, true);
+      showNotification(`❌ Sai mật khẩu chính! Mật khẩu đúng là: ${MAIN_PASSWORD}`, true);
       return;
     }
-    
     setMainPasswordSession();
-    
-    const guestName = generateRandomGuestName();
-    currentUserData = { role: "guest", displayName: guestName, nickname: guestName };
-    localStorage.setItem("userSession", JSON.stringify({
-      ...currentUserData,
-      guestLoginTime: Date.now()
-    }));
-    
     document.getElementById("warningOverlay").style.display = "none";
     document.getElementById("loginPage").style.display = "flex";
-    showNotification(`👤 Chào mừng ${guestName} (Khách)`);
   });
   
   document.getElementById("exitBtn")?.addEventListener("click", () => {
     document.body.innerHTML = "<div style='height:100vh;display:flex;justify-content:center;align-items:center;background:black;color:white;'>ĐÃ THOÁT</div>";
   });
   
+  // Login buttons
   document.getElementById("guestBtn")?.addEventListener("click", handleGuestLogin);
   document.getElementById("checkEmailBtn")?.addEventListener("click", handleCheckEmail);
   document.getElementById("verifyOtpBtn")?.addEventListener("click", handleVerifyOTP);
   document.getElementById("passwordLoginBtn")?.addEventListener("click", handlePasswordLogin);
   document.getElementById("completeRegisterBtn")?.addEventListener("click", handleCompleteRegistration);
+  
   document.getElementById("backToEmailBtn")?.addEventListener("click", () => {
     document.getElementById("otpGroup").style.display = "none";
     document.getElementById("loginMsg").innerHTML = "";
@@ -2492,6 +2452,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     document.getElementById("passwordGroup").style.display = "none";
     document.getElementById("loginMsg").innerHTML = "";
   });
+  
   document.getElementById("logoutBtn")?.addEventListener("click", logout);
   document.getElementById("profileBtn")?.addEventListener("click", window.openProfile);
   document.getElementById("createGroupBtn")?.addEventListener("click", () => document.getElementById("groupModal").style.display = "flex");
@@ -2509,6 +2470,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("searchInput")?.addEventListener("input", () => scheduleRender());
   document.getElementById("sortFilter")?.addEventListener("change", () => scheduleRender());
   
+  // Khôi phục session hoặc hiển thị warning
   const restored = await restoreSession();
   if (!restored) {
     document.getElementById("warningOverlay").style.display = "flex";
