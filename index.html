@@ -9,6 +9,9 @@
 <!-- EmailJS -->
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 
+<!-- SortableJS cho kéo thả sắp xếp ảnh -->
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+
 <style>
 * {
   margin: 0;
@@ -311,6 +314,10 @@ body {
   border-radius: 8px;
   border: 1px solid #FF69B4;
   position: relative;
+  cursor: grab;
+}
+.img-preview-item:active {
+  cursor: grabbing;
 }
 .img-preview-item button {
   position: absolute;
@@ -324,6 +331,7 @@ body {
   font-size: 12px;
   padding: 0;
   margin: 0;
+  cursor: pointer;
 }
 .manga-grid {
   display: grid;
@@ -1359,10 +1367,6 @@ async function updateChapter(storyId, chapterId, data) {
 }
 
 window.deleteChapter = async (storyId, chapterId) => {
-  console.log("🗑 deleteChapter called - storyId:", storyId, "chapterId:", chapterId);
-  console.log("Current user:", currentUserData);
-  
-  // CHỈ ADMIN MỚI ĐƯỢC XÓA
   if (!currentUserData || !isAdmin(currentUserData)) {
     showNotification("⚠️ Chỉ Admin mới có quyền xóa chapter!", true);
     return;
@@ -1372,14 +1376,11 @@ window.deleteChapter = async (storyId, chapterId) => {
   
   try {
     await remove(ref(db, `chapters/${storyId}/${chapterId}`));
-    
-    // Cập nhật lại danh sách chapters trong story
     const storyRef = ref(db, `stories/${storyId}/chapters`);
     const snap = await get(storyRef);
     const chapters = snap.val() || {};
     delete chapters[chapterId];
     await set(storyRef, chapters);
-    
     showNotification("✅ Đã xóa chapter thành công!");
     openStoryDetail(storyId);
   } catch (err) {
@@ -1390,15 +1391,67 @@ window.deleteChapter = async (storyId, chapterId) => {
 
 window.openAddChapter = (storyId) => {
   selectedChapterImages = [];
+  let sortableInstance = null;
   
   document.getElementById("addChapterContent").innerHTML = `
     <input id="chapterTitle" placeholder="Tên chapter *">
     <input id="chapterNumber" placeholder="Số chapter (để trống tự động tăng)">
     <input type="file" id="chapterImages" accept="image/*" multiple>
     <div id="chapterImagesPreview" class="images-preview"></div>
+    <p style="font-size:12px; color:#aaa; margin-top:5px;">💡 Kéo thả ảnh để sắp xếp thứ tự</p>
     <textarea id="chapterPages" placeholder="Hoặc nhập link ảnh (mỗi dòng 1 link)" rows="10"></textarea>
     <button class="btn-pink" id="saveChapterBtn">📤 ĐĂNG CHAPTER</button>
   `;
+  
+  const previewDiv = document.getElementById("chapterImagesPreview");
+  
+  // Hàm cập nhật Sortable
+  const updateSortable = () => {
+    if (sortableInstance) sortableInstance.destroy();
+    if (previewDiv.children.length > 0) {
+      sortableInstance = new Sortable(previewDiv, {
+        animation: 150,
+        handle: '.img-preview-item',
+        onEnd: () => {
+          // Cập nhật lại thứ tự ảnh trong mảng selectedChapterImages
+          const newOrder = [];
+          for (let i = 0; i < previewDiv.children.length; i++) {
+            const imgDiv = previewDiv.children[i];
+            const imgSrc = imgDiv.querySelector('img').src;
+            const originalFile = selectedChapterImages.find(f => {
+              const reader = new FileReader();
+              reader.onload = (e) => {
+                if (e.target.result === imgSrc) return true;
+              };
+              return false;
+            });
+            if (originalFile) newOrder.push(originalFile);
+          }
+          if (newOrder.length === selectedChapterImages.length) {
+            selectedChapterImages = newOrder;
+          }
+        }
+      });
+    }
+  };
+  
+  document.getElementById("chapterImages")?.addEventListener("change", (e) => {
+    const files = Array.from(e.target.files);
+    selectedChapterImages = files;
+    previewDiv.innerHTML = "";
+    for (const file of files) {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const imgDiv = document.createElement("div");
+        imgDiv.className = "img-preview-item";
+        imgDiv.innerHTML = `<img src="${ev.target.result}" style="width:100%; height:100%; object-fit:cover; border-radius:8px;"><button onclick="this.parentElement.remove()">✕</button>`;
+        previewDiv.appendChild(imgDiv);
+        updateSortable();
+      };
+      reader.readAsDataURL(file);
+    }
+    updateSortable();
+  });
   
   const saveBtn = document.getElementById("saveChapterBtn");
   if (saveBtn) {
@@ -1406,24 +1459,6 @@ window.openAddChapter = (storyId) => {
     saveBtn.parentNode.replaceChild(newBtn, saveBtn);
     newBtn.addEventListener("click", () => window.saveAddChapter(storyId));
   }
-  
-  document.getElementById("chapterImages")?.addEventListener("change", (e) => {
-    const files = Array.from(e.target.files);
-    selectedChapterImages = files;
-    const previewDiv = document.getElementById("chapterImagesPreview");
-    previewDiv.innerHTML = "";
-    for (const file of files) {
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        const imgDiv = document.createElement("div");
-        imgDiv.style.position = "relative";
-        imgDiv.style.display = "inline-block";
-        imgDiv.innerHTML = `<img class="img-preview-item" src="${ev.target.result}"><button onclick="this.parentElement.remove()">✕</button>`;
-        previewDiv.appendChild(imgDiv);
-      };
-      reader.readAsDataURL(file);
-    }
-  });
   
   document.getElementById("addChapterModal").style.display = "flex";
 };
@@ -1480,16 +1515,9 @@ window.saveAddChapter = async (storyId) => {
 };
 
 window.openEditChapter = async (storyId, chapterId) => {
-  console.log("✏️ openEditChapter called - storyId:", storyId, "chapterId:", chapterId);
-  console.log("Current user:", currentUserData);
-  
   const story = allStories.find(s => s.id === storyId);
-  if (!story) {
-    showNotification("Không tìm thấy truyện!", true);
-    return;
-  }
+  if (!story) return;
   
-  // Kiểm tra quyền sửa chapter: Admin hoặc thành viên nhóm dịch hoặc chủ truyện
   const canEdit = currentUserData && (isAdmin(currentUserData) || (currentUserData.privileges?.groupId && story.groupId === currentUserData.privileges?.groupId) || story.ownerUid === currentUserData?.uid);
   
   if (!canEdit) {
@@ -1498,24 +1526,59 @@ window.openEditChapter = async (storyId, chapterId) => {
   }
   
   const chapter = await getChapter(storyId, chapterId);
-  if (!chapter) {
-    showNotification("Không tìm thấy chapter!", true);
-    return;
-  }
+  if (!chapter) return;
+  
+  let sortableInstance = null;
+  let newImageFiles = [];
+  let existingPages = chapter.pages || [];
   
   document.getElementById("editChapterContent").innerHTML = `
     <input id="editChapterTitle" value="${escapeHtml(chapter.title)}" placeholder="Tên chapter *">
     <input id="editChapterNumber" value="${chapter.chapterNumber || 0}" placeholder="Số chapter" type="number">
-    <textarea id="editChapterPages" placeholder="Link ảnh (mỗi dòng 1 link)" rows="10">${chapter.pages ? chapter.pages.join('\n') : ''}</textarea>
-    <div style="margin-top:10px;">
-      <label style="color:#FF69B4;">📷 Hoặc chọn ảnh mới từ máy tính (thêm vào cuối danh sách):</label>
+    
+    <label style="color:#FF69B4; margin-top:10px; display:block;">📷 Ảnh hiện tại (kéo thả để sắp xếp)</label>
+    <div id="existingImagesPreview" class="images-preview"></div>
+    
+    <div style="margin-top:15px;">
+      <label style="color:#FF69B4;">➕ Thêm ảnh mới:</label>
       <input type="file" id="editNewChapterImages" accept="image/*" multiple>
       <div id="editNewChapterPreview" class="images-preview"></div>
     </div>
+    
+    <label style="color:#FF69B4; margin-top:10px; display:block;">🔗 Hoặc nhập link ảnh (mỗi dòng 1 link)</label>
+    <textarea id="editChapterPages" rows="10">${existingPages.join('\n')}</textarea>
+    
     <button class="btn-pink" id="saveChapterEditBtn" style="margin-top:15px;">💾 LƯU THAY ĐỔI</button>
   `;
   
-  let newImageFiles = [];
+  // Hiển thị ảnh hiện tại
+  const existingPreviewDiv = document.getElementById("existingImagesPreview");
+  for (let i = 0; i < existingPages.length; i++) {
+    const imgDiv = document.createElement("div");
+    imgDiv.className = "img-preview-item";
+    imgDiv.setAttribute("data-index", i);
+    imgDiv.innerHTML = `<img src="${escapeHtml(existingPages[i])}" style="width:100%; height:100%; object-fit:cover; border-radius:8px;"><button onclick="this.parentElement.remove()">✕</button>`;
+    existingPreviewDiv.appendChild(imgDiv);
+  }
+  
+  // Sortable cho ảnh hiện tại
+  if (existingPreviewDiv.children.length > 0) {
+    sortableInstance = new Sortable(existingPreviewDiv, {
+      animation: 150,
+      handle: '.img-preview-item',
+      onEnd: () => {
+        const newOrder = [];
+        for (let i = 0; i < existingPreviewDiv.children.length; i++) {
+          const imgDiv = existingPreviewDiv.children[i];
+          const img = imgDiv.querySelector('img');
+          newOrder.push(img.src);
+        }
+        existingPages = newOrder;
+      }
+    });
+  }
+  
+  // Preview ảnh mới
   document.getElementById("editNewChapterImages")?.addEventListener("change", (e) => {
     const files = Array.from(e.target.files);
     newImageFiles = files;
@@ -1525,9 +1588,8 @@ window.openEditChapter = async (storyId, chapterId) => {
       const reader = new FileReader();
       reader.onload = (ev) => {
         const imgDiv = document.createElement("div");
-        imgDiv.style.position = "relative";
-        imgDiv.style.display = "inline-block";
-        imgDiv.innerHTML = `<img class="img-preview-item" src="${ev.target.result}"><button onclick="this.parentElement.remove()">✕</button>`;
+        imgDiv.className = "img-preview-item";
+        imgDiv.innerHTML = `<img src="${ev.target.result}" style="width:100%; height:100%; object-fit:cover; border-radius:8px;"><button onclick="this.parentElement.remove()">✕</button>`;
         previewDiv.appendChild(imgDiv);
       };
       reader.readAsDataURL(file);
@@ -1541,14 +1603,21 @@ window.openEditChapter = async (storyId, chapterId) => {
     newBtn.addEventListener("click", async () => {
       const newTitle = document.getElementById("editChapterTitle").value;
       const newNumber = parseInt(document.getElementById("editChapterNumber").value) || 0;
-      let newPages = document.getElementById("editChapterPages").value.split('\n').filter(p => p.trim());
+      let newPages = [...existingPages];
+      
+      // Thêm link ảnh từ textarea
+      const pagesText = document.getElementById("editChapterPages").value;
+      if (pagesText.trim()) {
+        const linkPages = pagesText.split('\n').filter(p => p.trim());
+        newPages = [...newPages, ...linkPages];
+      }
       
       if (!newTitle) {
         showNotification("Nhập tên chapter", true);
         return;
       }
       
-      // Upload ảnh mới nếu có
+      // Upload ảnh mới
       if (newImageFiles.length > 0) {
         showLoading(true);
         showNotification(`📤 Đang upload ${newImageFiles.length} ảnh mới...`, false);
@@ -1639,11 +1708,14 @@ function renderGenreFilter() {
 function renderCurrentTab() {
   if (!document.getElementById("mangaGrid")) return;
   let filtered = [];
+  
+  // TẤT CẢ USER ĐỀU CÓ THỂ XEM TRUYỆN ĐÃ DUYỆT
   if (isAdmin(currentUserData)) {
     filtered = [...allStories];
   } else {
     filtered = allStories.filter(s => s.approved === true);
   }
+  
   if (selectedGenre) {
     filtered = filtered.filter(s => s.genres && s.genres.includes(selectedGenre));
   }
@@ -1680,7 +1752,6 @@ window.openStoryDetail = async (storyId) => {
   if (!story) return;
   const chapters = await getChapters(storyId);
   
-  // Kiểm tra quyền
   const canEditStory = currentUserData && (isAdmin(currentUserData) || (currentUserData.privileges?.groupId && story.groupId === currentUserData.privileges?.groupId) || story.ownerUid === currentUserData?.uid);
   const canEditChapter = currentUserData && (isAdmin(currentUserData) || (currentUserData.privileges?.groupId && story.groupId === currentUserData.privileges?.groupId) || story.ownerUid === currentUserData?.uid);
   const canDeleteChapter = currentUserData && isAdmin(currentUserData);
