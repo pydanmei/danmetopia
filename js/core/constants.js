@@ -4,6 +4,12 @@ export const IMGBB_API_KEY = "d16b5595d7f6044476d254c8f428cc28";
 // Admin emails
 export const ADMIN_EMAILS = ["pydanmeii@gmail.com", "pepyl4298@gmail.com", "maihuong4298@gmail.com"];
 
+// Session configuration
+export const SESSION_CONFIG = {
+  guest: 60 * 60 * 1000,      // 1 hour
+  user: 7 * 24 * 60 * 60 * 1000 // 7 days
+};
+
 // Genre list
 export const GENRE_LIST = [
   { name: "3D", icon: "🎮", desc: "Truyện được vẽ bằng đồ họa 3D" },
@@ -40,9 +46,3 @@ export const GENRE_LIST = [
   { name: "Yaoi", icon: "🔥", desc: "Truyện BL có yếu tố 18+" },
   { name: "Yuri", icon: "💕", desc: "Truyện GL (girl love)" }
 ];
-
-// Session configuration
-export const SESSION_CONFIG = {
-  guest: 60 * 60 * 1000,      // 1 hour
-  user: 7 * 24 * 60 * 60 * 1000 // 7 days
-};
