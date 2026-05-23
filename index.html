@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>🌸 DANMETOPIA - Đọc truyện tranh online 🌸</title>
+<title>DANMETOPIA - Đọc truyện tranh online</title>
 <meta name="theme-color" content="#FF69B4">
 
 <!-- EmailJS -->
@@ -645,7 +645,6 @@ body {
 </head>
 <body>
 
-<!-- WARNING 18+ -->
 <div id="warningOverlay">
   <div class="warning-box">
     <h2>⚠️ CẢNH BÁO 18+ ⚠️</h2>
@@ -657,7 +656,6 @@ body {
   </div>
 </div>
 
-<!-- LOGIN PAGE -->
 <div id="loginPage">
   <div class="login-box">
     <h2>🌸 DANMETOPIA 🌸</h2>
@@ -680,7 +678,6 @@ body {
   </div>
 </div>
 
-<!-- REGISTER PAGE -->
 <div id="registerPage">
   <div class="login-box" style="max-width:380px;">
     <h2>🎉 HOÀN TẤT ĐĂNG KÝ</h2>
@@ -693,10 +690,9 @@ body {
   </div>
 </div>
 
-<!-- MAIN CONTAINER -->
 <div id="mainContainer">
   <div class="topbar">
-    <div class="logo" onclick="showHome()">🌸 DANMETOPIA 🌸</div>
+    <div class="logo" onclick="showHome()">🌸 DANMETOPIA</div>
     <div class="user-area">
       <span id="userDisplay">👤 Đang tải...</span>
       <a href="groups.html" id="groupsLink" class="nav-link" style="display:none">📚 Nhóm</a>
@@ -729,7 +725,6 @@ body {
   </div>
 </div>
 
-<!-- MODALS -->
 <div id="groupModal" class="modal"><div class="modal-content"><span class="close-modal" onclick="closeModal('groupModal')">&times;</span><h3>📚 TẠO NHÓM DỊCH</h3><input id="groupNameInput" placeholder="Tên nhóm"><textarea id="groupDescInput" placeholder="Mô tả" rows="3"></textarea><button id="confirmGroupBtn">TẠO NHÓM</button></div></div>
 <div id="storyModal" class="modal"><div class="modal-content"><span class="close-modal" onclick="closeModal('storyModal')">&times;</span><div id="storyDetailContent"></div><div id="storyChapters"></div><div id="storyActions"></div></div></div>
 <div id="editStoryModal" class="modal"><div class="modal-content"><span class="close-modal" onclick="closeModal('editStoryModal')">&times;</span><h2>📝 CHỈNH SỬA TRUYỆN</h2><div id="editStoryContent"></div></div></div>
@@ -1969,13 +1964,12 @@ onAuthStateChanged(auth, async (user) => {
 });
 </script>
 
-<!-- DATALIST CHO GENRE -->
 <datalist id="genreDropdown">
   <option>Action</option><option>Comedy</option><option>Romance</option>
   <option>Danmei</option><option>Yaoi</option><option>Shounen Ai</option>
   <option>Horror</option><option>Fantasy</option><option>Sci-fi</option>
   <option>School Life</option><option>Drama</option><option>Mystery</option>
-  <option>Manhwa</option><option>Manhua</option><option>Manga</option>
+  <option>Manhwa</option><option>Manhua</option>
 </datalist>
 </body>
 </html>
