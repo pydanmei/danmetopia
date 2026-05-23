@@ -214,6 +214,7 @@ body {
   cursor: pointer;
   text-decoration: none;
   color: black;
+  white-space: nowrap;
 }
 .user-area {
   display: flex;
@@ -606,7 +607,7 @@ body {
   to { transform: translateX(0); opacity: 1; }
 }
 .reader-page {
-  max-width: 900px;
+  max-width: 1000px;
   margin: 0 auto;
   padding: 20px;
 }
@@ -670,6 +671,86 @@ body {
   border-radius: 8px;
   color: white;
 }
+/* Float scroll to top button */
+.scroll-top-btn {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  width: 50px;
+  height: 50px;
+  background: #FF69B4;
+  color: black;
+  border: none;
+  border-radius: 50%;
+  font-size: 24px;
+  cursor: pointer;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+  z-index: 1000;
+  transition: all 0.3s;
+}
+.scroll-top-btn:hover {
+  background: #FF1493;
+  color: white;
+  transform: scale(1.1);
+}
+/* Footer Disclaimer */
+.footer-disclaimer {
+  background: #1a1a1a;
+  padding: 25px 20px;
+  text-align: center;
+  border-top: 1px solid #333;
+  margin-top: 50px;
+}
+.footer-disclaimer .disclaimer-content {
+  max-width: 800px;
+  margin: 0 auto;
+  font-size: 12px;
+  color: #888;
+  line-height: 1.6;
+}
+.footer-disclaimer a {
+  color: #FF69B4;
+  text-decoration: none;
+}
+.footer-disclaimer a:hover {
+  text-decoration: underline;
+}
+/* READER MODAL FULLSCREEN */
+#readerModal .modal-content {
+  max-width: 100%;
+  width: 100%;
+  height: 100%;
+  max-height: 100%;
+  border-radius: 0;
+  padding: 0;
+  background: #0f0f0f;
+}
+#readerModal {
+  background: #0f0f0f;
+}
+.close-reader {
+  position: fixed;
+  top: 15px;
+  right: 20px;
+  font-size: 28px;
+  cursor: pointer;
+  color: #aaa;
+  z-index: 1001;
+  background: rgba(0,0,0,0.5);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.close-reader:hover {
+  color: #FF69B4;
+  background: rgba(0,0,0,0.8);
+}
 @media (max-width: 600px) {
   .manga-grid {
     grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
@@ -689,6 +770,29 @@ body {
   .chapter-nav {
     flex-direction: column;
     align-items: center;
+  }
+  .logo {
+    font-size: 18px;
+    white-space: normal;
+    text-align: center;
+  }
+  .user-area {
+    justify-content: center;
+    width: 100%;
+  }
+  .scroll-top-btn {
+    bottom: 20px;
+    right: 20px;
+    width: 40px;
+    height: 40px;
+    font-size: 18px;
+  }
+  .footer-disclaimer {
+    padding: 15px;
+    margin-top: 30px;
+  }
+  .footer-disclaimer .disclaimer-content {
+    font-size: 10px;
   }
 }
 </style>
@@ -780,8 +884,21 @@ body {
 <div id="editStoryModal" class="modal"><div class="modal-content"><span class="close-modal" onclick="closeModal('editStoryModal')">&times;</span><h2>📝 CHỈNH SỬA TRUYỆN</h2><div id="editStoryContent"></div></div></div>
 <div id="addChapterModal" class="modal"><div class="modal-content"><span class="close-modal" onclick="closeModal('addChapterModal')">&times;</span><h2>📖 THÊM CHAPTER MỚI</h2><div id="addChapterContent"></div></div></div>
 <div id="editChapterModal" class="modal"><div class="modal-content"><span class="close-modal" onclick="closeModal('editChapterModal')">&times;</span><h2>✏️ CHỈNH SỬA CHAPTER</h2><div id="editChapterContent"></div></div></div>
-<div id="readerModal" class="modal"><div class="modal-content"><span class="close-modal" onclick="closeReaderModal()">&times;</span><div id="readerContent"></div></div></div>
+<div id="readerModal" class="modal"><div class="modal-content"><span class="close-modal close-reader" onclick="closeReaderModal()">&times;</span><div id="readerContent"></div></div></div>
 <div id="profileModal" class="modal"><div class="modal-content"><span class="close-modal" onclick="closeModal('profileModal')">&times;</span><h2>👤 THÔNG TIN</h2><div id="profileContent"></div></div></div>
+
+<!-- FLOAT SCROLL TO TOP BUTTON -->
+<button class="scroll-top-btn" id="scrollTopBtn">⬆️</button>
+
+<!-- FOOTER DISCLAIMER -->
+<div class="footer-disclaimer">
+  <div class="disclaimer-content">
+    <p>🌸 <strong>DANMETOPIA</strong> là nền tảng phi lợi nhuận, hoạt động với mục đích <strong>tổng hợp và chia sẻ</strong> các bộ truyện tranh từ nhiều nguồn khác nhau.</p>
+    <p style="margin:10px 0;">📌 <strong>Miễn trừ trách nhiệm:</strong> Chúng tôi không sở hữu bản quyền đối với bất kỳ nội dung nào được đăng tải. Toàn bộ bản quyền thuộc về tác giả và nhà xuất bản gốc. Nếu có bất kỳ vi phạm nào, vui lòng liên hệ để được gỡ bỏ.</p>
+    <p>📧 Liên hệ: <a href="mailto:pydanmeii@gmail.com">pydanmeii@gmail.com</a></p>
+    <p style="margin-top:10px;">© 2025 DANMETOPIA - Đọc truyện tranh online miễn phí</p>
+  </div>
+</div>
 
 <script type="module">
 // ==================== IMGBB CONFIG ====================
@@ -913,6 +1030,21 @@ function generateRandomGuestName() {
 function scheduleRender() {
   if (renderTimeout) clearTimeout(renderTimeout);
   renderTimeout = setTimeout(() => renderCurrentTab(), 150);
+}
+
+// Float scroll to top
+const scrollBtn = document.getElementById("scrollTopBtn");
+if (scrollBtn) {
+  window.addEventListener("scroll", () => {
+    if (window.scrollY > 300) {
+      scrollBtn.style.display = "flex";
+    } else {
+      scrollBtn.style.display = "none";
+    }
+  });
+  scrollBtn.addEventListener("click", () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
 }
 
 // ==================== IMGBB UPLOAD ====================
@@ -1225,10 +1357,6 @@ window.showHome = () => {
   scheduleRender();
 };
 
-window.scrollToTop = () => {
-  window.scrollTo({ top: 0, behavior: "smooth" });
-};
-
 document.getElementById("homeLogo")?.addEventListener("click", () => window.showHome());
 
 // ==================== GROUPS FUNCTIONS ====================
@@ -1430,7 +1558,6 @@ window.openAddChapter = (storyId) => {
         onEnd: () => {
           const newOrder = [];
           for (let i = 0; i < previewDiv.children.length; i++) {
-            const imgDiv = previewDiv.children[i];
             newOrder.push(selectedChapterImages[i]);
           }
           if (newOrder.length === selectedChapterImages.length) {
@@ -2021,6 +2148,10 @@ window.changeChapterTo = (index) => {
   currentChapterIndex = index;
   renderChapter();
   window.scrollTo(0, 0);
+};
+
+window.scrollToTop = () => {
+  window.scrollTo({ top: 0, behavior: "smooth" });
 };
 
 async function loadComments(storyId) {
