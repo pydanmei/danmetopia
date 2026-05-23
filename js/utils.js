@@ -2,6 +2,7 @@ import { ref, get, child, db } from './db.js';
 
 // Show notification
 export function showNotification(msg, isError = false) {
+  console.log("🔔 Notification:", msg, isError ? "ERROR" : "INFO");
   const notif = document.createElement("div");
   notif.className = "notification";
   notif.style.background = isError ? "#ff4444" : "#FF69B4";
