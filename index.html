@@ -9,6 +9,16 @@
 </head>
 <body>
 
+<!-- GLOBAL ERROR HANDLER - BẮT LỖI NGAY TỪ ĐẦU -->
+<script>
+  window.onerror = function(msg, url, line, col, error) {
+    console.error("🔥 GLOBAL ERROR:", { msg, url, line, col, error });
+    alert("Lỗi: " + msg + "\nDòng: " + line);
+    return false;
+  };
+  console.log("✅ Global error handler initialized");
+</script>
+
 <!-- Warning Overlay -->
 <div id="warningOverlay">
   <div class="warning-box">
@@ -90,7 +100,15 @@
   <div id="footer-placeholder"></div>
 </div>
 
-<!-- Modals -->
+<!-- READER MODAL - QUAN TRỌNG: PHẢI CÓ -->
+<div id="readerModal" class="modal">
+  <div class="modal-content fullscreen-reader">
+    <button class="reader-close-btn close-modal" onclick="window.closeReaderModal && window.closeReaderModal()">✕</button>
+    <div id="readerContent"></div>
+  </div>
+</div>
+
+<!-- Other Modals -->
 <div id="groupModal" class="modal"><div class="modal-content"><span class="close-modal" onclick="closeModal('groupModal')">&times;</span><h3>📚 TẠO NHÓM DỊCH</h3><input id="groupNameInput" placeholder="Tên nhóm"><textarea id="groupDescInput" placeholder="Mô tả" rows="3"></textarea><button id="confirmGroupBtn">TẠO NHÓM</button></div></div>
 <div id="storyModal" class="modal"><div class="modal-content"><span class="close-modal" onclick="closeModal('storyModal')">&times;</span><div id="storyDetailContent"></div><div id="storyChapters"></div><div id="storyActions"></div></div></div>
 <div id="editStoryModal" class="modal"><div class="modal-content"><span class="close-modal" onclick="closeModal('editStoryModal')">&times;</span><h2>📝 CHỈNH SỬA TRUYỆN</h2><div id="editStoryContent"></div></div></div>
@@ -120,24 +138,30 @@
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
 
 <script type="module">
+  console.log("🚀 App starting...");
+  
   // Import all modules
-  import { initFirebase, db, auth } from './js/db.js';
-  import { initAuth, handleGuestLogin, handleCheckEmail, handleVerifyOTP, handlePasswordLogin, handleCompleteRegistration, logout, restoreSession, currentUserData } from './js/auth.js';
-  import { loadStoriesRealtime, loadAllGroups, loadFollows, renderGenreFilter, renderCurrentTab, scheduleRender } from './js/data.js';
+  import { initFirebase, db, auth, ref, get, set, push, update, remove, onValue } from './js/db.js';
+  import { initAuth, handleGuestLogin, handleCheckEmail, handleVerifyOTP, handlePasswordLogin, handleCompleteRegistration, logout, restoreSession, currentUserData, setUserSession } from './js/auth.js';
+  import { loadStoriesRealtime, loadAllGroups, loadFollows, renderGenreFilter, renderCurrentTab, scheduleRender, allStories } from './js/data.js';
   import { initUI, closeModal, showNotification, showLoading } from './js/ui.js';
   import { initUploadPanel } from './js/upload.js';
-  import { initScrollButtons } from './js/utils.js';
+  import { initScrollButtons, escapeHtml, generateRandomGuestName, isAdmin, canModerate } from './js/utils.js';
   
-  // Global variables (for window access)
+  // Make global functions available
   window.currentUserData = currentUserData;
   window.closeModal = closeModal;
   window.showNotification = showNotification;
+  window.allStories = allStories;
+  window.isAdmin = isAdmin;
+  window.canModerate = canModerate;
   
   // EmailJS init
   emailjs.init("fPq8fpw1OqzOtj-lk");
   
   // Initialize Firebase
   initFirebase();
+  console.log("✅ Firebase initialized");
   
   // Load header and footer
   async function loadComponents() {
@@ -150,15 +174,16 @@
       const footerHtml = await footerRes.text();
       document.getElementById('footer-placeholder').innerHTML = footerHtml;
       
-      // Re-attach event listeners after loading
       attachHeaderEvents();
+      console.log("✅ Components loaded");
     } catch (err) {
       console.error('Error loading components:', err);
+      showNotification("Lỗi tải giao diện: " + err.message, true);
     }
   }
   
   function attachHeaderEvents() {
-    document.getElementById('homeLogo')?.addEventListener('click', () => window.showHome());
+    document.getElementById('homeLogo')?.addEventListener('click', () => window.location.href = 'index.html');
     document.getElementById('logoutBtn')?.addEventListener('click', logout);
     document.getElementById('profileBtn')?.addEventListener('click', () => window.openProfile());
     document.getElementById('createGroupBtn')?.addEventListener('click', () => document.getElementById('groupModal').style.display = 'flex');
@@ -167,6 +192,7 @@
   
   // Initialize app
   async function initApp() {
+    console.log("📱 Initializing app...");
     await loadComponents();
     await loadAllGroups();
     await loadFollows();
@@ -175,6 +201,7 @@
     loadStoriesRealtime();
     initScrollButtons();
     initUI();
+    console.log("✅ App initialized");
     
     // Tab switching
     document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -200,6 +227,7 @@
     localStorage.setItem('mainPasswordExpiry', (Date.now() + 24 * 60 * 60 * 1000).toString());
     document.getElementById('warningOverlay').style.display = 'none';
     document.getElementById('loginPage').style.display = 'flex';
+    console.log("✅ Password correct, showing login page");
   });
   
   document.getElementById('exitBtn')?.addEventListener('click', () => {
@@ -207,6 +235,7 @@
   });
   
   document.getElementById('guestBtn')?.addEventListener('click', async () => {
+    console.log("👤 Guest login clicked");
     await handleGuestLogin();
     await initApp();
   });
@@ -226,16 +255,33 @@
     document.getElementById('loginMsg').innerHTML = '';
   });
   
-  // Check session
-  const restored = await restoreSession();
-  if (!restored) {
-    document.getElementById('warningOverlay').style.display = 'flex';
-  } else {
-    document.getElementById('warningOverlay').style.display = 'none';
-    document.getElementById('loginPage').style.display = 'none';
-    document.getElementById('mainContainer').style.display = 'block';
-    await initApp();
+  // Check session with timeout
+  async function checkSession() {
+    try {
+      console.log("🔐 Checking session...");
+      const restored = await Promise.race([
+        restoreSession(),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('Session restore timeout')), 5000))
+      ]);
+      
+      if (!restored) {
+        console.log("⚠️ No valid session, showing warning");
+        document.getElementById('warningOverlay').style.display = 'flex';
+      } else {
+        console.log("✅ Session restored, showing main app");
+        document.getElementById('warningOverlay').style.display = 'none';
+        document.getElementById('loginPage').style.display = 'none';
+        document.getElementById('mainContainer').style.display = 'block';
+        await initApp();
+      }
+    } catch (err) {
+      console.error("Session check error:", err);
+      document.getElementById('warningOverlay').style.display = 'flex';
+      showNotification("Lỗi khôi phục phiên: " + err.message, true);
+    }
   }
+  
+  checkSession();
   
   window.showHome = () => {
     window.location.href = 'index.html';
