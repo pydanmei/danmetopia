@@ -1,18 +1,64 @@
-import { auth, db, ref, set, get, child, update, remove } from './db.js';
+import { auth, db, ref, set, get, child, update, remove } from '../core/firebase.js';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-import { showNotification, showLoading, generateRandomGuestName, getUserData, getDisplayName } from './utils.js';
-
-// Session configuration
-const SESSION_CONFIG = {
-  guest: 60 * 60 * 1000,      // 1 hour
-  user: 7 * 24 * 60 * 60 * 1000 // 7 days
-};
+import { SESSION_CONFIG, ADMIN_EMAILS } from '../core/constants.js';
+import { showNotification, showLoading, generateRandomGuestName, escapeHtml } from './utils.js';
 
 export let currentUserData = null;
 
-// Initialize auth module
-export function initAuth() {
-  console.log("🔐 Auth module initialized");
+// Get user data by UID
+export async function getUserData(uid) {
+  const snap = await get(child(ref(db), `users/${uid}`));
+  return snap.exists() ? snap.val() : null;
+}
+
+// Get user group
+export async function getUserGroup(uid) {
+  const userData = await getUserData(uid);
+  if (userData?.privileges?.groupId) {
+    const snap = await get(child(ref(db), `groups/${userData.privileges.groupId}`));
+    return snap.exists() ? { id: userData.privileges.groupId, ...snap.val() } : null;
+  }
+  return null;
+}
+
+// Get user's groups
+export async function getUserGroups(uid) {
+  const userGroups = [];
+  const groupsSnap = await get(ref(db, "groups"));
+  const groups = groupsSnap.val() || {};
+  for (const gid in groups) {
+    if (groups[gid].members && groups[gid].members.includes(uid)) {
+      userGroups.push({ id: gid, ...groups[gid] });
+    }
+  }
+  return userGroups;
+}
+
+// Get display name
+export async function getDisplayName(uid, email, userData) {
+  if (!userData) userData = await getUserData(uid);
+  if (!userData) return generateRandomGuestName();
+  const nickname = userData?.nickname || email?.split("@")[0] || "Người dùng";
+  if (userData?.role === "admin") return `${nickname} (Admin)`;
+  if (userData?.role === "user" && userData?.privileges?.moderator) return `${nickname} (Quản lý)`;
+  if (userData?.role === "user" && userData?.privileges?.groupId) {
+    const group = await getUserGroup(uid);
+    return `${nickname} (${group?.groupName || "Nhóm dịch"})`;
+  }
+  return nickname;
+}
+
+// Load user data
+export async function loadUserData(uid, email) {
+  const userData = await getUserData(uid);
+  const displayName = await getDisplayName(uid, email, userData);
+  return {
+    uid, email,
+    role: userData?.role || "user",
+    privileges: userData?.privileges || { moderator: false, groupId: null },
+    nickname: userData?.nickname,
+    displayName: displayName
+  };
 }
 
 // Set user session
@@ -74,22 +120,8 @@ export function isSessionValid() {
   }
 }
 
-// Load user data
-export async function loadUserData(uid, email) {
-  const userData = await getUserData(uid);
-  const displayName = await getDisplayName(uid, email, userData);
-  return {
-    uid, email,
-    role: userData?.role || "user",
-    privileges: userData?.privileges || { moderator: false, groupId: null },
-    nickname: userData?.nickname,
-    displayName: displayName
-  };
-}
-
 // Create new user
 async function createNewUser(uid, email, nickname) {
-  const ADMIN_EMAILS = ["pydanmeii@gmail.com", "pepyl4298@gmail.com", "maihuong4298@gmail.com"];
   const isAdminEmail = ADMIN_EMAILS.includes(email);
   await set(ref(db, `users/${uid}`), {
     email, nickname,
@@ -156,7 +188,6 @@ export async function handleCheckEmail() {
   const email = document.getElementById("loginEmail").value.trim();
   if (!email) { showNotification("Nhập email", true); return; }
   
-  const ADMIN_EMAILS = ["pydanmeii@gmail.com", "pepyl4298@gmail.com", "maihuong4298@gmail.com"];
   const isAdminEmail = ADMIN_EMAILS.includes(email);
   showLoading(true);
   const emailExists = await checkEmailExists(email);
@@ -212,7 +243,6 @@ export async function handlePasswordLogin() {
   } catch (err) {
     console.error("Login error:", err);
     if (err.code === "auth/invalid-credential") {
-      const ADMIN_EMAILS = ["pydanmeii@gmail.com", "pepyl4298@gmail.com", "maihuong4298@gmail.com"];
       const isAdminEmail = ADMIN_EMAILS.includes(email);
       if (isAdminEmail) {
         const confirmCreate = confirm("Email Admin chưa có tài khoản. Bạn có muốn tạo tài khoản Admin mới không?");
