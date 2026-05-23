@@ -1,6 +1,7 @@
 import { FirebaseService } from '../core/firebaseService.js';
 import { state, setState } from '../core/state.js';
-import { refreshUserSession, getUserGroups } from './auth.js';
+import { currentUserData, refreshUserSession } from './auth.js';
+import { getUserGroups } from './utils.js';
 import { isAdmin, canModerate, hasGroup, showNotification, showLoading, escapeHtml } from './utils.js';
 import { getChapters, followStory, unfollowStory, isFollowing, likeStory, approveStory, rejectStory, deleteStory } from './data.js';
 import { uploadImage } from './upload.js';
