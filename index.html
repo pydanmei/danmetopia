@@ -542,14 +542,15 @@ body {
   padding: 10px 15px;
   margin-bottom: 8px;
   border-radius: 8px;
-  cursor: pointer;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
 }
-.chapter-item:hover {
-  background: #FF69B4;
-  color: black;
+.chapter-item > div:first-child {
+  flex: 1;
+  cursor: pointer;
 }
 .chapter-actions {
   display: flex;
@@ -653,6 +654,10 @@ body {
   }
   .story-detail-grid {
     grid-template-columns: 1fr;
+  }
+  .chapter-item {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }
 </style>
@@ -1353,24 +1358,35 @@ async function updateChapter(storyId, chapterId, data) {
   showNotification("✅ Đã cập nhật chapter");
 }
 
-async function deleteChapter(storyId, chapterId) {
+window.deleteChapter = async (storyId, chapterId) => {
+  console.log("🗑 deleteChapter called - storyId:", storyId, "chapterId:", chapterId);
+  console.log("Current user:", currentUserData);
+  
   // CHỈ ADMIN MỚI ĐƯỢC XÓA
-  if (!isAdmin(currentUserData)) {
+  if (!currentUserData || !isAdmin(currentUserData)) {
     showNotification("⚠️ Chỉ Admin mới có quyền xóa chapter!", true);
     return;
   }
   
   if (!confirm("Xóa chapter này? Hành động không thể hoàn tác!")) return;
   
-  await remove(ref(db, `chapters/${storyId}/${chapterId}`));
-  const storyRef = ref(db, `stories/${storyId}/chapters`);
-  const snap = await get(storyRef);
-  const chapters = snap.val() || {};
-  delete chapters[chapterId];
-  await set(storyRef, chapters);
-  showNotification("✅ Đã xóa chapter");
-  openStoryDetail(storyId);
-}
+  try {
+    await remove(ref(db, `chapters/${storyId}/${chapterId}`));
+    
+    // Cập nhật lại danh sách chapters trong story
+    const storyRef = ref(db, `stories/${storyId}/chapters`);
+    const snap = await get(storyRef);
+    const chapters = snap.val() || {};
+    delete chapters[chapterId];
+    await set(storyRef, chapters);
+    
+    showNotification("✅ Đã xóa chapter thành công!");
+    openStoryDetail(storyId);
+  } catch (err) {
+    console.error("Delete chapter error:", err);
+    showNotification("Lỗi khi xóa chapter: " + err.message, true);
+  }
+};
 
 window.openAddChapter = (storyId) => {
   selectedChapterImages = [];
@@ -1380,7 +1396,7 @@ window.openAddChapter = (storyId) => {
     <input id="chapterNumber" placeholder="Số chapter (để trống tự động tăng)">
     <input type="file" id="chapterImages" accept="image/*" multiple>
     <div id="chapterImagesPreview" class="images-preview"></div>
-    <textarea id="chapterPages" placeholder="Hoặc nhập link ảnh (mỗi dòng 1 link)" rows="5"></textarea>
+    <textarea id="chapterPages" placeholder="Hoặc nhập link ảnh (mỗi dòng 1 link)" rows="10"></textarea>
     <button class="btn-pink" id="saveChapterBtn">📤 ĐĂNG CHAPTER</button>
   `;
   
@@ -1464,8 +1480,14 @@ window.saveAddChapter = async (storyId) => {
 };
 
 window.openEditChapter = async (storyId, chapterId) => {
+  console.log("✏️ openEditChapter called - storyId:", storyId, "chapterId:", chapterId);
+  console.log("Current user:", currentUserData);
+  
   const story = allStories.find(s => s.id === storyId);
-  if (!story) return;
+  if (!story) {
+    showNotification("Không tìm thấy truyện!", true);
+    return;
+  }
   
   // Kiểm tra quyền sửa chapter: Admin hoặc thành viên nhóm dịch hoặc chủ truyện
   const canEdit = currentUserData && (isAdmin(currentUserData) || (currentUserData.privileges?.groupId && story.groupId === currentUserData.privileges?.groupId) || story.ownerUid === currentUserData?.uid);
@@ -1476,37 +1498,82 @@ window.openEditChapter = async (storyId, chapterId) => {
   }
   
   const chapter = await getChapter(storyId, chapterId);
-  if (!chapter) return;
+  if (!chapter) {
+    showNotification("Không tìm thấy chapter!", true);
+    return;
+  }
   
   document.getElementById("editChapterContent").innerHTML = `
     <input id="editChapterTitle" value="${escapeHtml(chapter.title)}" placeholder="Tên chapter *">
     <input id="editChapterNumber" value="${chapter.chapterNumber || 0}" placeholder="Số chapter" type="number">
-    <textarea id="editChapterPages" placeholder="Link ảnh (mỗi dòng 1 link)" rows="5">${chapter.pages ? chapter.pages.join('\n') : ''}</textarea>
-    <button class="btn-pink" id="saveChapterEditBtn">💾 LƯU THAY ĐỔI</button>
+    <textarea id="editChapterPages" placeholder="Link ảnh (mỗi dòng 1 link)" rows="10">${chapter.pages ? chapter.pages.join('\n') : ''}</textarea>
+    <div style="margin-top:10px;">
+      <label style="color:#FF69B4;">📷 Hoặc chọn ảnh mới từ máy tính (thêm vào cuối danh sách):</label>
+      <input type="file" id="editNewChapterImages" accept="image/*" multiple>
+      <div id="editNewChapterPreview" class="images-preview"></div>
+    </div>
+    <button class="btn-pink" id="saveChapterEditBtn" style="margin-top:15px;">💾 LƯU THAY ĐỔI</button>
   `;
   
-  document.getElementById("saveChapterEditBtn")?.addEventListener("click", async () => {
-    const newTitle = document.getElementById("editChapterTitle").value;
-    const newNumber = parseInt(document.getElementById("editChapterNumber").value) || 0;
-    const newPages = document.getElementById("editChapterPages").value.split('\n').filter(p => p.trim());
-    
-    if (!newTitle) {
-      showNotification("Nhập tên chapter", true);
-      return;
+  let newImageFiles = [];
+  document.getElementById("editNewChapterImages")?.addEventListener("change", (e) => {
+    const files = Array.from(e.target.files);
+    newImageFiles = files;
+    const previewDiv = document.getElementById("editNewChapterPreview");
+    previewDiv.innerHTML = "";
+    for (const file of files) {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const imgDiv = document.createElement("div");
+        imgDiv.style.position = "relative";
+        imgDiv.style.display = "inline-block";
+        imgDiv.innerHTML = `<img class="img-preview-item" src="${ev.target.result}"><button onclick="this.parentElement.remove()">✕</button>`;
+        previewDiv.appendChild(imgDiv);
+      };
+      reader.readAsDataURL(file);
     }
-    if (newPages.length === 0) {
-      showNotification("Thêm ít nhất 1 ảnh", true);
-      return;
-    }
-    
-    await updateChapter(storyId, chapterId, {
-      title: newTitle,
-      chapterNumber: newNumber,
-      pages: newPages
-    });
-    closeModal("editChapterModal");
-    openStoryDetail(storyId);
   });
+  
+  const saveBtn = document.getElementById("saveChapterEditBtn");
+  if (saveBtn) {
+    const newBtn = saveBtn.cloneNode(true);
+    saveBtn.parentNode.replaceChild(newBtn, saveBtn);
+    newBtn.addEventListener("click", async () => {
+      const newTitle = document.getElementById("editChapterTitle").value;
+      const newNumber = parseInt(document.getElementById("editChapterNumber").value) || 0;
+      let newPages = document.getElementById("editChapterPages").value.split('\n').filter(p => p.trim());
+      
+      if (!newTitle) {
+        showNotification("Nhập tên chapter", true);
+        return;
+      }
+      
+      // Upload ảnh mới nếu có
+      if (newImageFiles.length > 0) {
+        showLoading(true);
+        showNotification(`📤 Đang upload ${newImageFiles.length} ảnh mới...`, false);
+        const newImageUrls = await uploadMultipleImages(newImageFiles);
+        if (newImageUrls && newImageUrls.length > 0) {
+          newPages = [...newPages, ...newImageUrls];
+        }
+        showLoading(false);
+      }
+      
+      if (newPages.length === 0) {
+        showNotification("Thêm ít nhất 1 ảnh", true);
+        return;
+      }
+      
+      await updateChapter(storyId, chapterId, {
+        title: newTitle,
+        chapterNumber: newNumber,
+        pages: newPages
+      });
+      closeModal("editChapterModal");
+      showNotification("✅ Đã cập nhật chapter!");
+      openStoryDetail(storyId);
+    });
+  }
   
   document.getElementById("editChapterModal").style.display = "flex";
 };
@@ -1642,7 +1709,7 @@ window.openStoryDetail = async (storyId) => {
   chapters.forEach((chap) => {
     chaptersHtml += `
       <div class="chapter-item">
-        <div style="flex:1; cursor:pointer;" onclick="openReader('${storyId}', ${chap.chapterNumber - 1})">
+        <div onclick="openReader('${storyId}', ${chap.chapterNumber - 1})">
           <span>${escapeHtml(chap.title)}</span>
           <span style="font-size:12px; color:#888;">📅 ${new Date(chap.createdAt).toLocaleDateString()}</span>
         </div>
