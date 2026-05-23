@@ -6,7 +6,7 @@
   <title>🌸 DANMETOPIA - Quản lý nhóm 🌸</title>
   <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body data-page="groups">
   <div id="mainContainer">
     <div id="header-placeholder"></div>
     
@@ -29,30 +29,30 @@
   
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
   <script type="module">
-    import { initFirebase, db, ref, get, update, push, set } from './js/db.js';
-    import { initAuth, restoreSession, currentUserData } from './js/auth.js';
-    import { escapeHtml, showNotification, getUserGroups } from './js/utils.js';
-    import { initUI } from './js/ui.js';
+    import { API } from './js/core/api.js';
+    import { state } from './js/core/state.js';
+    import { FirebaseService } from './js/core/firebaseService.js';
     
-    initFirebase();
+    const { db, ref, get } = FirebaseService;
+    
     emailjs.init("fPq8fpw1OqzOtj-lk");
     
     async function loadGroups() {
-      if (!currentUserData) return;
+      if (!state.currentUser) return;
       
       const groupsSnap = await get(ref(db, 'groups'));
       const allGroups = groupsSnap.val() || {};
       
-      const userGroups = await getUserGroups(currentUserData.uid);
+      const userGroups = await API.getUserGroups(state.currentUser.uid);
       const myGroupsDiv = document.getElementById('myGroupsList');
       if (userGroups.length === 0) {
         myGroupsDiv.innerHTML = '<p>Bạn chưa tham gia nhóm nào</p>';
       } else {
         myGroupsDiv.innerHTML = userGroups.map(group => `
           <div class="group-card" style="background:#2a2a2a; margin:10px 0; padding:15px; border-radius:12px;">
-            <strong>${escapeHtml(group.groupName)}</strong>
-            <p>${escapeHtml(group.description) || 'Chưa có mô tả'}</p>
-            ${group.ownerId === currentUserData.uid ? '<span style="color:#FF69B4;">👑 Chủ nhóm</span>' : ''}
+            <strong>${API.escapeHtml(group.groupName)}</strong>
+            <p>${API.escapeHtml(group.description) || 'Chưa có mô tả'}</p>
+            ${group.ownerId === state.currentUser.uid ? '<span style="color:#FF69B4;">👑 Chủ nhóm</span>' : ''}
           </div>
         `).join('');
       }
@@ -61,8 +61,8 @@
       const allGroupsArray = Object.entries(allGroups).map(([id, g]) => ({ id, ...g }));
       allGroupsDiv.innerHTML = allGroupsArray.map(group => `
         <div class="group-card" style="background:#2a2a2a; margin:10px 0; padding:15px; border-radius:12px;">
-          <strong>${escapeHtml(group.groupName)}</strong>
-          <p>${escapeHtml(group.description) || 'Chưa có mô tả'}</p>
+          <strong>${API.escapeHtml(group.groupName)}</strong>
+          <p>${API.escapeHtml(group.description) || 'Chưa có mô tả'}</p>
           <div style="font-size:12px; color:#888;">Thành viên: ${group.members?.length || 0}</div>
           <button onclick="requestJoinGroup('${group.id}')" class="btn-pink" style="margin-top:10px;">➕ Tham gia</button>
         </div>
@@ -70,7 +70,7 @@
     }
     
     window.requestJoinGroup = async (groupId) => {
-      showNotification('Chức năng đang phát triển');
+      API.showNotification('Chức năng đang phát triển');
     };
     
     async function loadComponents() {
@@ -85,12 +85,11 @@
       document.getElementById('homeLogo')?.addEventListener('click', () => window.location.href = 'index.html');
     }
     
-    const restored = await restoreSession();
+    const restored = await API.restoreSession();
     if (!restored) {
       window.location.href = 'index.html';
     } else {
       await loadComponents();
-      initUI();
       await loadGroups();
     }
   </script>
