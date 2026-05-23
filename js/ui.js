@@ -1,8 +1,11 @@
-import { db, ref, get, update, push, set } from './db.js';
+import { initFirebase, db, ref, get, update, push, set } from './db.js';
 import { currentUserData, refreshUserSession } from './auth.js';
 import { isAdmin, isModerator, canModerate, hasGroup, getUserGroups, escapeHtml, showNotification, showLoading } from './utils.js';
 import { allStories, getChapters, getChapter, followStory, unfollowStory, isFollowing, likeStory, approveStory, rejectStory, deleteStory, userFollows } from './data.js';
 import { uploadImage } from './upload.js';
+
+// Initialize Firebase
+initFirebase();
 
 // Get user group options
 export async function getUserGroupOptions() {
