@@ -263,6 +263,13 @@ body {
   .footer-disclaimer .disclaimer-content {
     font-size: 10px;
   }
+  .reader-scroll-top {
+    bottom: 70px;
+    right: 15px;
+    width: 40px;
+    height: 40px;
+    font-size: 20px;
+  }
 }
 .user-area {
   display: flex;
@@ -750,6 +757,31 @@ body {
   color: white;
   transform: scale(1.1);
 }
+/* Floating scroll to top button inside reader */
+.reader-scroll-top {
+  position: fixed;
+  bottom: 80px;
+  right: 20px;
+  width: 45px;
+  height: 45px;
+  background: rgba(255,105,180,0.3);
+  backdrop-filter: blur(5px);
+  color: #FF69B4;
+  border: 1px solid rgba(255,105,180,0.5);
+  border-radius: 12px;
+  font-size: 24px;
+  cursor: pointer;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 1002;
+  transition: all 0.3s;
+}
+.reader-scroll-top:hover {
+  background: rgba(255,105,180,0.6);
+  color: white;
+  transform: scale(1.05);
+}
 /* Footer Disclaimer */
 .footer-disclaimer {
   background: #1a1a1a;
@@ -982,10 +1014,6 @@ function checkUserSession() {
   const expiry = localStorage.getItem(LOGIN_SESSION_KEY);
   if (!expiry) return false;
   return Date.now() < parseInt(expiry);
-}
-
-function clearMainPasswordSession() {
-  localStorage.removeItem(MAIN_PASSWORD_SESSION_KEY);
 }
 
 function clearUserSession() {
@@ -1256,6 +1284,8 @@ async function handleCheckEmail() {
     pendingRegisterEmail = email;
     document.getElementById("passwordGroup").style.display = "block";
     document.getElementById("otpGroup").style.display = "none";
+    document.getElementById("loginMsg").innerHTML = "";
+    document.getElementById("loginMsg").style.color = "#FF69B4";
     document.getElementById("loginMsg").innerHTML = "👑 Email Admin, vui lòng nhập mật khẩu";
     return;
   }
@@ -1270,6 +1300,8 @@ async function handleCheckEmail() {
     await sendOTPEmail(email);
     document.getElementById("otpGroup").style.display = "block";
     document.getElementById("passwordGroup").style.display = "none";
+    document.getElementById("loginMsg").innerHTML = "";
+    document.getElementById("loginMsg").style.color = "#FF69B4";
     document.getElementById("loginMsg").innerHTML = "📩 Mã OTP đã gửi, vui lòng kiểm tra email";
   }
 }
@@ -1302,6 +1334,7 @@ async function handlePasswordLogin() {
     showNotification(`✅ Chào mừng ${currentUserData.displayName}`);
     initApp();
   } catch (err) {
+    console.error("Login error:", err);
     if (err.code === "auth/invalid-credential") {
       const isAdminEmail = ADMIN_EMAILS.includes(email);
       if (isAdminEmail) {
@@ -1317,6 +1350,8 @@ async function handlePasswordLogin() {
       } else {
         showNotification("Sai email hoặc mật khẩu", true);
       }
+    } else if (err.code === "auth/user-not-found") {
+      showNotification("Email chưa được đăng ký. Vui lòng đăng ký trước.", true);
     } else {
       showNotification("Lỗi: " + err.message, true);
     }
@@ -1366,7 +1401,7 @@ async function restoreSession() {
       document.getElementById("mainContainer").style.display = "block";
       initApp();
       return true;
-    } else if (data.uid) {
+    } else if (data.uid && data.email) {
       currentUserData = await loadUserData(data.uid, data.email);
       localStorage.setItem("userSession", JSON.stringify(currentUserData));
       document.getElementById("warningOverlay").style.display = "none";
@@ -1381,7 +1416,6 @@ async function restoreSession() {
 
 async function logout() {
   await signOut(auth);
-  clearMainPasswordSession();
   clearUserSession();
   localStorage.removeItem("userSession");
   window.location.reload();
@@ -2077,13 +2111,46 @@ window.saveEditStory = async (storyId) => {
 
 // ==================== READER ====================
 let currentReaderStoryId = null, currentChapters = [], currentChapterIndex = 0;
+let readerScrollTopBtn = null;
+
 function closeReaderModal() {
   document.getElementById("readerModal").style.display = "none";
   if (chaptersUnsubscribe) chaptersUnsubscribe();
   if (commentsUnsubscribe) commentsUnsubscribe();
   currentReaderStoryId = null;
+  if (readerScrollTopBtn) {
+    readerScrollTopBtn.remove();
+    readerScrollTopBtn = null;
+  }
 }
 window.closeReaderModal = closeReaderModal;
+
+function addReaderScrollTopButton() {
+  if (readerScrollTopBtn) return;
+  readerScrollTopBtn = document.createElement("button");
+  readerScrollTopBtn.className = "reader-scroll-top";
+  readerScrollTopBtn.innerHTML = "↑";
+  readerScrollTopBtn.title = "Lên đầu trang";
+  readerScrollTopBtn.onclick = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    const readerPage = document.querySelector('.reader-page');
+    if (readerPage) {
+      readerPage.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+  document.body.appendChild(readerScrollTopBtn);
+  
+  // Show/hide based on scroll position
+  window.addEventListener("scroll", () => {
+    if (readerScrollTopBtn) {
+      if (window.scrollY > 300) {
+        readerScrollTopBtn.style.display = "flex";
+      } else {
+        readerScrollTopBtn.style.display = "none";
+      }
+    }
+  });
+}
 
 window.openReader = async (storyId, chapterIndex) => {
   console.log("📖 openReader called - storyId:", storyId, "chapterIndex:", chapterIndex);
@@ -2122,6 +2189,7 @@ window.openReader = async (storyId, chapterIndex) => {
   });
   
   document.getElementById("readerModal").style.display = "flex";
+  addReaderScrollTopButton();
 };
 
 function renderChapter() {
@@ -2196,7 +2264,9 @@ window.changeChapter = (delta) => {
     currentChapterIndex = newIdx;
     renderChapter();
     // Scroll to top immediately when changing chapter
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setTimeout(() => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, 50);
   }
 };
 
@@ -2204,16 +2274,16 @@ window.changeChapterTo = (index) => {
   currentChapterIndex = index;
   renderChapter();
   // Scroll to top immediately when changing chapter
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  setTimeout(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, 50);
 };
 
 window.scrollToTopReader = () => {
-  // Find the reader-page element and scroll to it
+  window.scrollTo({ top: 0, behavior: 'smooth' });
   const readerPage = document.querySelector('.reader-page');
   if (readerPage) {
     readerPage.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  } else {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 };
 
@@ -2487,23 +2557,15 @@ document.addEventListener("DOMContentLoaded", async () => {
   
   document.getElementById("warningContinueBtn")?.addEventListener("click", () => {
     const mainPass = document.getElementById("mainPassword").value;
-    console.log("🔑 Mật khẩu nhập:", mainPass);
     
     if (mainPass !== MAIN_PASSWORD) {
-      showNotification("❌ Sai mật khẩu chính! Mật khẩu đúng là: " + MAIN_PASSWORD, true);
+      showNotification("❌ Sai mật khẩu chính!", true);
       return;
     }
     
     setMainPasswordSession();
-    
-    const guestName = generateRandomGuestName();
-    currentUserData = { role: "guest", displayName: guestName, nickname: guestName };
-    localStorage.setItem("userSession", JSON.stringify(currentUserData));
-    setUserSession(false);
-    
     document.getElementById("warningOverlay").style.display = "none";
     document.getElementById("loginPage").style.display = "flex";
-    showNotification(`👤 Chào mừng ${guestName} (Khách)`);
   });
   
   document.getElementById("exitBtn")?.addEventListener("click", () => {
@@ -2517,10 +2579,12 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("completeRegisterBtn")?.addEventListener("click", handleCompleteRegistration);
   document.getElementById("backToEmailBtn")?.addEventListener("click", () => {
     document.getElementById("otpGroup").style.display = "none";
+    document.getElementById("passwordGroup").style.display = "none";
     document.getElementById("loginMsg").innerHTML = "";
   });
   document.getElementById("backToEmailBtn2")?.addEventListener("click", () => {
     document.getElementById("passwordGroup").style.display = "none";
+    document.getElementById("otpGroup").style.display = "none";
     document.getElementById("loginMsg").innerHTML = "";
   });
   document.getElementById("logoutBtn")?.addEventListener("click", logout);
@@ -2540,8 +2604,14 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("searchInput")?.addEventListener("input", () => scheduleRender());
   document.getElementById("sortFilter")?.addEventListener("change", () => scheduleRender());
   
-  const restored = await restoreSession();
-  if (!restored) {
+  // Check if user has already entered main password
+  if (checkMainPasswordSession()) {
+    const restored = await restoreSession();
+    if (!restored) {
+      document.getElementById("warningOverlay").style.display = "none";
+      document.getElementById("loginPage").style.display = "flex";
+    }
+  } else {
     document.getElementById("warningOverlay").style.display = "flex";
   }
 });
