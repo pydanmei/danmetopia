@@ -1,52 +1,66 @@
 // ==================== CORE IMPORTS ====================
-import { db, auth } from './core/firebase.js';
-import { ADMIN_EMAILS } from './core/constants.js';
+import { FirebaseService } from './core/firebaseService.js';
+import { API } from './core/api.js';
+import { state, subscribe, setState } from './core/state.js';
+import { ADMIN_EMAILS, GENRE_LIST, SESSION_CONFIG, IMGBB_API_KEY } from './core/constants.js';
 
 // ==================== MODULES IMPORTS ====================
 import { 
-  currentUserData, setUserSession, refreshUserSession,
   handleGuestLogin, handleCheckEmail, handleVerifyOTP, 
   handlePasswordLogin, handleCompleteRegistration, 
-  logout, restoreSession, getUserData, loadUserData 
+  logout, restoreSession, refreshUserSession,
+  setUserSession, getUserData, loadUserData 
 } from './modules/auth.js';
 
 import { 
-  allStories, loadStoriesRealtime, loadAllGroups, loadFollows,
-  renderGenreFilter, renderCurrentTab, scheduleRender 
+  loadStoriesRealtime, loadAllGroups, loadFollows,
+  renderGenreFilter, renderCurrentTab, scheduleRender,
+  followStory, unfollowStory, likeStory, approveStory, rejectStory, deleteStory,
+  getChapters 
 } from './modules/data.js';
 
 import { 
-  initUI, closeModal, showNotification, showLoading, 
-  openStoryDetail, openEditStory, saveEditStory, 
-  openProfile, saveProfile, createNewGroup, updateUserDisplay 
+  initUI, closeModal, openStoryDetail, openEditStory, saveEditStory,
+  openProfile, saveProfile, createNewGroup 
 } from './modules/ui.js';
 
-import { initUploadPanel } from './modules/upload.js';
-import { initScrollButtons, escapeHtml, generateRandomGuestName, isAdmin, canModerate } from './modules/utils.js';
+import { initUploadPanel, uploadImage, uploadMultipleImages, createStory } from './modules/upload.js';
+import { initScrollButtons, showNotification, showLoading, escapeHtml, generateRandomGuestName, isAdmin, canModerate, hasGroup, imageCache } from './modules/utils.js';
 import { openReader, closeReaderModal, changeChapter, changeChapterTo, scrollToTop } from './modules/reader.js';
 
-// ==================== GLOBAL EXPORTS ====================
-window.currentUserData = currentUserData;
-window.closeModal = closeModal;
-window.showNotification = showNotification;
-window.allStories = allStories;
-window.isAdmin = isAdmin;
-window.canModerate = canModerate;
-window.refreshUserSession = refreshUserSession;
-window.openStoryDetail = openStoryDetail;
-window.openEditStory = openEditStory;
-window.saveEditStory = saveEditStory;
-window.openProfile = openProfile;
-window.saveProfile = saveProfile;
-window.createNewGroup = createNewGroup;
-window.openReader = openReader;
-window.closeReaderModal = closeReaderModal;
-window.changeChapter = changeChapter;
-window.changeChapterTo = changeChapterTo;
-window.scrollToTop = scrollToTop;
+// ==================== GLOBAL API (window.API) ====================
+window.API = {
+  // Auth
+  handleGuestLogin, handleCheckEmail, handleVerifyOTP,
+  handlePasswordLogin, handleCompleteRegistration, logout,
+  restoreSession, refreshUserSession, setUserSession,
+  getUserData, loadUserData,
+  
+  // Data
+  loadStoriesRealtime, loadAllGroups, loadFollows,
+  renderGenreFilter, renderCurrentTab, scheduleRender,
+  followStory, unfollowStory, likeStory, approveStory, rejectStory, deleteStory,
+  getChapters,
+  
+  // UI
+  initUI, closeModal, openStoryDetail, openEditStory, saveEditStory,
+  openProfile, saveProfile, createNewGroup,
+  
+  // Upload
+  initUploadPanel, uploadImage, uploadMultipleImages, createStory,
+  
+  // Utils
+  initScrollButtons, showNotification, showLoading, escapeHtml,
+  generateRandomGuestName, isAdmin, canModerate, hasGroup,
+  
+  // Reader
+  openReader, closeReaderModal, changeChapter, changeChapterTo, scrollToTop
+};
 
 // ==================== INITIALIZATION ====================
 console.log("🚀 App starting...");
+console.log("✅ Firebase ready");
+console.log("✅ State ready");
 
 // EmailJS init
 emailjs.init("fPq8fpw1OqzOtj-lk");
@@ -72,23 +86,23 @@ async function loadComponents() {
 
 function attachHeaderEvents() {
   document.getElementById('homeLogo')?.addEventListener('click', () => window.location.href = 'index.html');
-  document.getElementById('logoutBtn')?.addEventListener('click', logout);
-  document.getElementById('profileBtn')?.addEventListener('click', () => window.openProfile());
+  document.getElementById('logoutBtn')?.addEventListener('click', () => API.logout());
+  document.getElementById('profileBtn')?.addEventListener('click', () => API.openProfile());
   document.getElementById('createGroupBtn')?.addEventListener('click', () => document.getElementById('groupModal').style.display = 'flex');
-  document.getElementById('confirmGroupBtn')?.addEventListener('click', () => window.createNewGroup());
+  document.getElementById('confirmGroupBtn')?.addEventListener('click', () => API.createNewGroup());
 }
 
 // Initialize app
 async function initApp() {
   console.log("📱 Initializing app...");
   await loadComponents();
-  await loadAllGroups();
-  await loadFollows();
-  renderGenreFilter();
-  initUploadPanel();
-  loadStoriesRealtime();
-  initScrollButtons();
-  initUI();
+  await API.loadAllGroups();
+  await API.loadFollows();
+  API.renderGenreFilter();
+  API.initUploadPanel();
+  API.loadStoriesRealtime();
+  API.initScrollButtons();
+  API.initUI();
   await updateUserDisplay();
   console.log("✅ App initialized");
   
@@ -98,13 +112,43 @@ async function initApp() {
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       window.currentTab = btn.dataset.tab;
-      scheduleRender();
+      API.scheduleRender();
     });
   });
   
-  document.getElementById('searchInput')?.addEventListener('input', () => scheduleRender());
-  document.getElementById('sortFilter')?.addEventListener('change', () => scheduleRender());
+  document.getElementById('searchInput')?.addEventListener('input', () => API.scheduleRender());
+  document.getElementById('sortFilter')?.addEventListener('change', () => API.scheduleRender());
 }
+
+// Update user display
+async function updateUserDisplay() {
+  const userDisplay = document.getElementById("userDisplay");
+  const groupsLink = document.getElementById("groupsLink");
+  const profileBtn = document.getElementById("profileBtn");
+  const logoutBtn = document.getElementById("logoutBtn");
+  const createGroupBtn = document.getElementById("createGroupBtn");
+  const adminLink = document.getElementById("adminLink");
+  
+  if (!userDisplay) return;
+  if (!state.currentUser || state.currentUser.role === "guest") {
+    userDisplay.innerHTML = `👤 ${escapeHtml(state.currentUser?.displayName || "Guest")}`;
+    if (groupsLink) groupsLink.style.display = "inline-block";
+    if (profileBtn) profileBtn.style.display = "none";
+    if (logoutBtn) logoutBtn.style.display = "none";
+    if (createGroupBtn) createGroupBtn.style.display = "none";
+    if (adminLink) adminLink.style.display = "none";
+  } else {
+    userDisplay.innerHTML = `👤 ${escapeHtml(state.currentUser.displayName)}`;
+    if (groupsLink) groupsLink.style.display = "inline-block";
+    if (profileBtn) profileBtn.style.display = "inline-block";
+    if (logoutBtn) logoutBtn.style.display = "inline-block";
+    if (createGroupBtn) createGroupBtn.style.display = !hasGroup(state.currentUser) ? "inline-block" : "none";
+    if (adminLink) adminLink.style.display = canModerate(state.currentUser) ? "inline-block" : "none";
+  }
+}
+
+// Subscribe to state changes
+subscribe('currentUser', () => updateUserDisplay());
 
 // ==================== WARNING & LOGIN FLOW ====================
 document.getElementById('warningContinueBtn')?.addEventListener('click', () => {
@@ -125,14 +169,14 @@ document.getElementById('exitBtn')?.addEventListener('click', () => {
 
 document.getElementById('guestBtn')?.addEventListener('click', async () => {
   console.log("👤 Guest login clicked");
-  await handleGuestLogin();
+  await API.handleGuestLogin();
   await initApp();
 });
 
-document.getElementById('checkEmailBtn')?.addEventListener('click', handleCheckEmail);
-document.getElementById('verifyOtpBtn')?.addEventListener('click', handleVerifyOTP);
-document.getElementById('passwordLoginBtn')?.addEventListener('click', handlePasswordLogin);
-document.getElementById('completeRegisterBtn')?.addEventListener('click', handleCompleteRegistration);
+document.getElementById('checkEmailBtn')?.addEventListener('click', API.handleCheckEmail);
+document.getElementById('verifyOtpBtn')?.addEventListener('click', API.handleVerifyOTP);
+document.getElementById('passwordLoginBtn')?.addEventListener('click', API.handlePasswordLogin);
+document.getElementById('completeRegisterBtn')?.addEventListener('click', API.handleCompleteRegistration);
 
 document.getElementById('backToEmailBtn')?.addEventListener('click', () => {
   document.getElementById('otpGroup').style.display = 'none';
@@ -149,7 +193,7 @@ async function checkSession() {
   try {
     console.log("🔐 Checking session...");
     const restored = await Promise.race([
-      restoreSession(),
+      API.restoreSession(),
       new Promise((resolve) => setTimeout(() => resolve(false), 5000))
     ]);
     
