@@ -14,7 +14,6 @@ const firebaseConfig = {
 
 // ✅ CHỈ INIT 1 LẦN DUY NHẤT
 const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
-
 export const auth = getAuth(app);
 export const db = getDatabase(app);
 
