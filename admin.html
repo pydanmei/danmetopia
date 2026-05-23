@@ -3,10 +3,10 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>🌸 DANMETOPIA - Trang quản trị 🌸</title>
+  <title>🌸 DANMETOPIA - Admin Panel</title>
   <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body data-page="admin">
   <div id="mainContainer">
     <div id="header-placeholder"></div>
     
@@ -22,11 +22,6 @@
         <h3>👥 Quản lý người dùng</h3>
         <div id="usersList"></div>
       </div>
-      
-      <div class="admin-section">
-        <h3>📖 Quản lý chapter</h3>
-        <div id="chaptersList"></div>
-      </div>
     </div>
     
     <div id="footer-placeholder"></div>
@@ -34,16 +29,16 @@
   
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
   <script type="module">
-    import { initFirebase, db, ref, get, update, remove } from './js/db.js';
-    import { initAuth, restoreSession, currentUserData } from './js/auth.js';
-    import { isAdmin, escapeHtml, showNotification } from './js/utils.js';
-    import { initUI } from './js/ui.js';
+    import { API } from './js/core/api.js';
+    import { state } from './js/core/state.js';
+    import { FirebaseService } from './js/core/firebaseService.js';
     
-    initFirebase();
+    const { db, ref, get, update } = FirebaseService;
+    
     emailjs.init("fPq8fpw1OqzOtj-lk");
     
     async function loadAdminData() {
-      if (!currentUserData || !isAdmin(currentUserData)) {
+      if (!state.currentUser || !API.isAdmin(state.currentUser)) {
         window.location.href = 'index.html';
         return;
       }
@@ -59,10 +54,10 @@
       } else {
         pendingDiv.innerHTML = pending.map(([id, story]) => `
           <div class="admin-story-item" style="background:#2a2a2a; margin:10px 0; padding:15px; border-radius:12px;">
-            <strong>${escapeHtml(story.title)}</strong> - by ${escapeHtml(story.ownerNickname)}
+            <strong>${API.escapeHtml(story.title)}</strong> - by ${API.escapeHtml(story.ownerNickname)}
             <div style="margin-top:10px;">
-              <button onclick="approveStory('${id}')" class="btn-pink">✅ Duyệt</button>
-              <button onclick="rejectStory('${id}')" class="btn-red">❌ Từ chối</button>
+              <button onclick="API.approveStory('${id}')" class="btn-pink">✅ Duyệt</button>
+              <button onclick="API.rejectStory('${id}')" class="btn-red">❌ Từ chối</button>
             </div>
           </div>
         `).join('');
@@ -74,7 +69,7 @@
       const usersList = document.getElementById('usersList');
       usersList.innerHTML = Object.entries(users).map(([uid, user]) => `
         <div class="admin-user-item" style="background:#2a2a2a; margin:10px 0; padding:15px; border-radius:12px;">
-          <div><strong>${escapeHtml(user.nickname)}</strong> - ${escapeHtml(user.email)}</div>
+          <div><strong>${API.escapeHtml(user.nickname)}</strong> - ${API.escapeHtml(user.email)}</div>
           <div>Role: ${user.role}</div>
           <div style="margin-top:10px;">
             <button onclick="promoteToMod('${uid}')" class="btn-pink">⭐ Thành Mod</button>
@@ -84,31 +79,18 @@
       `).join('');
     }
     
-    window.approveStory = async (storyId) => {
-      await update(ref(db, `stories/${storyId}`), { approved: true });
-      showNotification('Đã duyệt truyện');
-      loadAdminData();
-    };
-    
-    window.rejectStory = async (storyId) => {
-      await update(ref(db, `stories/${storyId}`), { approved: false });
-      showNotification('Đã từ chối truyện');
-      loadAdminData();
-    };
-    
     window.promoteToMod = async (uid) => {
       await update(ref(db, `users/${uid}/privileges`), { moderator: true });
-      showNotification('Đã nâng cấp thành Mod');
+      API.showNotification('Đã nâng cấp thành Mod');
       loadAdminData();
     };
     
     window.demoteUser = async (uid) => {
       await update(ref(db, `users/${uid}/privileges`), { moderator: false });
-      showNotification('Đã hạ cấp user');
+      API.showNotification('Đã hạ cấp user');
       loadAdminData();
     };
     
-    // Load header/footer and init
     async function loadComponents() {
       const headerRes = await fetch('components/header.html');
       const headerHtml = await headerRes.text();
@@ -121,12 +103,11 @@
       document.getElementById('homeLogo')?.addEventListener('click', () => window.location.href = 'index.html');
     }
     
-    const restored = await restoreSession();
-    if (!restored || !isAdmin(currentUserData)) {
+    const restored = await API.restoreSession();
+    if (!restored || !API.isAdmin(state.currentUser)) {
       window.location.href = 'index.html';
     } else {
       await loadComponents();
-      initUI();
       await loadAdminData();
     }
   </script>
