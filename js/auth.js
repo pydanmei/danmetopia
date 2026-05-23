@@ -1,6 +1,6 @@
 import { auth, db, ref, set, get, child, update, remove } from './db.js';
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-import { showNotification, showLoading, generateRandomGuestName, getUserData, getDisplayName, escapeHtml } from './utils.js';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { showNotification, showLoading, generateRandomGuestName, getUserData, getDisplayName } from './utils.js';
 
 // Session configuration
 const SESSION_CONFIG = {
@@ -9,6 +9,11 @@ const SESSION_CONFIG = {
 };
 
 export let currentUserData = null;
+
+// Initialize auth module
+export function initAuth() {
+  console.log("🔐 Auth module initialized");
+}
 
 // Set user session
 export function setUserSession(userData) {
@@ -20,6 +25,7 @@ export function setUserSession(userData) {
     expireAt: Date.now() + ttl
   };
   localStorage.setItem("userSession", JSON.stringify(session));
+  currentUserData = userData;
 }
 
 // Refresh user session
@@ -27,23 +33,28 @@ export function refreshUserSession() {
   const sessionStr = localStorage.getItem("userSession");
   if (!sessionStr) return false;
   
-  const session = JSON.parse(sessionStr);
-  if (!session.expireAt || Date.now() > session.expireAt) {
-    localStorage.removeItem("userSession");
+  try {
+    const session = JSON.parse(sessionStr);
+    if (!session.expireAt || Date.now() > session.expireAt) {
+      localStorage.removeItem("userSession");
+      return false;
+    }
+    
+    const ttl = session.role === "guest" ? SESSION_CONFIG.guest : SESSION_CONFIG.user;
+    session.savedAt = Date.now();
+    session.expireAt = Date.now() + ttl;
+    localStorage.setItem("userSession", JSON.stringify(session));
+    
+    if (session.role !== "guest") {
+      currentUserData = session;
+    } else {
+      currentUserData = session;
+    }
+    return true;
+  } catch (err) {
+    console.error("Refresh session error:", err);
     return false;
   }
-  
-  const ttl = session.role === "guest" ? SESSION_CONFIG.guest : SESSION_CONFIG.user;
-  session.savedAt = Date.now();
-  session.expireAt = Date.now() + ttl;
-  localStorage.setItem("userSession", JSON.stringify(session));
-  
-  if (session.role !== "guest") {
-    currentUserData = session;
-  } else {
-    currentUserData = session;
-  }
-  return true;
 }
 
 // Check if session is valid
@@ -51,12 +62,16 @@ export function isSessionValid() {
   const sessionStr = localStorage.getItem("userSession");
   if (!sessionStr) return false;
   
-  const session = JSON.parse(sessionStr);
-  if (!session.expireAt || Date.now() > session.expireAt) {
-    localStorage.removeItem("userSession");
+  try {
+    const session = JSON.parse(sessionStr);
+    if (!session.expireAt || Date.now() > session.expireAt) {
+      localStorage.removeItem("userSession");
+      return false;
+    }
+    return true;
+  } catch (err) {
     return false;
   }
-  return true;
 }
 
 // Load user data
@@ -134,8 +149,6 @@ export async function handleGuestLogin() {
   document.getElementById("loginPage").style.display = "none";
   document.getElementById("mainContainer").style.display = "block";
   showNotification(`👤 Chào mừng ${guestName} (Khách)`);
-  
-  // Dispatch event for app to know login completed
   window.dispatchEvent(new CustomEvent('user-logged-in', { detail: currentUserData }));
 }
 
@@ -197,6 +210,7 @@ export async function handlePasswordLogin() {
     showNotification(`✅ Chào mừng ${currentUserData.displayName}`);
     window.dispatchEvent(new CustomEvent('user-logged-in', { detail: currentUserData }));
   } catch (err) {
+    console.error("Login error:", err);
     if (err.code === "auth/invalid-credential") {
       const ADMIN_EMAILS = ["pydanmeii@gmail.com", "pepyl4298@gmail.com", "maihuong4298@gmail.com"];
       const isAdminEmail = ADMIN_EMAILS.includes(email);
@@ -239,45 +253,45 @@ export async function handleCompleteRegistration() {
     showNotification(`🎉 Chào mừng ${nickname}!`);
     window.dispatchEvent(new CustomEvent('user-logged-in', { detail: currentUserData }));
   } catch (err) {
+    console.error("Registration error:", err);
     msg.innerText = "Lỗi: " + err.message;
   } finally { showLoading(false); }
 }
 
 export async function restoreSession() {
+  console.log("Restoring session...");
+  
   if (!isSessionValid()) {
+    console.log("Session invalid");
     localStorage.removeItem("userSession");
     return false;
   }
   
-  const session = JSON.parse(localStorage.getItem("userSession"));
-  
-  if (session.role === "guest") {
-    currentUserData = session;
-    document.getElementById("warningOverlay").style.display = "none";
-    document.getElementById("loginPage").style.display = "none";
-    document.getElementById("mainContainer").style.display = "block";
-    window.dispatchEvent(new CustomEvent('user-logged-in', { detail: currentUserData }));
-    return true;
-  } else if (session.uid) {
-    currentUserData = await loadUserData(session.uid, session.email);
-    setUserSession(currentUserData);
-    document.getElementById("warningOverlay").style.display = "none";
-    document.getElementById("loginPage").style.display = "none";
-    document.getElementById("mainContainer").style.display = "block";
-    window.dispatchEvent(new CustomEvent('user-logged-in', { detail: currentUserData }));
-    return true;
+  try {
+    const session = JSON.parse(localStorage.getItem("userSession"));
+    console.log("Session data:", session);
+    
+    if (session.role === "guest") {
+      currentUserData = session;
+      return true;
+    } else if (session.uid) {
+      currentUserData = await loadUserData(session.uid, session.email);
+      setUserSession(currentUserData);
+      return true;
+    }
+    return false;
+  } catch (err) {
+    console.error("Restore session error:", err);
+    return false;
   }
-  return false;
 }
 
 export async function logout() {
-  await signOut(auth);
+  try {
+    await signOut(auth);
+  } catch (err) {
+    console.error("Logout error:", err);
+  }
   localStorage.removeItem("userSession");
   window.location.reload();
-}
-
-// Initialize auth module (khởi tạo listeners nếu cần)
-export function initAuth() {
-  console.log("🔐 Auth module initialized");
-  // Có thể thêm logic khởi tạo auth listeners ở đây nếu cần
 }
