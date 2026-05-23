@@ -1,18 +1,11 @@
-import { initFirebase, db, ref, get, update, push, set } from './db.js';
-import { currentUserData, refreshUserSession } from './auth.js';
-import { isAdmin, isModerator, canModerate, hasGroup, getUserGroups, escapeHtml, showNotification, showLoading } from './utils.js';
-import { allStories, getChapters, getChapter, followStory, unfollowStory, isFollowing, likeStory, approveStory, rejectStory, deleteStory, userFollows } from './data.js';
+import { FirebaseService } from '../core/firebaseService.js';
+import { state, setState } from '../core/state.js';
+import { refreshUserSession, getUserGroups } from './auth.js';
+import { isAdmin, canModerate, hasGroup, showNotification, showLoading, escapeHtml } from './utils.js';
+import { getChapters, followStory, unfollowStory, isFollowing, likeStory, approveStory, rejectStory, deleteStory } from './data.js';
 import { uploadImage } from './upload.js';
 
-// Initialize Firebase
-initFirebase();
-
-// Get user group options
-export async function getUserGroupOptions() {
-  if (!currentUserData || currentUserData.role === "guest") return [];
-  const userGroups = await getUserGroups(currentUserData.uid);
-  return userGroups;
-}
+const { db, ref, get, update, push, set } = FirebaseService;
 
 // Close modal
 export function closeModal(modalId) { 
@@ -21,16 +14,16 @@ export function closeModal(modalId) {
 }
 
 // Open story detail
-window.openStoryDetail = async (storyId) => {
+export async function openStoryDetail(storyId) {
   refreshUserSession();
-  const story = allStories.find(s => s.id === storyId);
+  const story = state.stories.find(s => s.id === storyId);
   if (!story) return;
   const chapters = await getChapters(storyId);
   
-  const canEditStory = currentUserData && (isAdmin(currentUserData) || (currentUserData.privileges?.groupId && story.groupId === currentUserData.privileges?.groupId) || story.ownerUid === currentUserData?.uid);
-  const canEditChapter = currentUserData && (isAdmin(currentUserData) || (currentUserData.privileges?.groupId && story.groupId === currentUserData.privileges?.groupId) || story.ownerUid === currentUserData?.uid);
-  const canDeleteChapter = currentUserData && isAdmin(currentUserData);
-  const isMod = canModerate(currentUserData);
+  const canEditStory = state.currentUser && (isAdmin(state.currentUser) || (state.currentUser.privileges?.groupId && story.groupId === state.currentUser.privileges?.groupId) || story.ownerUid === state.currentUser?.uid);
+  const canEditChapter = state.currentUser && (isAdmin(state.currentUser) || (state.currentUser.privileges?.groupId && story.groupId === state.currentUser.privileges?.groupId) || story.ownerUid === state.currentUser?.uid);
+  const canDeleteChapter = state.currentUser && isAdmin(state.currentUser);
+  const isMod = canModerate(state.currentUser);
   
   document.getElementById("storyDetailContent").innerHTML = `
     <div class="story-detail-grid">
@@ -54,12 +47,12 @@ window.openStoryDetail = async (storyId) => {
   let chaptersHtml = `<h3>📖 DANH SÁCH CHAPTER</h3><div class="chapter-list">`;
   chapters.forEach((chap) => {
     chaptersHtml += `
-      <div class="chapter-item" onclick="window.openReader('${storyId}', ${chap.chapterNumber - 1})">
+      <div class="chapter-item" onclick="API.openReader('${storyId}', ${chap.chapterNumber - 1})">
         <span>${escapeHtml(chap.title)}</span>
         <span style="font-size:12px; color:#888;">📅 ${new Date(chap.createdAt).toLocaleDateString()}</span>
         <div class="chapter-actions">
-          ${canEditChapter ? `<button class="chapter-edit-btn" onclick="event.stopPropagation(); window.openEditChapter('${storyId}', '${chap.id}')">✏️ Sửa</button>` : ''}
-          ${canDeleteChapter ? `<button class="chapter-delete-btn" onclick="event.stopPropagation(); window.deleteChapter('${storyId}', '${chap.id}')">🗑 Xóa</button>` : ''}
+          ${canEditChapter ? `<button class="chapter-edit-btn" onclick="event.stopPropagation(); API.openEditChapter('${storyId}', '${chap.id}')">✏️ Sửa</button>` : ''}
+          ${canDeleteChapter ? `<button class="chapter-delete-btn" onclick="event.stopPropagation(); API.deleteChapter('${storyId}', '${chap.id}')">🗑 Xóa</button>` : ''}
         </div>
       </div>
     `;
@@ -67,26 +60,26 @@ window.openStoryDetail = async (storyId) => {
   chaptersHtml += `</div>`;
   document.getElementById("storyChapters").innerHTML = chaptersHtml;
   
-  let actionsHtml = `<button onclick="window.likeStoryAndRefresh('${storyId}')">❤️ Thích</button>`;
-  if (currentUserData && currentUserData.role !== "guest") actionsHtml += `<button onclick="window.toggleFollow('${storyId}')">${isFollowing(storyId) ? '⭐ Đã theo dõi' : '➕ Theo dõi'}</button>`;
-  if (canEditStory) actionsHtml += `<button onclick="window.openEditStory('${storyId}')">✏️ Chỉnh sửa truyện</button><button onclick="window.openAddChapter('${storyId}')">📖 Thêm chapter mới</button>`;
-  if (isMod && story.approved === false) actionsHtml += `<button onclick="window.approveStoryAction('${storyId}')">✅ Duyệt truyện</button><button onclick="window.rejectStoryAction('${storyId}')">❌ Từ chối</button>`;
-  if (isAdmin(currentUserData)) actionsHtml += `<button onclick="window.deleteStoryAction('${storyId}')" style="background:#ff4444;">🗑 Xóa truyện</button>`;
+  let actionsHtml = `<button onclick="API.likeStoryAndRefresh('${storyId}')">❤️ Thích</button>`;
+  if (state.currentUser && state.currentUser.role !== "guest") actionsHtml += `<button onclick="API.toggleFollow('${storyId}')">${isFollowing(storyId) ? '⭐ Đã theo dõi' : '➕ Theo dõi'}</button>`;
+  if (canEditStory) actionsHtml += `<button onclick="API.openEditStory('${storyId}')">✏️ Chỉnh sửa truyện</button><button onclick="API.openAddChapter('${storyId}')">📖 Thêm chapter mới</button>`;
+  if (isMod && story.approved === false) actionsHtml += `<button onclick="API.approveStoryAction('${storyId}')">✅ Duyệt truyện</button><button onclick="API.rejectStoryAction('${storyId}')">❌ Từ chối</button>`;
+  if (isAdmin(state.currentUser)) actionsHtml += `<button onclick="API.deleteStoryAction('${storyId}')" style="background:#ff4444;">🗑 Xóa truyện</button>`;
   document.getElementById("storyActions").innerHTML = actionsHtml;
   document.getElementById("storyModal").style.display = "flex";
-};
+}
 
-// Helper functions for story actions
-window.likeStoryAndRefresh = async (storyId) => { await likeStory(storyId); window.openStoryDetail(storyId); };
+// Helper functions
+window.likeStoryAndRefresh = async (storyId) => { await likeStory(storyId); openStoryDetail(storyId); };
 window.approveStoryAction = async (storyId) => { await approveStory(storyId); closeModal("storyModal"); };
 window.rejectStoryAction = async (storyId) => { await rejectStory(storyId); closeModal("storyModal"); };
 window.deleteStoryAction = async (storyId) => { if (confirm("Xóa truyện?")) { await deleteStory(storyId); closeModal("storyModal"); } };
-window.toggleFollow = async (storyId) => { if (isFollowing(storyId)) await unfollowStory(storyId); else await followStory(storyId); window.openStoryDetail(storyId); };
+window.toggleFollow = async (storyId) => { if (isFollowing(storyId)) await unfollowStory(storyId); else await followStory(storyId); openStoryDetail(storyId); };
 
 // Open edit story
-window.openEditStory = async (storyId) => {
-  const story = allStories.find(s => s.id === storyId);
-  const userGroups = await getUserGroupOptions();
+export async function openEditStory(storyId) {
+  const story = state.stories.find(s => s.id === storyId);
+  const userGroups = await getUserGroups(state.currentUser?.uid);
   let groupOptions = '<option value="">-- Không có nhóm --</option>';
   for (const group of userGroups) {
     groupOptions += `<option value="${group.id}" ${story.groupId === group.id ? 'selected' : ''}>${escapeHtml(group.groupName)}</option>`;
@@ -120,7 +113,7 @@ window.openEditStory = async (storyId) => {
     <input id="editCover" value="${escapeHtml(story.cover || '')}" placeholder="Hoặc link ảnh bìa">
     <div id="editCoverPreview"></div>
     <textarea id="editDesc" placeholder="Mô tả truyện">${escapeHtml(story.desc || '')}</textarea>
-    <button onclick="window.saveEditStory('${storyId}')">💾 Lưu</button>
+    <button onclick="API.saveEditStory('${storyId}')">💾 Lưu</button>
   `;
   if (story.cover) {
     document.getElementById("editCoverPreview").innerHTML = `<img class="cover-preview" src="${escapeHtml(story.cover)}">`;
@@ -134,10 +127,10 @@ window.openEditStory = async (storyId) => {
     }
   });
   document.getElementById("editStoryModal").style.display = "flex";
-};
+}
 
 // Save edit story
-window.saveEditStory = async (storyId) => {
+export async function saveEditStory(storyId) {
   refreshUserSession();
   const newGroupId = document.getElementById("editGroupId").value;
   const coverFile = document.getElementById("editCoverFile").files[0];
@@ -171,34 +164,34 @@ window.saveEditStory = async (storyId) => {
   });
   closeModal("editStoryModal");
   showNotification("Đã cập nhật truyện");
-  window.openStoryDetail(storyId);
-};
+  openStoryDetail(storyId);
+}
 
 // Open profile
-window.openProfile = () => {
+export function openProfile() {
   document.getElementById("profileContent").innerHTML = `
-    <div class="profile-field"><label>📧 Email</label><input value="${escapeHtml(currentUserData?.email || '')}" disabled></div>
-    <div class="profile-field"><label>🏷️ Nickname</label><input id="profileNickname" value="${escapeHtml(currentUserData?.nickname || '')}"></div>
-    <button onclick="window.saveProfile()">💾 Lưu</button>
+    <div class="profile-field"><label>📧 Email</label><input value="${escapeHtml(state.currentUser?.email || '')}" disabled></div>
+    <div class="profile-field"><label>🏷️ Nickname</label><input id="profileNickname" value="${escapeHtml(state.currentUser?.nickname || '')}"></div>
+    <button onclick="API.saveProfile()">💾 Lưu</button>
   `;
   document.getElementById("profileModal").style.display = "flex";
-};
+}
 
 // Save profile
-window.saveProfile = async () => {
+export async function saveProfile() {
   const newNickname = document.getElementById("profileNickname").value;
   if (!newNickname) { showNotification("Nickname không được trống", true); return; }
   try {
-    await update(ref(db, `users/${currentUserData.uid}`), { nickname: newNickname });
-    currentUserData.nickname = newNickname;
-    document.getElementById("userDisplay").innerHTML = `👤 ${escapeHtml(currentUserData.displayName)}`;
+    await update(ref(db, `users/${state.currentUser.uid}`), { nickname: newNickname });
+    state.currentUser.nickname = newNickname;
+    document.getElementById("userDisplay").innerHTML = `👤 ${escapeHtml(state.currentUser.displayName)}`;
     showNotification("Đã cập nhật");
     closeModal("profileModal");
   } catch (err) { showNotification(err.message, true); }
-};
+}
 
 // Create new group
-window.createNewGroup = async () => {
+export async function createNewGroup() {
   const groupName = document.getElementById("groupNameInput").value;
   if (!groupName) { alert("Nhập tên nhóm"); return; }
   showLoading(true);
@@ -208,52 +201,20 @@ window.createNewGroup = async () => {
     await set(newGroupRef, { 
       groupName, 
       description: document.getElementById("groupDescInput").value || "", 
-      ownerId: currentUserData.uid, 
-      members: [currentUserData.uid], 
+      ownerId: state.currentUser.uid, 
+      members: [state.currentUser.uid], 
       createdAt: Date.now() 
     });
-    await update(ref(db, `users/${currentUserData.uid}/privileges`), { groupId: newGroupRef.key });
+    await update(ref(db, `users/${state.currentUser.uid}/privileges`), { groupId: newGroupRef.key });
     closeModal("groupModal");
     showNotification("✅ Tạo nhóm thành công!");
     setTimeout(() => window.location.reload(), 1000);
   } catch (err) { alert("Lỗi: " + err.message); }
   showLoading(false);
-};
-
-// Update user display
-export async function updateUserDisplay() {
-  const userDisplay = document.getElementById("userDisplay");
-  const groupsLink = document.getElementById("groupsLink");
-  const profileBtn = document.getElementById("profileBtn");
-  const logoutBtn = document.getElementById("logoutBtn");
-  const createGroupBtn = document.getElementById("createGroupBtn");
-  const adminLink = document.getElementById("adminLink");
-  if (!userDisplay) return;
-  if (!currentUserData || currentUserData.role === "guest") {
-    userDisplay.innerHTML = `👤 ${escapeHtml(currentUserData?.displayName || "Guest")}`;
-    if (groupsLink) groupsLink.style.display = "inline-block";
-    if (profileBtn) profileBtn.style.display = "none";
-    if (logoutBtn) logoutBtn.style.display = "none";
-    if (createGroupBtn) createGroupBtn.style.display = "none";
-    if (adminLink) adminLink.style.display = "none";
-  } else {
-    userDisplay.innerHTML = `👤 ${escapeHtml(currentUserData.displayName)}`;
-    if (groupsLink) groupsLink.style.display = "inline-block";
-    if (profileBtn) profileBtn.style.display = "inline-block";
-    if (logoutBtn) logoutBtn.style.display = "inline-block";
-    if (createGroupBtn) createGroupBtn.style.display = !hasGroup(currentUserData) ? "inline-block" : "none";
-    if (adminLink) adminLink.style.display = canModerate(currentUserData) ? "inline-block" : "none";
-  }
 }
 
 // Initialize UI
 export function initUI() {
-  // Make functions global
+  // Make functions global via API
   window.closeModal = closeModal;
-  window.openStoryDetail = window.openStoryDetail;
-  window.openEditStory = window.openEditStory;
-  window.saveEditStory = window.saveEditStory;
-  window.openProfile = window.openProfile;
-  window.saveProfile = window.saveProfile;
-  window.createNewGroup = window.createNewGroup;
 }
