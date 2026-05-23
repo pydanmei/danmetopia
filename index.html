@@ -216,6 +216,54 @@ body {
   color: black;
   white-space: nowrap;
 }
+@media (max-width: 600px) {
+  .logo {
+    font-size: 18px;
+    white-space: normal;
+    text-align: center;
+    word-break: keep-all;
+    display: inline-block;
+  }
+  .topbar {
+    flex-direction: column;
+    text-align: center;
+    padding: 10px;
+  }
+  .user-area {
+    justify-content: center;
+    width: 100%;
+    flex-wrap: wrap;
+  }
+  .manga-grid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 12px;
+  }
+  .story-detail-grid {
+    grid-template-columns: 1fr;
+  }
+  .chapter-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .chapter-nav {
+    flex-direction: column;
+    align-items: center;
+  }
+  .scroll-top-btn {
+    bottom: 20px;
+    right: 20px;
+    width: 40px;
+    height: 40px;
+    font-size: 18px;
+  }
+  .footer-disclaimer {
+    padding: 15px;
+    margin-top: 30px;
+  }
+  .footer-disclaimer .disclaimer-content {
+    font-size: 10px;
+  }
+}
 .user-area {
   display: flex;
   gap: 12px;
@@ -610,6 +658,12 @@ body {
   max-width: 1000px;
   margin: 0 auto;
   padding: 20px;
+  min-height: 100vh;
+}
+.reader-page h2 {
+  color: #FF69B4;
+  margin-bottom: 20px;
+  text-align: center;
 }
 .chapter-nav {
   display: flex;
@@ -751,50 +805,6 @@ body {
   color: #FF69B4;
   background: rgba(0,0,0,0.8);
 }
-@media (max-width: 600px) {
-  .manga-grid {
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-    gap: 12px;
-  }
-  .topbar {
-    flex-direction: column;
-    text-align: center;
-  }
-  .story-detail-grid {
-    grid-template-columns: 1fr;
-  }
-  .chapter-item {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-  .chapter-nav {
-    flex-direction: column;
-    align-items: center;
-  }
-  .logo {
-    font-size: 18px;
-    white-space: normal;
-    text-align: center;
-  }
-  .user-area {
-    justify-content: center;
-    width: 100%;
-  }
-  .scroll-top-btn {
-    bottom: 20px;
-    right: 20px;
-    width: 40px;
-    height: 40px;
-    font-size: 18px;
-  }
-  .footer-disclaimer {
-    padding: 15px;
-    margin-top: 30px;
-  }
-  .footer-disclaimer .disclaimer-content {
-    font-size: 10px;
-  }
-}
 </style>
 </head>
 <body>
@@ -877,6 +887,16 @@ body {
   <div class="manga-grid" id="mangaGrid">
     <div style="text-align:center; padding:50px;"><div class="loading-spinner"></div><p>Đang tải truyện...</p></div>
   </div>
+  
+  <!-- FOOTER DISCLAIMER -->
+  <div class="footer-disclaimer">
+    <div class="disclaimer-content">
+      <p>🌸 <strong>DANMETOPIA</strong> là nền tảng phi lợi nhuận, hoạt động với mục đích <strong>tổng hợp và chia sẻ</strong> các bộ truyện tranh từ nhiều nguồn khác nhau.</p>
+      <p style="margin:10px 0;">📌 <strong>Miễn trừ trách nhiệm:</strong> Chúng tôi không sở hữu bản quyền đối với bất kỳ nội dung nào được đăng tải. Toàn bộ bản quyền thuộc về tác giả và nhà xuất bản gốc. Nếu có bất kỳ vi phạm nào, vui lòng liên hệ để được gỡ bỏ.</p>
+      <p>📧 Liên hệ: <a href="mailto:pydanmeii@gmail.com">pydanmeii@gmail.com</a></p>
+      <p style="margin-top:10px;">© 2025 DANMETOPIA - Đọc truyện tranh online miễn phí</p>
+    </div>
+  </div>
 </div>
 
 <div id="groupModal" class="modal"><div class="modal-content"><span class="close-modal" onclick="closeModal('groupModal')">&times;</span><h3>📚 TẠO NHÓM DỊCH</h3><input id="groupNameInput" placeholder="Tên nhóm"><textarea id="groupDescInput" placeholder="Mô tả" rows="3"></textarea><button id="confirmGroupBtn">TẠO NHÓM</button></div></div>
@@ -890,19 +910,13 @@ body {
 <!-- FLOAT SCROLL TO TOP BUTTON -->
 <button class="scroll-top-btn" id="scrollTopBtn">⬆️</button>
 
-<!-- FOOTER DISCLAIMER -->
-<div class="footer-disclaimer">
-  <div class="disclaimer-content">
-    <p>🌸 <strong>DANMETOPIA</strong> là nền tảng phi lợi nhuận, hoạt động với mục đích <strong>tổng hợp và chia sẻ</strong> các bộ truyện tranh từ nhiều nguồn khác nhau.</p>
-    <p style="margin:10px 0;">📌 <strong>Miễn trừ trách nhiệm:</strong> Chúng tôi không sở hữu bản quyền đối với bất kỳ nội dung nào được đăng tải. Toàn bộ bản quyền thuộc về tác giả và nhà xuất bản gốc. Nếu có bất kỳ vi phạm nào, vui lòng liên hệ để được gỡ bỏ.</p>
-    <p>📧 Liên hệ: <a href="mailto:pydanmeii@gmail.com">pydanmeii@gmail.com</a></p>
-    <p style="margin-top:10px;">© 2025 DANMETOPIA - Đọc truyện tranh online miễn phí</p>
-  </div>
-</div>
-
 <script type="module">
 // ==================== IMGBB CONFIG ====================
 const IMGBB_API_KEY = "d16b5595d7f6044476d254c8f428cc28";
+
+// ==================== SESSION TIMES ====================
+const GUEST_SESSION_HOURS = 1;
+const LOGGED_IN_SESSION_DAYS = 7;
 
 // ==================== GENRE LIST ====================
 const GENRE_LIST = [
@@ -943,6 +957,7 @@ const GENRE_LIST = [
 
 // ==================== SESSION MANAGEMENT ====================
 const MAIN_PASSWORD_SESSION_KEY = "mainPasswordExpiry";
+const LOGIN_SESSION_KEY = "loginSessionExpiry";
 const MAIN_PASSWORD = "danmei";
 
 function setMainPasswordSession() {
@@ -950,8 +965,31 @@ function setMainPasswordSession() {
   localStorage.setItem(MAIN_PASSWORD_SESSION_KEY, expiry.toString());
 }
 
+function checkMainPasswordSession() {
+  const expiry = localStorage.getItem(MAIN_PASSWORD_SESSION_KEY);
+  if (!expiry) return false;
+  return Date.now() < parseInt(expiry);
+}
+
+function setUserSession(isLoggedIn) {
+  const expiryTime = isLoggedIn 
+    ? Date.now() + LOGGED_IN_SESSION_DAYS * 24 * 60 * 60 * 1000
+    : Date.now() + GUEST_SESSION_HOURS * 60 * 60 * 1000;
+  localStorage.setItem(LOGIN_SESSION_KEY, expiryTime.toString());
+}
+
+function checkUserSession() {
+  const expiry = localStorage.getItem(LOGIN_SESSION_KEY);
+  if (!expiry) return false;
+  return Date.now() < parseInt(expiry);
+}
+
 function clearMainPasswordSession() {
   localStorage.removeItem(MAIN_PASSWORD_SESSION_KEY);
+}
+
+function clearUserSession() {
+  localStorage.removeItem(LOGIN_SESSION_KEY);
 }
 
 // ==================== FIREBASE & EMAILJS ====================
@@ -1036,7 +1074,7 @@ function scheduleRender() {
 const scrollBtn = document.getElementById("scrollTopBtn");
 if (scrollBtn) {
   window.addEventListener("scroll", () => {
-    if (window.scrollY > 300) {
+    if (window.scrollY > 100) {
       scrollBtn.style.display = "flex";
     } else {
       scrollBtn.style.display = "none";
@@ -1198,6 +1236,7 @@ async function handleGuestLogin() {
   const guestName = generateRandomGuestName();
   currentUserData = { role: "guest", displayName: guestName, nickname: guestName };
   localStorage.setItem("userSession", JSON.stringify(currentUserData));
+  setUserSession(false);
   document.getElementById("loginPage").style.display = "none";
   document.getElementById("mainContainer").style.display = "block";
   showNotification(`👤 Chào mừng ${guestName} (Khách)`);
@@ -1257,6 +1296,7 @@ async function handlePasswordLogin() {
     const userData = await loadUserData(userCred.user.uid, email);
     currentUserData = userData;
     localStorage.setItem("userSession", JSON.stringify(currentUserData));
+    setUserSession(true);
     document.getElementById("loginPage").style.display = "none";
     document.getElementById("mainContainer").style.display = "block";
     showNotification(`✅ Chào mừng ${currentUserData.displayName}`);
@@ -1298,6 +1338,7 @@ async function handleCompleteRegistration() {
     const userData = await loadUserData(userCred.user.uid, pendingRegisterEmail);
     currentUserData = userData;
     localStorage.setItem("userSession", JSON.stringify(currentUserData));
+    setUserSession(true);
     document.getElementById("registerPage").style.display = "none";
     document.getElementById("mainContainer").style.display = "block";
     showNotification(`🎉 Chào mừng ${nickname}!`);
@@ -1310,6 +1351,12 @@ async function handleCompleteRegistration() {
 async function restoreSession() {
   const session = localStorage.getItem("userSession");
   if (!session) return false;
+  
+  if (!checkUserSession()) {
+    localStorage.removeItem("userSession");
+    return false;
+  }
+  
   try {
     const data = JSON.parse(session);
     if (data.role === "guest") {
@@ -1335,6 +1382,7 @@ async function restoreSession() {
 async function logout() {
   await signOut(auth);
   clearMainPasswordSession();
+  clearUserSession();
   localStorage.removeItem("userSession");
   window.location.reload();
 }
@@ -2075,6 +2123,7 @@ window.openReader = async (storyId, chapterIndex) => {
 function renderChapter() {
   if (!currentChapters[currentChapterIndex]) return;
   const chap = currentChapters[currentChapterIndex];
+  const story = allStories.find(s => s.id === currentReaderStoryId);
   const readerDiv = document.getElementById("readerContent");
   if (!readerDiv) return;
   
@@ -2083,10 +2132,12 @@ function renderChapter() {
   
   readerDiv.innerHTML = `
     <div class="reader-page">
+      <h2>${escapeHtml(story?.title || "Truyện")} - ${escapeHtml(chap.title)}</h2>
+      
       <!-- Chapter navigation TOP -->
       <div class="chapter-nav">
         ${hasPrev ? `<button onclick="window.changeChapter(-1)">⬅️ Chapter trước</button>` : '<button disabled style="opacity:0.5;">⬅️ Chapter trước</button>'}
-        <h3>${escapeHtml(chap.title)}</h3>
+        <button onclick="window.closeReaderModal()" style="background:#FFCCCC;">❌ Đóng</button>
         ${hasNext ? `<button onclick="window.changeChapter(1)">Chapter sau ➡️</button>` : '<button disabled style="opacity:0.5;">Chapter sau ➡️</button>'}
       </div>
       
@@ -2098,7 +2149,7 @@ function renderChapter() {
       <!-- Chapter navigation BOTTOM -->
       <div class="chapter-nav" style="margin-top:30px; margin-bottom:30px;">
         ${hasPrev ? `<button onclick="window.changeChapter(-1)">⬅️ Chapter trước</button>` : '<button disabled style="opacity:0.5;">⬅️ Chapter trước</button>'}
-        <button onclick="window.scrollToTop()" style="background:#FFCCCC;">⬆️ Lên đầu trang</button>
+        <button onclick="window.scrollToTopReader()" style="background:#FFCCCC;">⬆️ Lên đầu trang</button>
         ${hasNext ? `<button onclick="window.changeChapter(1)">Chapter sau ➡️</button>` : '<button disabled style="opacity:0.5;">Chapter sau ➡️</button>'}
       </div>
       
@@ -2150,7 +2201,7 @@ window.changeChapterTo = (index) => {
   window.scrollTo(0, 0);
 };
 
-window.scrollToTop = () => {
+window.scrollToTopReader = () => {
   window.scrollTo({ top: 0, behavior: "smooth" });
 };
 
@@ -2441,6 +2492,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const guestName = generateRandomGuestName();
     currentUserData = { role: "guest", displayName: guestName, nickname: guestName };
     localStorage.setItem("userSession", JSON.stringify(currentUserData));
+    setUserSession(false);
     
     document.getElementById("warningOverlay").style.display = "none";
     document.getElementById("loginPage").style.display = "flex";
@@ -2492,6 +2544,7 @@ onAuthStateChanged(auth, async (user) => {
     const email = user.email || "user@anonymous.com";
     currentUserData = await loadUserData(user.uid, email);
     localStorage.setItem("userSession", JSON.stringify(currentUserData));
+    setUserSession(true);
     document.getElementById("loginPage").style.display = "none";
     document.getElementById("mainContainer").style.display = "block";
     await initApp();
