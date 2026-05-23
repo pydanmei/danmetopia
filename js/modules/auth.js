@@ -1,9 +1,10 @@
-import { auth, db, ref, set, get, child, update, remove } from '../core/firebase.js';
+import { FirebaseService } from '../core/firebaseService.js';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import { SESSION_CONFIG, ADMIN_EMAILS } from '../core/constants.js';
+import { state, setState } from '../core/state.js';
 import { showNotification, showLoading, generateRandomGuestName, escapeHtml } from './utils.js';
 
-export let currentUserData = null;
+const { auth, db, ref, set, get, child, update, remove } = FirebaseService;
 
 // Get user data by UID
 export async function getUserData(uid) {
@@ -21,21 +22,8 @@ export async function getUserGroup(uid) {
   return null;
 }
 
-// Get user's groups
-export async function getUserGroups(uid) {
-  const userGroups = [];
-  const groupsSnap = await get(ref(db, "groups"));
-  const groups = groupsSnap.val() || {};
-  for (const gid in groups) {
-    if (groups[gid].members && groups[gid].members.includes(uid)) {
-      userGroups.push({ id: gid, ...groups[gid] });
-    }
-  }
-  return userGroups;
-}
-
 // Get display name
-export async function getDisplayName(uid, email, userData) {
+async function getDisplayName(uid, email, userData) {
   if (!userData) userData = await getUserData(uid);
   if (!userData) return generateRandomGuestName();
   const nickname = userData?.nickname || email?.split("@")[0] || "Người dùng";
@@ -71,7 +59,7 @@ export function setUserSession(userData) {
     expireAt: Date.now() + ttl
   };
   localStorage.setItem("userSession", JSON.stringify(session));
-  currentUserData = userData;
+  setState('currentUser', userData);
 }
 
 // Refresh user session
@@ -83,6 +71,7 @@ export function refreshUserSession() {
     const session = JSON.parse(sessionStr);
     if (!session.expireAt || Date.now() > session.expireAt) {
       localStorage.removeItem("userSession");
+      setState('currentUser', null);
       return false;
     }
     
@@ -90,12 +79,7 @@ export function refreshUserSession() {
     session.savedAt = Date.now();
     session.expireAt = Date.now() + ttl;
     localStorage.setItem("userSession", JSON.stringify(session));
-    
-    if (session.role !== "guest") {
-      currentUserData = session;
-    } else {
-      currentUserData = session;
-    }
+    setState('currentUser', session);
     return true;
   } catch (err) {
     console.error("Refresh session error:", err);
@@ -112,6 +96,7 @@ export function isSessionValid() {
     const session = JSON.parse(sessionStr);
     if (!session.expireAt || Date.now() > session.expireAt) {
       localStorage.removeItem("userSession");
+      setState('currentUser', null);
       return false;
     }
     return true;
@@ -176,12 +161,12 @@ async function checkEmailExists(email) {
 // Authentication handlers
 export async function handleGuestLogin() {
   const guestName = generateRandomGuestName();
-  currentUserData = { role: "guest", displayName: guestName, nickname: guestName };
-  setUserSession(currentUserData);
+  const userData = { role: "guest", displayName: guestName, nickname: guestName };
+  setUserSession(userData);
   document.getElementById("loginPage").style.display = "none";
   document.getElementById("mainContainer").style.display = "block";
   showNotification(`👤 Chào mừng ${guestName} (Khách)`);
-  window.dispatchEvent(new CustomEvent('user-logged-in', { detail: currentUserData }));
+  window.dispatchEvent(new CustomEvent('user-logged-in', { detail: userData }));
 }
 
 export async function handleCheckEmail() {
@@ -234,12 +219,11 @@ export async function handlePasswordLogin() {
   try {
     const userCred = await signInWithEmailAndPassword(auth, email, password);
     const userData = await loadUserData(userCred.user.uid, email);
-    currentUserData = userData;
-    setUserSession(currentUserData);
+    setUserSession(userData);
     document.getElementById("loginPage").style.display = "none";
     document.getElementById("mainContainer").style.display = "block";
-    showNotification(`✅ Chào mừng ${currentUserData.displayName}`);
-    window.dispatchEvent(new CustomEvent('user-logged-in', { detail: currentUserData }));
+    showNotification(`✅ Chào mừng ${userData.displayName}`);
+    window.dispatchEvent(new CustomEvent('user-logged-in', { detail: userData }));
   } catch (err) {
     console.error("Login error:", err);
     if (err.code === "auth/invalid-credential") {
@@ -276,12 +260,11 @@ export async function handleCompleteRegistration() {
     const userCred = await createUserWithEmailAndPassword(auth, window.pendingRegisterEmail, password);
     await createNewUser(userCred.user.uid, window.pendingRegisterEmail, nickname);
     const userData = await loadUserData(userCred.user.uid, window.pendingRegisterEmail);
-    currentUserData = userData;
-    setUserSession(currentUserData);
+    setUserSession(userData);
     document.getElementById("registerPage").style.display = "none";
     document.getElementById("mainContainer").style.display = "block";
     showNotification(`🎉 Chào mừng ${nickname}!`);
-    window.dispatchEvent(new CustomEvent('user-logged-in', { detail: currentUserData }));
+    window.dispatchEvent(new CustomEvent('user-logged-in', { detail: userData }));
   } catch (err) {
     console.error("Registration error:", err);
     msg.innerText = "Lỗi: " + err.message;
@@ -302,11 +285,11 @@ export async function restoreSession() {
     console.log("Session data:", session);
     
     if (session.role === "guest") {
-      currentUserData = session;
+      setState('currentUser', session);
       return true;
     } else if (session.uid) {
-      currentUserData = await loadUserData(session.uid, session.email);
-      setUserSession(currentUserData);
+      const userData = await loadUserData(session.uid, session.email);
+      setUserSession(userData);
       return true;
     }
     return false;
@@ -323,5 +306,6 @@ export async function logout() {
     console.error("Logout error:", err);
   }
   localStorage.removeItem("userSession");
+  setState('currentUser', null);
   window.location.reload();
 }
