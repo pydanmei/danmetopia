@@ -1,7 +1,10 @@
-import { db, ref, onValue } from './db.js';
+// IMPORT ĐẦY ĐỦ - QUAN TRỌNG
+import { db, ref, onValue, get, set, push } from './db.js';
 import { currentUserData, refreshUserSession } from './auth.js';
-import { escapeHtml, loadImageWithSkeleton, imageCache } from './utils.js';
+import { escapeHtml, loadImageWithSkeleton, imageCache, showNotification } from './utils.js';
 import { allStories } from './data.js';
+
+console.log("✅ reader.js loaded");
 
 let currentReaderStoryId = null;
 let currentChapters = [];
@@ -11,8 +14,9 @@ let commentUnsubscribe = null;
 
 // Close reader modal
 export function closeReaderModal() {
+  console.log("Closing reader modal");
   const readerModal = document.getElementById("readerModal");
-  readerModal.style.display = "none";
+  if (readerModal) readerModal.style.display = "none";
   if (chaptersUnsubscribe) chaptersUnsubscribe();
   if (commentUnsubscribe) commentUnsubscribe();
   document.body.style.overflow = "";
@@ -22,48 +26,75 @@ export function closeReaderModal() {
 // Open reader
 window.openReader = async (storyId, chapterIndex) => {
   console.log("📖 openReader - storyId:", storyId, "chapterIndex:", chapterIndex);
-  refreshUserSession();
   
-  if (chaptersUnsubscribe) chaptersUnsubscribe();
-  if (commentUnsubscribe) commentUnsubscribe();
-  
-  currentReaderStoryId = storyId;
-  currentChapterIndex = chapterIndex || 0;
-  
-  const story = allStories.find(s => s.id === storyId);
-  if (story) {
-    try {
-      const viewRef = ref(db, `stories/${storyId}/views`);
-      const snapshot = await get(viewRef);
-      await set(viewRef, (snapshot.val() || 0) + 1);
-    } catch (err) {
-      console.error("Update view error:", err);
+  try {
+    refreshUserSession();
+    
+    if (chaptersUnsubscribe) chaptersUnsubscribe();
+    if (commentUnsubscribe) commentUnsubscribe();
+    
+    currentReaderStoryId = storyId;
+    currentChapterIndex = chapterIndex || 0;
+    
+    // Update view count
+    const story = allStories.find(s => s.id === storyId);
+    if (story) {
+      try {
+        const viewRef = ref(db, `stories/${storyId}/views`);
+        const snapshot = await get(viewRef);
+        await set(viewRef, (snapshot.val() || 0) + 1);
+      } catch (err) {
+        console.error("Update view error:", err);
+      }
     }
-  }
-  
-  const chaptersRef = ref(db, `chapters/${storyId}`);
-  chaptersUnsubscribe = onValue(chaptersRef, (snapshot) => {
-    const data = snapshot.val();
-    if (data) {
-      currentChapters = Object.entries(data).map(([id, value]) => ({ id, ...value }));
-      currentChapters.sort((a, b) => (a.chapterNumber || 0) - (b.chapterNumber || 0));
+    
+    // Load chapters
+    const chaptersRef = ref(db, `chapters/${storyId}`);
+    chaptersUnsubscribe = onValue(chaptersRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        currentChapters = Object.entries(data).map(([id, value]) => ({ id, ...value }));
+        currentChapters.sort((a, b) => (a.chapterNumber || 0) - (b.chapterNumber || 0));
+        renderChapter();
+      } else {
+        currentChapters = [];
+        renderChapter();
+      }
+    });
+    
+    // Show modal
+    const readerModal = document.getElementById("readerModal");
+    if (readerModal) {
+      document.body.style.overflow = "hidden";
+      readerModal.style.display = "flex";
+      setTimeout(() => {
+        const readerContent = document.getElementById("readerContent");
+        if (readerContent) readerContent.scrollTop = 0;
+      }, 50);
     } else {
-      currentChapters = [];
+      console.error("readerModal not found!");
+      showNotification("Lỗi: Không tìm thấy reader", true);
     }
-    renderChapter();
-  });
-  
-  document.body.style.overflow = "hidden";
-  const readerModal = document.getElementById("readerModal");
-  readerModal.style.display = "flex";
-  setTimeout(() => {
-    document.getElementById("readerContent")?.scrollTo({ top: 0, behavior: "instant" });
-  }, 50);
+  } catch (err) {
+    console.error("Error opening reader:", err);
+    showNotification("Lỗi mở truyện: " + err.message, true);
+  }
 };
 
 // Render chapter
 function renderChapter() {
-  if (!currentChapters[currentChapterIndex]) return;
+  console.log("Rendering chapter", currentChapterIndex);
+  
+  if (!currentChapters || currentChapters.length === 0) {
+    document.getElementById("readerContent").innerHTML = '<div class="reader-page"><p>Đang tải chapter...</p></div>';
+    return;
+  }
+  
+  if (!currentChapters[currentChapterIndex]) {
+    document.getElementById("readerContent").innerHTML = '<div class="reader-page"><p>Không tìm thấy chapter</p></div>';
+    return;
+  }
+  
   const chap = currentChapters[currentChapterIndex];
   const readerDiv = document.getElementById("readerContent");
   if (!readerDiv) return;
@@ -114,7 +145,7 @@ function renderChapter() {
     </div>
   `;
   
-  // Lazy load images with Intersection Observer
+  // Lazy load images
   const imageObserver = new IntersectionObserver((entries, observer) => {
     entries.forEach(entry => {
       if (entry.isIntersecting) {
@@ -169,7 +200,8 @@ window.changeChapter = (delta) => {
     currentChapterIndex = newIdx;
     renderChapter();
     setTimeout(() => {
-      document.getElementById("readerContent")?.scrollTo({ top: 0, behavior: "smooth" });
+      const readerContent = document.getElementById("readerContent");
+      if (readerContent) readerContent.scrollTop = 0;
     }, 50);
   }
 };
@@ -179,7 +211,8 @@ window.changeChapterTo = (index) => {
   currentChapterIndex = index;
   renderChapter();
   setTimeout(() => {
-    document.getElementById("readerContent")?.scrollTo({ top: 0, behavior: "smooth" });
+    const readerContent = document.getElementById("readerContent");
+    if (readerContent) readerContent.scrollTop = 0;
   }, 50);
 };
 
@@ -248,7 +281,3 @@ async function postComment(storyId) {
 
 // Make functions global
 window.closeReaderModal = closeReaderModal;
-window.openReader = window.openReader;
-window.changeChapter = window.changeChapter;
-window.changeChapterTo = window.changeChapterTo;
-window.scrollToTop = window.scrollToTop;
