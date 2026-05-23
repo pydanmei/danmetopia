@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>🌸 DANMETOPIA - Quản lý nhóm dịch 🌸</title>
+<title>DANMETOPIA - Quản lý nhóm dịch</title>
 <meta name="theme-color" content="#FF69B4">
 <style>
 * {
@@ -239,7 +239,7 @@ h1 {
   margin-bottom: 8px;
 }
 .member-email {
-  font-size: 13px;
+  font-size: 12px;
   color: #aaa;
 }
 .btn-small {
@@ -275,7 +275,7 @@ h1 {
 <body>
 
 <div class="topbar">
-  <a href="index.html" class="logo">🌸 DANMETOPIA 🌸</a>
+  <a href="index.html" class="logo">🌸 DANMETOPIA</a>
   <div class="user-area">
     <span id="userDisplay">👤 Đang tải...</span>
     <button id="createGroupBtn" class="nav-btn" style="display:none">➕ Tạo nhóm</button>
@@ -292,7 +292,6 @@ h1 {
   </div>
 </div>
 
-<!-- MODAL TẠO/CHỈNH SỬA NHÓM -->
 <div id="groupFormModal" class="modal">
   <div class="modal-content">
     <span class="close-modal" onclick="closeModal('groupFormModal')">&times;</span>
@@ -304,7 +303,6 @@ h1 {
   </div>
 </div>
 
-<!-- MODAL CHI TIẾT NHÓM -->
 <div id="groupDetailModal" class="modal">
   <div class="modal-content" style="max-width: 600px;">
     <span class="close-modal" onclick="closeModal('groupDetailModal')">&times;</span>
@@ -360,6 +358,15 @@ function isAdmin(userData) { return userData?.role === "admin"; }
 function isModerator(userData) { return userData?.role === "user" && userData?.privileges?.moderator === true; }
 function canModerate(userData) { return isAdmin(userData) || isModerator(userData); }
 
+function canViewEmail(viewer, targetUserData, groupOwnerId) {
+  if (isAdmin(viewer)) return true;
+  if (isModerator(viewer)) {
+    return !isAdmin(targetUserData);
+  }
+  if (viewer?.uid === groupOwnerId) return true;
+  return false;
+}
+
 async function getUserData(uid) {
   const snap = await get(ref(db, `users/${uid}`));
   return snap.exists() ? snap.val() : null;
@@ -391,19 +398,16 @@ async function loadUserData(uid, email) {
   };
 }
 
-// Kiểm tra quyền chỉnh sửa nhóm (admin, moderator, hoặc chủ nhóm)
 function canEditGroup(userData, group) {
   if (!userData || userData.role === "guest") return false;
   if (isAdmin(userData) || isModerator(userData)) return true;
   return group?.ownerId === userData.uid;
 }
 
-// Kiểm tra quyền xóa nhóm (chỉ admin)
 function canDeleteGroup(userData) {
   return isAdmin(userData);
 }
 
-// Kiểm tra quyền quản lý thành viên (admin, moderator, hoặc chủ nhóm)
 function canManageMembers(userData, group) {
   if (!userData || userData.role === "guest") return false;
   if (isAdmin(userData) || isModerator(userData)) return true;
@@ -423,12 +427,10 @@ async function loadGroups() {
 async function renderGroups() {
   const grid = document.getElementById("groupsGrid");
   if (!grid) return;
-  
   if (allGroups.length === 0) {
     grid.innerHTML = "<div style='text-align:center; padding:50px;'>📭 Chưa có nhóm dịch nào</div>";
     return;
   }
-  
   grid.innerHTML = allGroups.map(group => `
     <div class="group-card" onclick="openGroupDetail('${group.id}')">
       <div class="group-name">${escapeHtml(group.groupName)}</div>
@@ -443,7 +445,6 @@ window.openGroupDetail = async (groupId) => {
   const group = allGroups.find(g => g.id === groupId);
   if (!group) return;
   
-  // Lấy thông tin thành viên
   const members = [];
   if (group.members && group.members.length > 0) {
     for (const uid of group.members) {
@@ -454,7 +455,6 @@ window.openGroupDetail = async (groupId) => {
     }
   }
   
-  // Lấy danh sách truyện của nhóm
   const storiesSnap = await get(ref(db, "stories"));
   const stories = storiesSnap.val() || {};
   const groupStories = Object.entries(stories)
@@ -465,10 +465,28 @@ window.openGroupDetail = async (groupId) => {
   const canDelete = canDeleteGroup(currentUserData);
   const canManage = canManageMembers(currentUserData, group);
   
+  const owner = members.find(m => m.isOwner);
+  const ownerDisplayName = owner?.nickname || owner?.email || group.ownerId;
+  
+  let membersHtml = '';
+  for (const m of members) {
+    const canView = canViewEmail(currentUserData, m, group.ownerId);
+    membersHtml += `
+      <div class="member-item">
+        <div>
+          <b>${escapeHtml(m.nickname || m.email)}</b>
+          ${m.isOwner ? '<span class="admin-badge">Chủ nhóm</span>' : ''}
+          <div class="member-email">${canView ? escapeHtml(m.email) : '🔒 Ẩn'}</div>
+        </div>
+        ${canManage && !m.isOwner ? `<button onclick="removeMember('${groupId}', '${m.uid}')" class="btn-small btn-red">Xóa</button>` : ''}
+      </div>
+    `;
+  }
+  
   document.getElementById("groupDetailContent").innerHTML = `
     <h2>${escapeHtml(group.groupName)}</h2>
     <p><strong>📝 Mô tả:</strong> ${escapeHtml(group.description) || "Chưa có mô tả"}</p>
-    <p><strong>👑 Chủ nhóm:</strong> ${escapeHtml(members.find(m => m.isOwner)?.nickname || group.ownerId)}</p>
+    <p><strong>👑 Chủ nhóm:</strong> ${escapeHtml(ownerDisplayName)}</p>
     <p><strong>📅 Ngày tạo:</strong> ${new Date(group.createdAt).toLocaleDateString()}</p>
     
     ${canEdit ? `
@@ -480,16 +498,7 @@ window.openGroupDetail = async (groupId) => {
     
     <h3 style="margin-top:20px;">👥 Thành viên (${members.length})</h3>
     <div class="member-list">
-      ${members.map(m => `
-        <div class="member-item">
-          <div>
-            <b>${escapeHtml(m.nickname || m.email)}</b>
-            ${m.isOwner ? '<span class="admin-badge">Chủ nhóm</span>' : ''}
-            <div class="member-email">${escapeHtml(m.email)}</div>
-          </div>
-          ${canManage && !m.isOwner ? `<button onclick="removeMember('${groupId}', '${m.uid}')" class="btn-small btn-red">Xóa</button>` : ''}
-        </div>
-      `).join("")}
+      ${membersHtml}
     </div>
     
     ${canManage ? `
@@ -529,23 +538,13 @@ window.saveGroup = async () => {
   const groupName = document.getElementById("groupName").value.trim();
   const groupDesc = document.getElementById("groupDesc").value;
   const editingId = document.getElementById("editingGroupId").value;
-  
-  if (!groupName) {
-    showNotification("Nhập tên nhóm", true);
-    return;
-  }
-  
+  if (!groupName) { showNotification("Nhập tên nhóm", true); return; }
   showLoading(true);
   try {
     if (editingId) {
-      // Cập nhật nhóm
-      await update(ref(db, `groups/${editingId}`), {
-        groupName: groupName,
-        description: groupDesc
-      });
+      await update(ref(db, `groups/${editingId}`), { groupName: groupName, description: groupDesc });
       showNotification("Đã cập nhật nhóm");
     } else {
-      // Tạo nhóm mới
       const groupsRef = ref(db, 'groups');
       const newGroupRef = push(groupsRef);
       await set(newGroupRef, {
@@ -570,10 +569,8 @@ window.saveGroup = async () => {
 
 window.deleteGroup = async (groupId) => {
   if (!confirm("Bạn có chắc chắn muốn xóa nhóm này? Hành động này không thể hoàn tác!")) return;
-  
   showLoading(true);
   try {
-    // Xóa groupId khỏi tất cả user trong nhóm
     const group = allGroups.find(g => g.id === groupId);
     if (group && group.members) {
       for (const uid of group.members) {
@@ -584,7 +581,6 @@ window.deleteGroup = async (groupId) => {
         }
       }
     }
-    // Xóa nhóm
     await remove(ref(db, `groups/${groupId}`));
     showNotification("Đã xóa nhóm");
     closeModal("groupDetailModal");
@@ -597,14 +593,9 @@ window.deleteGroup = async (groupId) => {
 
 window.addMember = async (groupId) => {
   const email = document.getElementById("memberEmail").value.trim();
-  if (!email) {
-    showNotification("Nhập email", true);
-    return;
-  }
-  
+  if (!email) { showNotification("Nhập email", true); return; }
   showLoading(true);
   try {
-    // Tìm user theo email
     const usersSnap = await get(ref(db, "users"));
     const users = usersSnap.val() || {};
     let targetUid = null;
@@ -614,13 +605,10 @@ window.addMember = async (groupId) => {
         break;
       }
     }
-    
     if (!targetUid) {
       showNotification("Không tìm thấy người dùng với email này", true);
       return;
     }
-    
-    // Thêm vào danh sách thành viên
     const groupRef = ref(db, `groups/${groupId}`);
     const groupSnap = await get(groupRef);
     const group = groupSnap.val();
@@ -643,7 +631,6 @@ window.addMember = async (groupId) => {
 
 window.removeMember = async (groupId, memberUid) => {
   if (!confirm("Xóa thành viên này khỏi nhóm?")) return;
-  
   showLoading(true);
   try {
     const groupRef = ref(db, `groups/${groupId}`);
@@ -652,15 +639,11 @@ window.removeMember = async (groupId, memberUid) => {
     let members = group.members || [];
     members = members.filter(uid => uid !== memberUid);
     await update(groupRef, { members: members });
-    
-    // Nếu là chủ nhóm, chuyển quyền? (giữ nguyên, không xóa)
-    // Xóa groupId khỏi user
     const userRef = ref(db, `users/${memberUid}/privileges/groupId`);
     const currentGroupId = await get(userRef);
     if (currentGroupId.val() === groupId) {
       await set(userRef, null);
     }
-    
     showNotification("Đã xóa thành viên");
     openGroupDetail(groupId);
   } catch (err) {
@@ -695,9 +678,7 @@ async function updateUserDisplay() {
   const userDisplay = document.getElementById("userDisplay");
   const createGroupBtn = document.getElementById("createGroupBtn");
   const adminLink = document.getElementById("adminLink");
-  
   if (!userDisplay) return;
-  
   const session = localStorage.getItem("userSession");
   if (!session) {
     userDisplay.innerHTML = "👤 Chưa đăng nhập";
@@ -705,7 +686,6 @@ async function updateUserDisplay() {
     if (adminLink) adminLink.style.display = "none";
     return;
   }
-  
   try {
     const data = JSON.parse(session);
     if (data.role === "guest") {
@@ -732,7 +712,6 @@ async function logout() {
 async function init() {
   await updateUserDisplay();
   loadGroups();
-  
   document.getElementById("createGroupBtn")?.addEventListener("click", () => {
     document.getElementById("groupFormTitle").innerText = "📚 TẠO NHÓM MỚI";
     document.getElementById("groupName").value = "";
@@ -744,7 +723,6 @@ async function init() {
   document.getElementById("logoutBtn")?.addEventListener("click", logout);
 }
 
-// Kiểm tra session khi load
 const session = localStorage.getItem("userSession");
 if (!session) {
   window.location.href = "index.html";
