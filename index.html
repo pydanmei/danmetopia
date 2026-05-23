@@ -9,7 +9,7 @@
 <!-- EmailJS -->
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 
-<!-- SortableJS cho kéo thả sắp xếp ảnh -->
+<!-- SortableJS -->
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
 
 <style>
@@ -555,10 +555,15 @@ body {
   align-items: center;
   flex-wrap: wrap;
   gap: 10px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.chapter-item:hover {
+  background: #FF69B4;
+  color: black;
 }
 .chapter-item > div:first-child {
   flex: 1;
-  cursor: pointer;
 }
 .chapter-actions {
   display: flex;
@@ -574,6 +579,16 @@ body {
 }
 .chapter-edit-btn { background: #FFCC00; color: black; }
 .chapter-delete-btn { background: #ff4444; color: white; }
+.chapter-list-section {
+  background: #1c1c1c;
+  border-radius: 16px;
+  padding: 15px;
+  margin-top: 30px;
+}
+.chapter-list-section h4 {
+  color: #FF69B4;
+  margin-bottom: 15px;
+}
 .notification {
   position: fixed;
   bottom: 20px;
@@ -610,6 +625,10 @@ body {
   font-weight: bold;
   cursor: pointer;
   color: black;
+}
+.chapter-nav button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 .reader-image {
   width: 100%;
@@ -666,6 +685,10 @@ body {
   .chapter-item {
     flex-direction: column;
     align-items: flex-start;
+  }
+  .chapter-nav {
+    flex-direction: column;
+    align-items: center;
   }
 }
 </style>
@@ -1202,6 +1225,10 @@ window.showHome = () => {
   scheduleRender();
 };
 
+window.scrollToTop = () => {
+  window.scrollTo({ top: 0, behavior: "smooth" });
+};
+
 document.getElementById("homeLogo")?.addEventListener("click", () => window.showHome());
 
 // ==================== GROUPS FUNCTIONS ====================
@@ -1404,12 +1431,6 @@ window.openAddChapter = (storyId) => {
           const newOrder = [];
           for (let i = 0; i < previewDiv.children.length; i++) {
             const imgDiv = previewDiv.children[i];
-            const img = imgDiv.querySelector('img');
-            const originalFile = selectedChapterImages.find(f => {
-              const reader = new FileReader();
-              reader.readAsDataURL(f);
-              return false;
-            });
             newOrder.push(selectedChapterImages[i]);
           }
           if (newOrder.length === selectedChapterImages.length) {
@@ -1540,7 +1561,6 @@ window.openEditChapter = async (storyId, chapterId) => {
   for (let i = 0; i < existingPages.length; i++) {
     const imgDiv = document.createElement("div");
     imgDiv.className = "img-preview-item";
-    imgDiv.setAttribute("data-index", i);
     imgDiv.innerHTML = `<img src="${escapeHtml(existingPages[i])}" style="width:100%; height:100%; object-fit:cover; border-radius:8px;"><button onclick="this.parentElement.remove()">✕</button>`;
     existingPreviewDiv.appendChild(imgDiv);
   }
@@ -1689,7 +1709,6 @@ function renderCurrentTab() {
   if (!document.getElementById("mangaGrid")) return;
   let filtered = [];
   
-  // TẤT CẢ USER ĐỀU CÓ THỂ XEM TRUYỆN ĐÃ DUYỆT (kể cả guest)
   if (isAdmin(currentUserData)) {
     filtered = [...allStories];
   } else {
@@ -1759,11 +1778,9 @@ window.openStoryDetail = async (storyId) => {
   let chaptersHtml = `<h3>📖 DANH SÁCH CHAPTER</h3><div class="chapter-list">`;
   chapters.forEach((chap) => {
     chaptersHtml += `
-      <div class="chapter-item">
-        <div onclick="openReader('${storyId}', ${chap.chapterNumber - 1})">
-          <span>${escapeHtml(chap.title)}</span>
-          <span style="font-size:12px; color:#888;">📅 ${new Date(chap.createdAt).toLocaleDateString()}</span>
-        </div>
+      <div class="chapter-item" onclick="openStoryDetailChapter('${storyId}', ${chap.chapterNumber - 1})">
+        <span>${escapeHtml(chap.title)}</span>
+        <span style="font-size:12px; color:#888;">📅 ${new Date(chap.createdAt).toLocaleDateString()}</span>
         <div class="chapter-actions">
           ${canEditChapter ? `<button class="chapter-edit-btn" onclick="event.stopPropagation(); openEditChapter('${storyId}', '${chap.id}')">✏️ Sửa</button>` : ''}
           ${canDeleteChapter ? `<button class="chapter-delete-btn" onclick="event.stopPropagation(); deleteChapter('${storyId}', '${chap.id}')">🗑 Xóa</button>` : ''}
@@ -1781,6 +1798,11 @@ window.openStoryDetail = async (storyId) => {
   if (isAdmin(currentUserData)) actionsHtml += `<button onclick="deleteStoryAction('${storyId}')" style="background:#ff4444;">🗑 Xóa truyện</button>`;
   document.getElementById("storyActions").innerHTML = actionsHtml;
   document.getElementById("storyModal").style.display = "flex";
+};
+
+window.openStoryDetailChapter = (storyId, chapterIndex) => {
+  closeModal("storyModal");
+  openReader(storyId, chapterIndex);
 };
 
 window.likeStoryAndRefresh = async (storyId) => { await likeStory(storyId); openStoryDetail(storyId); };
@@ -1929,21 +1951,46 @@ function renderChapter() {
   const readerDiv = document.getElementById("readerContent");
   if (!readerDiv) return;
   
+  const hasPrev = currentChapterIndex > 0;
+  const hasNext = currentChapterIndex < currentChapters.length - 1;
+  
   readerDiv.innerHTML = `
     <div class="reader-page">
+      <!-- Chapter navigation TOP -->
       <div class="chapter-nav">
-        <button onclick="window.changeChapter(-1)">⬅️ Chapter trước</button>
+        ${hasPrev ? `<button onclick="window.changeChapter(-1)">⬅️ Chapter trước</button>` : '<button disabled style="opacity:0.5;">⬅️ Chapter trước</button>'}
         <h3>${escapeHtml(chap.title)}</h3>
-        <button onclick="window.changeChapter(1)">Chapter sau ➡️</button>
+        ${hasNext ? `<button onclick="window.changeChapter(1)">Chapter sau ➡️</button>` : '<button disabled style="opacity:0.5;">Chapter sau ➡️</button>'}
       </div>
-      <div class="chapter-list" id="chapterList">
-        ${currentChapters.map((c, i) => `<div class="chapter-item" onclick="window.changeChapterTo(${i})">${escapeHtml(c.title)}</div>`).join("")}
-      </div>
+      
+      <!-- Chapter Images -->
       <div id="chapterImages">
-        ${chap.pages?.map(page => `<img class="reader-image" src="${escapeHtml(page)}" onerror="this.src='https://placehold.co/800x1200?text=Error'">`).join("") || "<p>Không có ảnh</p>"}
+        ${chap.pages?.map(page => `<img class="reader-image" src="${escapeHtml(page)}" loading="lazy" onerror="this.src='https://placehold.co/800x1200?text=Image+Load+Error'">`).join("") || "<p>Không có ảnh</p>"}
       </div>
+      
+      <!-- Chapter navigation BOTTOM -->
+      <div class="chapter-nav" style="margin-top:30px; margin-bottom:30px;">
+        ${hasPrev ? `<button onclick="window.changeChapter(-1)">⬅️ Chapter trước</button>` : '<button disabled style="opacity:0.5;">⬅️ Chapter trước</button>'}
+        <button onclick="window.scrollToTop()" style="background:#FFCCCC;">⬆️ Lên đầu trang</button>
+        ${hasNext ? `<button onclick="window.changeChapter(1)">Chapter sau ➡️</button>` : '<button disabled style="opacity:0.5;">Chapter sau ➡️</button>'}
+      </div>
+      
+      <!-- MỤC LỤC CHAPTER -->
+      <div class="chapter-list-section">
+        <h4>📑 MỤC LỤC CHAPTER</h4>
+        <div class="chapter-list">
+          ${currentChapters.map((c, i) => `
+            <div class="chapter-item" onclick="window.changeChapterTo(${i})">
+              <span>${escapeHtml(c.title)}</span>
+              <span style="font-size:12px; color:#888;">📅 ${new Date(c.createdAt).toLocaleDateString()}</span>
+            </div>
+          `).join("")}
+        </div>
+      </div>
+      
+      <!-- Comment Section -->
       <div class="comment-section">
-        <h4>💬 Bình luận</h4>
+        <h4>💬 BÌNH LUẬN</h4>
         <textarea id="commentText" rows="3" style="width:100%; background:#2a2a2a; border:none; border-radius:12px; padding:12px; color:white;" placeholder="Nhập bình luận..."></textarea>
         <button id="postCommentBtn" style="margin-top:10px; background:#FF69B4; border:none; border-radius:30px; padding:10px 20px; cursor:pointer; color:black; font-weight:bold;">GỬI</button>
         <div id="commentList" style="margin-top:20px;"></div>
@@ -1961,8 +2008,20 @@ function renderChapter() {
   }
 }
 
-window.changeChapter = (delta) => { let newIdx = currentChapterIndex + delta; if (newIdx >= 0 && newIdx < currentChapters.length) { currentChapterIndex = newIdx; renderChapter(); window.scrollTo(0,0); } };
-window.changeChapterTo = (index) => { currentChapterIndex = index; renderChapter(); window.scrollTo(0,0); };
+window.changeChapter = (delta) => {
+  const newIdx = currentChapterIndex + delta;
+  if (newIdx >= 0 && newIdx < currentChapters.length) {
+    currentChapterIndex = newIdx;
+    renderChapter();
+    window.scrollTo(0, 0);
+  }
+};
+
+window.changeChapterTo = (index) => {
+  currentChapterIndex = index;
+  renderChapter();
+  window.scrollTo(0, 0);
+};
 
 async function loadComments(storyId) {
   const commentsRef = ref(db, `comments/${storyId}`);
