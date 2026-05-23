@@ -1271,24 +1271,39 @@ async function rejectStory(storyId) {
 
 // ==================== CHAPTER FUNCTIONS ====================
 async function addChapter(storyId, title, pages, chapterNumber) {
+  console.log("📖 addChapter called:", { storyId, title, pagesCount: pages.length, chapterNumber });
+  
   if (!title) {
     showNotification("Thiếu tên chapter", true);
     throw new Error("Thiếu title");
   }
+  
+  // Lấy danh sách chapters hiện tại để xác định số chapter mới
+  const existingChapters = await getChapters(storyId);
+  const newChapterNumber = chapterNumber || existingChapters.length + 1;
+  
   const chaptersRef = ref(db, `chapters/${storyId}`);
   const newChapterRef = push(chaptersRef);
+  
   const chapterData = {
     title: title,
     pages: pages,
-    chapterNumber: chapterNumber || 0,
+    chapterNumber: newChapterNumber,
     createdAt: Date.now()
   };
+  
+  console.log("📦 Saving chapter data:", chapterData);
+  
   await set(newChapterRef, chapterData);
+  
+  // Cập nhật số chương trong story
   const storyRef = ref(db, `stories/${storyId}/chapters`);
   const snap = await get(storyRef);
   const currentChapters = snap.val() || {};
   currentChapters[newChapterRef.key] = true;
   await set(storyRef, currentChapters);
+  
+  console.log("✅ Chapter added successfully");
 }
 
 async function getChapters(storyId) {
@@ -1530,24 +1545,76 @@ window.saveEditStory = async (storyId) => {
   openStoryDetail(storyId);
 };
 
-// ==================== ADD CHAPTER ====================
+// ==================== CHAPTER FUNCTIONS ====================
 let selectedChapterImages = [];
 
+async function getChapters(storyId) {
+  const snapshot = await get(ref(db, `chapters/${storyId}`));
+  const data = snapshot.val() || {};
+  const chapters = Object.entries(data).map(([id, value]) => ({ id, ...value }));
+  chapters.sort((a, b) => (a.chapterNumber || 0) - (b.chapterNumber || 0));
+  return chapters;
+}
+
+async function addChapter(storyId, title, pages, chapterNumber) {
+  console.log("📖 addChapter called:", { storyId, title, pagesCount: pages.length });
+  
+  if (!title) {
+    showNotification("Thiếu tên chapter", true);
+    throw new Error("Thiếu title");
+  }
+  
+  const existingChapters = await getChapters(storyId);
+  const newChapterNumber = chapterNumber || existingChapters.length + 1;
+  
+  const chaptersRef = ref(db, `chapters/${storyId}`);
+  const newChapterRef = push(chaptersRef);
+  
+  const chapterData = {
+    title: title,
+    pages: pages,
+    chapterNumber: newChapterNumber,
+    createdAt: Date.now()
+  };
+  
+  await set(newChapterRef, chapterData);
+  
+  const storyRef = ref(db, `stories/${storyId}/chapters`);
+  const snap = await get(storyRef);
+  const currentChapters = snap.val() || {};
+  currentChapters[newChapterRef.key] = true;
+  await set(storyRef, currentChapters);
+  
+  console.log("✅ Chapter added");
+}
+
 window.openAddChapter = (storyId) => {
+  console.log("🔘 openAddChapter for storyId:", storyId);
   selectedChapterImages = [];
+  
   document.getElementById("addChapterContent").innerHTML = `
     <input id="chapterTitle" placeholder="Tên chapter *">
-    <input id="chapterNumber" placeholder="Số chapter">
+    <input id="chapterNumber" placeholder="Số chapter (để trống tự động tăng)">
     <input type="file" id="chapterImages" accept="image/*" multiple>
     <div id="chapterImagesPreview" class="images-preview"></div>
     <textarea id="chapterPages" placeholder="Hoặc nhập link ảnh (mỗi dòng 1 link)" rows="5"></textarea>
-    <button onclick="saveAddChapter('${storyId}')">📤 Đăng chapter</button>
+    <button class="btn-pink" id="saveChapterBtn">📤 ĐĂNG CHAPTER</button>
   `;
-  document.getElementById("chapterImages")?.addEventListener("change", async (e) => {
+  
+  // Gắn sự kiện cho nút
+  const saveBtn = document.getElementById("saveChapterBtn");
+  if (saveBtn) {
+    const newBtn = saveBtn.cloneNode(true);
+    saveBtn.parentNode.replaceChild(newBtn, saveBtn);
+    newBtn.addEventListener("click", () => window.saveAddChapter(storyId));
+  }
+  
+  // Preview ảnh
+  document.getElementById("chapterImages")?.addEventListener("change", (e) => {
     const files = Array.from(e.target.files);
+    selectedChapterImages = files;
     const previewDiv = document.getElementById("chapterImagesPreview");
     previewDiv.innerHTML = "";
-    selectedChapterImages = files;
     for (const file of files) {
       const reader = new FileReader();
       reader.onload = (ev) => {
@@ -1560,32 +1627,61 @@ window.openAddChapter = (storyId) => {
       reader.readAsDataURL(file);
     }
   });
+  
   document.getElementById("addChapterModal").style.display = "flex";
 };
 
 window.saveAddChapter = async (storyId) => {
-  const title = document.getElementById("chapterTitle").value;
-  const pagesText = document.getElementById("chapterPages").value;
-  const chapterNumber = parseInt(document.getElementById("chapterNumber").value) || 0;
-  if (!title) { showNotification("Nhập tên chapter", true); return; }
+  console.log("🔘 saveAddChapter called for storyId:", storyId);
+  
+  const title = document.getElementById("chapterTitle")?.value;
+  const pagesText = document.getElementById("chapterPages")?.value;
+  const chapterNumber = parseInt(document.getElementById("chapterNumber")?.value) || 0;
+  
+  if (!title) { 
+    showNotification("Nhập tên chapter", true); 
+    return; 
+  }
+  
   let pages = [];
-  if (selectedChapterImages.length > 0) {
+  
+  // Upload ảnh từ file
+  if (selectedChapterImages && selectedChapterImages.length > 0) {
     showLoading(true);
+    showNotification(`📤 Đang upload ${selectedChapterImages.length} ảnh...`, false);
     pages = await uploadMultipleImages(selectedChapterImages);
     showLoading(false);
   }
-  if (pagesText.trim()) {
+  
+  // Thêm link ảnh từ textarea
+  if (pagesText && pagesText.trim()) {
     const linkPages = pagesText.split('\n').filter(p => p.trim());
     pages = [...pages, ...linkPages];
   }
+  
   if (pages.length === 0) {
     showNotification("Thêm ít nhất 1 ảnh hoặc link ảnh", true);
     return;
   }
-  await addChapter(storyId, title, pages, chapterNumber);
-  closeModal("addChapterModal");
-  showNotification("Đã thêm chapter");
-  openStoryDetail(storyId);
+  
+  try {
+    await addChapter(storyId, title, pages, chapterNumber);
+    showNotification("✅ Đã thêm chapter thành công!");
+    closeModal("addChapterModal");
+    
+    // Reset form
+    if (document.getElementById("chapterTitle")) document.getElementById("chapterTitle").value = "";
+    if (document.getElementById("chapterNumber")) document.getElementById("chapterNumber").value = "";
+    if (document.getElementById("chapterPages")) document.getElementById("chapterPages").value = "";
+    if (document.getElementById("chapterImages")) document.getElementById("chapterImages").value = "";
+    if (document.getElementById("chapterImagesPreview")) document.getElementById("chapterImagesPreview").innerHTML = "";
+    selectedChapterImages = [];
+    
+    openStoryDetail(storyId);
+  } catch (err) {
+    console.error("Add chapter error:", err);
+    showNotification("Lỗi: " + err.message, true);
+  }
 };
 
 // ==================== READER ====================
