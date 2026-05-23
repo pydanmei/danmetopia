@@ -275,3 +275,9 @@ export async function logout() {
   localStorage.removeItem("userSession");
   window.location.reload();
 }
+
+// Initialize auth module (khởi tạo listeners nếu cần)
+export function initAuth() {
+  console.log("🔐 Auth module initialized");
+  // Có thể thêm logic khởi tạo auth listeners ở đây nếu cần
+}
