@@ -151,4 +151,26 @@ export function renderCurrentTab() {
   const searchTerm = document.getElementById("searchInput")?.value.toLowerCase() || "";
   if (searchTerm) filtered = filtered.filter(s => s.title?.toLowerCase().includes(searchTerm));
   const sortBy = document.getElementById("sortFilter")?.value;
-  if (sortBy === "likes")
+  if (sortBy === "likes") filtered.sort((a,b) => (b.likes||0) - (a.likes||0));
+  else if (sortBy === "views") filtered.sort((a,b) => (b.views||0) - (a.views||0));
+  else filtered.sort((a,b) => (b.createdAt||0) - (a.createdAt||0));
+  renderMangaGrid(filtered);
+}
+
+export function renderMangaGrid(stories) {
+  const grid = document.getElementById("mangaGrid");
+  if (!grid) return;
+  if (!stories.length) { grid.innerHTML = "<div style='text-align:center; padding:50px;'>📭 Không có truyện nào</div>"; return; }
+  grid.innerHTML = stories.map(story => `
+    <div class="manga-card" onclick="API.openStoryDetail('${story.id}')">
+      <img class="manga-cover" src="${escapeHtml(story.cover) || 'https://placehold.co/300x450?text=No+Cover'}" onerror="this.src='https://placehold.co/300x450?text=ERROR'">
+      <div class="manga-info">
+        <div class="manga-title">${escapeHtml(story.title)}</div>
+        <div class="manga-meta">📚 ${escapeHtml(story.groupName) || "Cá nhân"}</div>
+        <div class="manga-meta">❤️ ${story.likes || 0} | 👁 ${story.views || 0}</div>
+        ${story.approved === false ? '<div class="manga-meta" style="color:#FFCC00;">⏳ Chờ duyệt</div>' : ''}
+        <div class="manga-meta">${story.status === "Đã hoàn thành" ? "✅ Hoàn thành" : story.status === "Tạm ngưng" ? "⏸ Tạm ngưng" : "📖 Đang ra"}</div>
+      </div>
+    </div>
+  `).join("");
+}
