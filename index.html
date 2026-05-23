@@ -946,10 +946,6 @@ body {
 // ==================== IMGBB CONFIG ====================
 const IMGBB_API_KEY = "d16b5595d7f6044476d254c8f428cc28";
 
-// ==================== SESSION TIMES ====================
-const GUEST_SESSION_HOURS = 1;
-const LOGGED_IN_SESSION_DAYS = 7;
-
 // ==================== GENRE LIST ====================
 const GENRE_LIST = [
   { name: "3D", icon: "🎮", desc: "Truyện được vẽ bằng đồ họa 3D" },
@@ -987,42 +983,9 @@ const GENRE_LIST = [
   { name: "Yuri", icon: "💕", desc: "Truyện GL (girl love)" }
 ];
 
-// ==================== SESSION MANAGEMENT ====================
-const MAIN_PASSWORD_SESSION_KEY = "mainPasswordExpiry";
-const LOGIN_SESSION_KEY = "loginSessionExpiry";
-const MAIN_PASSWORD = "danmei";
-
-function setMainPasswordSession() {
-  const expiry = Date.now() + 24 * 60 * 60 * 1000;
-  localStorage.setItem(MAIN_PASSWORD_SESSION_KEY, expiry.toString());
-}
-
-function checkMainPasswordSession() {
-  const expiry = localStorage.getItem(MAIN_PASSWORD_SESSION_KEY);
-  if (!expiry) return false;
-  return Date.now() < parseInt(expiry);
-}
-
-function setUserSession(isLoggedIn) {
-  const expiryTime = isLoggedIn 
-    ? Date.now() + LOGGED_IN_SESSION_DAYS * 24 * 60 * 60 * 1000
-    : Date.now() + GUEST_SESSION_HOURS * 60 * 60 * 1000;
-  localStorage.setItem(LOGIN_SESSION_KEY, expiryTime.toString());
-}
-
-function checkUserSession() {
-  const expiry = localStorage.getItem(LOGIN_SESSION_KEY);
-  if (!expiry) return false;
-  return Date.now() < parseInt(expiry);
-}
-
-function clearUserSession() {
-  localStorage.removeItem(LOGIN_SESSION_KEY);
-}
-
 // ==================== FIREBASE & EMAILJS ====================
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import { getDatabase, ref, set, get, child, push, update, remove, onValue, off } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
 const firebaseConfig = {
@@ -1040,10 +1003,16 @@ const auth = getAuth(app);
 const db = getDatabase(app);
 emailjs.init("fPq8fpw1OqzOtj-lk");
 
+// Set persistence to LOCAL so user stays logged in
+await setPersistence(auth, browserLocalPersistence);
+
 // ==================== CONSTANTS ====================
 const ADMIN_EMAILS = ["pydanmeii@gmail.com", "pepyl4298@gmail.com", "maihuong4298@gmail.com"];
 
 let currentUserData = null;
+let guestData = null;
+let isGuestMode = false;
+let hasShownLogin = false;
 let allStories = [];
 let allGroups = [];
 let currentTab = "all";
@@ -1111,6 +1080,30 @@ if (scrollBtn) {
   scrollBtn.addEventListener("click", () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   });
+}
+
+// ==================== UI SHOW/HIDE ====================
+function showApp() {
+  document.getElementById("warningOverlay").style.display = "none";
+  document.getElementById("loginPage").style.display = "none";
+  document.getElementById("registerPage").style.display = "none";
+  document.getElementById("mainContainer").style.display = "block";
+  updateUserDisplay();
+  initApp();
+}
+
+function showLoginPage() {
+  document.getElementById("warningOverlay").style.display = "none";
+  document.getElementById("loginPage").style.display = "flex";
+  document.getElementById("mainContainer").style.display = "none";
+  document.getElementById("registerPage").style.display = "none";
+}
+
+function showWarningPage() {
+  document.getElementById("warningOverlay").style.display = "flex";
+  document.getElementById("loginPage").style.display = "none";
+  document.getElementById("mainContainer").style.display = "none";
+  document.getElementById("registerPage").style.display = "none";
 }
 
 // ==================== IMGBB UPLOAD ====================
@@ -1262,13 +1255,11 @@ async function createNewUser(uid, email, nickname) {
 // ==================== AUTH FLOWS ====================
 async function handleGuestLogin() {
   const guestName = generateRandomGuestName();
-  currentUserData = { role: "guest", displayName: guestName, nickname: guestName };
-  localStorage.setItem("userSession", JSON.stringify(currentUserData));
-  setUserSession(false);
-  document.getElementById("loginPage").style.display = "none";
-  document.getElementById("mainContainer").style.display = "block";
+  isGuestMode = true;
+  guestData = { role: "guest", displayName: guestName, nickname: guestName };
+  currentUserData = guestData;
+  showApp();
   showNotification(`👤 Chào mừng ${guestName} (Khách)`);
-  initApp();
 }
 
 async function handleCheckEmail() {
@@ -1277,32 +1268,35 @@ async function handleCheckEmail() {
   
   const isAdminEmail = ADMIN_EMAILS.includes(email);
   showLoading(true);
-  const emailExists = await checkEmailExists(email);
-  showLoading(false);
-  
-  if (isAdminEmail) {
-    pendingRegisterEmail = email;
-    document.getElementById("passwordGroup").style.display = "block";
-    document.getElementById("otpGroup").style.display = "none";
-    document.getElementById("loginMsg").innerHTML = "";
-    document.getElementById("loginMsg").style.color = "#FF69B4";
-    document.getElementById("loginMsg").innerHTML = "👑 Email Admin, vui lòng nhập mật khẩu";
-    return;
-  }
-  
-  if (emailExists) {
-    pendingRegisterEmail = email;
-    document.getElementById("passwordGroup").style.display = "block";
-    document.getElementById("otpGroup").style.display = "none";
-    document.getElementById("loginMsg").innerHTML = "";
-  } else {
-    pendingRegisterEmail = email;
-    await sendOTPEmail(email);
-    document.getElementById("otpGroup").style.display = "block";
-    document.getElementById("passwordGroup").style.display = "none";
-    document.getElementById("loginMsg").innerHTML = "";
-    document.getElementById("loginMsg").style.color = "#FF69B4";
-    document.getElementById("loginMsg").innerHTML = "📩 Mã OTP đã gửi, vui lòng kiểm tra email";
+  try {
+    const emailExists = await checkEmailExists(email);
+    
+    if (isAdminEmail) {
+      pendingRegisterEmail = email;
+      document.getElementById("passwordGroup").style.display = "block";
+      document.getElementById("otpGroup").style.display = "none";
+      document.getElementById("loginMsg").innerHTML = "";
+      document.getElementById("loginMsg").style.color = "#FF69B4";
+      document.getElementById("loginMsg").innerHTML = "👑 Email Admin, vui lòng nhập mật khẩu";
+      return;
+    }
+    
+    if (emailExists) {
+      pendingRegisterEmail = email;
+      document.getElementById("passwordGroup").style.display = "block";
+      document.getElementById("otpGroup").style.display = "none";
+      document.getElementById("loginMsg").innerHTML = "";
+    } else {
+      pendingRegisterEmail = email;
+      await sendOTPEmail(email);
+      document.getElementById("otpGroup").style.display = "block";
+      document.getElementById("passwordGroup").style.display = "none";
+      document.getElementById("loginMsg").innerHTML = "";
+      document.getElementById("loginMsg").style.color = "#FF69B4";
+      document.getElementById("loginMsg").innerHTML = "📩 Mã OTP đã gửi, vui lòng kiểm tra email";
+    }
+  } finally {
+    showLoading(false);
   }
 }
 
@@ -1310,12 +1304,15 @@ async function handleVerifyOTP() {
   const otp = document.getElementById("otpCode").value.trim();
   if (!otp || otp.length !== 6) { showNotification("Nhập mã OTP 6 số", true); return; }
   showLoading(true);
-  const result = await verifyOTP(pendingRegisterEmail, otp);
-  showLoading(false);
-  if (!result.success) { showNotification(result.message, true); return; }
-  document.getElementById("verifiedEmail").innerText = pendingRegisterEmail;
-  document.getElementById("loginPage").style.display = "none";
-  document.getElementById("registerPage").style.display = "flex";
+  try {
+    const result = await verifyOTP(pendingRegisterEmail, otp);
+    if (!result.success) { showNotification(result.message, true); return; }
+    document.getElementById("verifiedEmail").innerText = pendingRegisterEmail;
+    document.getElementById("loginPage").style.display = "none";
+    document.getElementById("registerPage").style.display = "flex";
+  } finally {
+    showLoading(false);
+  }
 }
 
 async function handlePasswordLogin() {
@@ -1324,15 +1321,8 @@ async function handlePasswordLogin() {
   if (!email || !password) { showNotification("Nhập email và mật khẩu", true); return; }
   showLoading(true);
   try {
-    const userCred = await signInWithEmailAndPassword(auth, email, password);
-    const userData = await loadUserData(userCred.user.uid, email);
-    currentUserData = userData;
-    localStorage.setItem("userSession", JSON.stringify(currentUserData));
-    setUserSession(true);
-    document.getElementById("loginPage").style.display = "none";
-    document.getElementById("mainContainer").style.display = "block";
-    showNotification(`✅ Chào mừng ${currentUserData.displayName}`);
-    initApp();
+    await signInWithEmailAndPassword(auth, email, password);
+    // onAuthStateChanged sẽ trigger sau khi login thành công
   } catch (err) {
     console.error("Login error:", err);
     if (err.code === "auth/invalid-credential") {
@@ -1355,7 +1345,9 @@ async function handlePasswordLogin() {
     } else {
       showNotification("Lỗi: " + err.message, true);
     }
-  } finally { showLoading(false); }
+  } finally {
+    showLoading(false);
+  }
 }
 
 async function handleCompleteRegistration() {
@@ -1370,55 +1362,27 @@ async function handleCompleteRegistration() {
   try {
     const userCred = await createUserWithEmailAndPassword(auth, pendingRegisterEmail, password);
     await createNewUser(userCred.user.uid, pendingRegisterEmail, nickname);
-    const userData = await loadUserData(userCred.user.uid, pendingRegisterEmail);
-    currentUserData = userData;
-    localStorage.setItem("userSession", JSON.stringify(currentUserData));
-    setUserSession(true);
-    document.getElementById("registerPage").style.display = "none";
-    document.getElementById("mainContainer").style.display = "block";
-    showNotification(`🎉 Chào mừng ${nickname}!`);
-    initApp();
+    // onAuthStateChanged sẽ trigger sau khi tạo thành công
   } catch (err) {
     msg.innerText = "Lỗi: " + err.message;
-  } finally { showLoading(false); }
-}
-
-async function restoreSession() {
-  const session = localStorage.getItem("userSession");
-  if (!session) return false;
-  
-  if (!checkUserSession()) {
-    localStorage.removeItem("userSession");
-    return false;
+  } finally {
+    showLoading(false);
   }
-  
-  try {
-    const data = JSON.parse(session);
-    if (data.role === "guest") {
-      currentUserData = data;
-      document.getElementById("warningOverlay").style.display = "none";
-      document.getElementById("loginPage").style.display = "none";
-      document.getElementById("mainContainer").style.display = "block";
-      initApp();
-      return true;
-    } else if (data.uid && data.email) {
-      currentUserData = await loadUserData(data.uid, data.email);
-      localStorage.setItem("userSession", JSON.stringify(currentUserData));
-      document.getElementById("warningOverlay").style.display = "none";
-      document.getElementById("loginPage").style.display = "none";
-      document.getElementById("mainContainer").style.display = "block";
-      initApp();
-      return true;
-    }
-  } catch(e) { console.error("Restore error:", e); }
-  return false;
 }
 
 async function logout() {
-  await signOut(auth);
-  clearUserSession();
-  localStorage.removeItem("userSession");
-  window.location.reload();
+  showLoading(true);
+  try {
+    await signOut(auth);
+    isGuestMode = false;
+    guestData = null;
+    currentUserData = null;
+    showLoginPage();
+  } catch (err) {
+    showNotification("Lỗi khi đăng xuất: " + err.message, true);
+  } finally {
+    showLoading(false);
+  }
 }
 
 // ==================== HOME BUTTON ====================
@@ -1693,11 +1657,14 @@ window.saveAddChapter = async (storyId) => {
   if (selectedChapterImages && selectedChapterImages.length > 0) {
     showLoading(true);
     showNotification(`📤 Đang upload ${selectedChapterImages.length} ảnh...`, false);
-    const uploadedUrls = await uploadMultipleImages(selectedChapterImages);
-    if (uploadedUrls && uploadedUrls.length > 0) {
-      pages = [...pages, ...uploadedUrls];
+    try {
+      const uploadedUrls = await uploadMultipleImages(selectedChapterImages);
+      if (uploadedUrls && uploadedUrls.length > 0) {
+        pages = [...pages, ...uploadedUrls];
+      }
+    } finally {
+      showLoading(false);
     }
-    showLoading(false);
   }
   
   if (pagesText && pagesText.trim()) {
@@ -1830,11 +1797,14 @@ window.openEditChapter = async (storyId, chapterId) => {
       if (newImageFiles.length > 0) {
         showLoading(true);
         showNotification(`📤 Đang upload ${newImageFiles.length} ảnh mới...`, false);
-        const newImageUrls = await uploadMultipleImages(newImageFiles);
-        if (newImageUrls && newImageUrls.length > 0) {
-          newPages = [...newPages, ...newImageUrls];
+        try {
+          const newImageUrls = await uploadMultipleImages(newImageFiles);
+          if (newImageUrls && newImageUrls.length > 0) {
+            newPages = [...newPages, ...newImageUrls];
+          }
+        } finally {
+          showLoading(false);
         }
-        showLoading(false);
       }
       
       if (newPages.length === 0) {
@@ -2551,9 +2521,42 @@ async function initApp() {
   loadStoriesRealtime();
 }
 
+// ==================== AUTH STATE LISTENER - SINGLE SOURCE OF TRUTH ====================
+// This is the ONLY auth handler - no localStorage session management
+onAuthStateChanged(auth, async (user) => {
+  console.log("Auth state changed:", user ? `Logged in as ${user.email}` : "No user");
+  
+  if (user) {
+    // Real user logged in - this overrides guest mode
+    isGuestMode = false;
+    guestData = null;
+    currentUserData = await loadUserData(user.uid, user.email);
+    showApp();
+    showNotification(`✅ Chào mừng ${currentUserData.displayName}`);
+  } else if (!isGuestMode && !hasShownLogin) {
+    // No user and not in guest mode - show login page
+    hasShownLogin = true;
+    showLoginPage();
+  }
+});
+
 // ==================== EVENT LISTENERS ====================
 document.addEventListener("DOMContentLoaded", async () => {
   console.log("🚀 DOM ready");
+  
+  const MAIN_PASSWORD = "danmei";
+  const MAIN_PASSWORD_SESSION_KEY = "mainPasswordExpiry";
+  
+  function checkMainPasswordSession() {
+    const expiry = localStorage.getItem(MAIN_PASSWORD_SESSION_KEY);
+    if (!expiry) return false;
+    return Date.now() < parseInt(expiry);
+  }
+  
+  function setMainPasswordSession() {
+    const expiry = Date.now() + 24 * 60 * 60 * 1000;
+    localStorage.setItem(MAIN_PASSWORD_SESSION_KEY, expiry.toString());
+  }
   
   document.getElementById("warningContinueBtn")?.addEventListener("click", () => {
     const mainPass = document.getElementById("mainPassword").value;
@@ -2606,25 +2609,13 @@ document.addEventListener("DOMContentLoaded", async () => {
   
   // Check if user has already entered main password
   if (checkMainPasswordSession()) {
-    const restored = await restoreSession();
-    if (!restored) {
-      document.getElementById("warningOverlay").style.display = "none";
-      document.getElementById("loginPage").style.display = "flex";
-    }
+    // Auth state will determine if we show login or main content
+    // Don't auto-show anything - wait for onAuthStateChanged
+    showLoading(true);
+    // Loading will be hidden by onAuthStateChanged or after timeout
+    setTimeout(() => showLoading(false), 3000);
   } else {
-    document.getElementById("warningOverlay").style.display = "flex";
-  }
-});
-
-onAuthStateChanged(auth, async (user) => {
-  if (user && !currentUserData) {
-    const email = user.email || "user@anonymous.com";
-    currentUserData = await loadUserData(user.uid, email);
-    localStorage.setItem("userSession", JSON.stringify(currentUserData));
-    setUserSession(true);
-    document.getElementById("loginPage").style.display = "none";
-    document.getElementById("mainContainer").style.display = "block";
-    await initApp();
+    showWarningPage();
   }
 });
 </script>
