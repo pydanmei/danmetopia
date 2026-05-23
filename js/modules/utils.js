@@ -1,3 +1,5 @@
+import { state, setState } from '../core/state.js';
+
 // Show notification
 export function showNotification(msg, isError = false) {
   console.log("🔔 Notification:", msg, isError ? "ERROR" : "INFO");
@@ -12,6 +14,7 @@ export function showNotification(msg, isError = false) {
 
 // Show/hide loading spinner
 export function showLoading(show) {
+  setState('isLoading', show);
   let spinner = document.getElementById("globalSpinner");
   if (show) {
     if (!spinner) {
@@ -87,5 +90,25 @@ export function initScrollButtons() {
   }
 }
 
-// Image cache for preloading
+// Image cache
 export const imageCache = new Map();
+
+// Load image with lazy loading
+export function loadImage(imgElement, src) {
+  if (!imgElement) return;
+  
+  if (imageCache.has(src)) {
+    imgElement.src = imageCache.get(src);
+    return;
+  }
+  
+  const tempImg = new Image();
+  tempImg.onload = () => {
+    imgElement.src = src;
+    imageCache.set(src, src);
+  };
+  tempImg.onerror = () => {
+    imgElement.src = "https://placehold.co/800x1200?text=Error";
+  };
+  tempImg.src = src;
+}
