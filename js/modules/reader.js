@@ -1,17 +1,10 @@
-// IMPORT ĐẦY ĐỦ
-import { initFirebase, db, ref, onValue, get, set, push } from './db.js';
-import { currentUserData, refreshUserSession } from './auth.js';
-import { escapeHtml, loadImageWithSkeleton, imageCache, showNotification } from './utils.js';
-import { allStories } from './data.js';
+import { FirebaseService } from '../core/firebaseService.js';
+import { state, setState } from '../core/state.js';
+import { refreshUserSession } from './auth.js';
+import { showNotification, escapeHtml, imageCache } from './utils.js';
 
-// Đảm bảo Firebase đã init
-initFirebase();
+const { db, ref, onValue, get, set, push } = FirebaseService;
 
-console.log("✅ reader.js loaded");
-
-let currentReaderStoryId = null;
-let currentChapters = [];
-let currentChapterIndex = 0;
 let chaptersUnsubscribe = null;
 let commentUnsubscribe = null;
 
@@ -23,11 +16,13 @@ export function closeReaderModal() {
   if (chaptersUnsubscribe) chaptersUnsubscribe();
   if (commentUnsubscribe) commentUnsubscribe();
   document.body.style.overflow = "";
-  currentReaderStoryId = null;
+  setState('currentReaderStoryId', null);
+  setState('currentChapters', []);
+  setState('currentChapterIndex', 0);
 }
 
 // Open reader
-window.openReader = async (storyId, chapterIndex) => {
+export async function openReader(storyId, chapterIndex) {
   console.log("📖 openReader - storyId:", storyId, "chapterIndex:", chapterIndex);
   
   try {
@@ -36,11 +31,11 @@ window.openReader = async (storyId, chapterIndex) => {
     if (chaptersUnsubscribe) chaptersUnsubscribe();
     if (commentUnsubscribe) commentUnsubscribe();
     
-    currentReaderStoryId = storyId;
-    currentChapterIndex = chapterIndex || 0;
+    setState('currentReaderStoryId', storyId);
+    setState('currentChapterIndex', chapterIndex || 0);
     
     // Update view count
-    const story = allStories.find(s => s.id === storyId);
+    const story = state.stories.find(s => s.id === storyId);
     if (story) {
       try {
         const viewRef = ref(db, `stories/${storyId}/views`);
@@ -56,11 +51,12 @@ window.openReader = async (storyId, chapterIndex) => {
     chaptersUnsubscribe = onValue(chaptersRef, (snapshot) => {
       const data = snapshot.val();
       if (data) {
-        currentChapters = Object.entries(data).map(([id, value]) => ({ id, ...value }));
-        currentChapters.sort((a, b) => (a.chapterNumber || 0) - (b.chapterNumber || 0));
+        const chapters = Object.entries(data).map(([id, value]) => ({ id, ...value }));
+        chapters.sort((a, b) => (a.chapterNumber || 0) - (b.chapterNumber || 0));
+        setState('currentChapters', chapters);
         renderChapter();
       } else {
-        currentChapters = [];
+        setState('currentChapters', []);
         renderChapter();
       }
     });
@@ -82,35 +78,35 @@ window.openReader = async (storyId, chapterIndex) => {
     console.error("Error opening reader:", err);
     showNotification("Lỗi mở truyện: " + err.message, true);
   }
-};
+}
 
 // Render chapter
 function renderChapter() {
-  console.log("Rendering chapter", currentChapterIndex);
+  console.log("Rendering chapter", state.currentChapterIndex);
   
-  if (!currentChapters || currentChapters.length === 0) {
+  if (!state.currentChapters || state.currentChapters.length === 0) {
     document.getElementById("readerContent").innerHTML = '<div class="reader-page"><p>Đang tải chapter...</p></div>';
     return;
   }
   
-  if (!currentChapters[currentChapterIndex]) {
+  if (!state.currentChapters[state.currentChapterIndex]) {
     document.getElementById("readerContent").innerHTML = '<div class="reader-page"><p>Không tìm thấy chapter</p></div>';
     return;
   }
   
-  const chap = currentChapters[currentChapterIndex];
+  const chap = state.currentChapters[state.currentChapterIndex];
   const readerDiv = document.getElementById("readerContent");
   if (!readerDiv) return;
   
-  const hasPrev = currentChapterIndex > 0;
-  const hasNext = currentChapterIndex < currentChapters.length - 1;
+  const hasPrev = state.currentChapterIndex > 0;
+  const hasNext = state.currentChapterIndex < state.currentChapters.length - 1;
   
   readerDiv.innerHTML = `
     <div class="reader-page">
       <div class="chapter-nav">
-        ${hasPrev ? `<button onclick="window.changeChapter(-1)" id="prevChapterBtn">⬅️ Chapter trước</button>` : '<button disabled>⬅️ Chapter trước</button>'}
+        ${hasPrev ? `<button onclick="API.changeChapter(-1)">⬅️ Chapter trước</button>` : '<button disabled>⬅️ Chapter trước</button>'}
         <h3>${escapeHtml(chap.title)}</h3>
-        ${hasNext ? `<button onclick="window.changeChapter(1)" id="nextChapterBtn">Chapter sau ➡️</button>` : '<button disabled>Chapter sau ➡️</button>'}
+        ${hasNext ? `<button onclick="API.changeChapter(1)">Chapter sau ➡️</button>` : '<button disabled>Chapter sau ➡️</button>'}
       </div>
       
       <div id="chapterImagesContainer">
@@ -120,16 +116,16 @@ function renderChapter() {
       </div>
       
       <div class="chapter-nav" style="margin-top:30px; margin-bottom:30px;">
-        ${hasPrev ? `<button onclick="window.changeChapter(-1)">⬅️ Chapter trước</button>` : '<button disabled>⬅️ Chapter trước</button>'}
-        <button onclick="window.scrollToTop()" style="background:#FFCCCC;">⬆️ Lên đầu trang</button>
-        ${hasNext ? `<button onclick="window.changeChapter(1)">Chapter sau ➡️</button>` : '<button disabled>Chapter sau ➡️</button>'}
+        ${hasPrev ? `<button onclick="API.changeChapter(-1)">⬅️ Chapter trước</button>` : '<button disabled>⬅️ Chapter trước</button>'}
+        <button onclick="API.scrollToTop()" style="background:#FFCCCC;">⬆️ Lên đầu trang</button>
+        ${hasNext ? `<button onclick="API.changeChapter(1)">Chapter sau ➡️</button>` : '<button disabled>Chapter sau ➡️</button>'}
       </div>
       
       <div class="chapter-list-section">
         <h4>📑 MỤC LỤC CHAPTER</h4>
         <div class="chapter-list">
-          ${currentChapters.map((c, i) => `
-            <div class="chapter-item" onclick="window.changeChapterTo(${i})">
+          ${state.currentChapters.map((c, i) => `
+            <div class="chapter-item" onclick="API.changeChapterTo(${i})">
               <span>${escapeHtml(c.title)}</span>
               <span style="font-size:12px; color:#888;">📅 ${new Date(c.createdAt).toLocaleDateString()}</span>
             </div>
@@ -148,24 +144,22 @@ function renderChapter() {
     </div>
   `;
   
-  loadCommentsRealtime(currentReaderStoryId);
+  loadCommentsRealtime(state.currentReaderStoryId);
   preloadNextChapter();
   
   const postBtn = document.getElementById("postCommentBtn");
   if (postBtn) {
     const newPostBtn = postBtn.cloneNode(true);
     postBtn.parentNode.replaceChild(newPostBtn, postBtn);
-    newPostBtn.addEventListener("click", () => postComment(currentReaderStoryId));
+    newPostBtn.addEventListener("click", () => postComment(state.currentReaderStoryId));
   }
 }
 
 // Preload next chapter
 function preloadNextChapter() {
-  if (!currentChapters || !currentReaderStoryId) return;
-  
-  const nextIndex = currentChapterIndex + 1;
-  if (nextIndex < currentChapters.length) {
-    const nextChapter = currentChapters[nextIndex];
+  const nextIndex = state.currentChapterIndex + 1;
+  if (nextIndex < state.currentChapters.length) {
+    const nextChapter = state.currentChapters[nextIndex];
     if (nextChapter?.pages) {
       nextChapter.pages.forEach(pageUrl => {
         if (!imageCache.has(pageUrl)) {
@@ -179,37 +173,37 @@ function preloadNextChapter() {
 }
 
 // Change chapter
-window.changeChapter = (delta) => {
-  const newIdx = currentChapterIndex + delta;
-  if (newIdx >= 0 && newIdx < currentChapters.length) {
-    currentChapterIndex = newIdx;
+export function changeChapter(delta) {
+  const newIdx = state.currentChapterIndex + delta;
+  if (newIdx >= 0 && newIdx < state.currentChapters.length) {
+    setState('currentChapterIndex', newIdx);
     renderChapter();
     setTimeout(() => {
       const readerContent = document.getElementById("readerContent");
       if (readerContent) readerContent.scrollTop = 0;
     }, 50);
   }
-};
+}
 
 // Change to specific chapter
-window.changeChapterTo = (index) => {
-  currentChapterIndex = index;
+export function changeChapterTo(index) {
+  setState('currentChapterIndex', index);
   renderChapter();
   setTimeout(() => {
     const readerContent = document.getElementById("readerContent");
     if (readerContent) readerContent.scrollTop = 0;
   }, 50);
-};
+}
 
 // Scroll to top
-window.scrollToTop = () => {
+export function scrollToTop() {
   const readerContent = document.getElementById("readerContent");
   if (readerContent) {
     readerContent.scrollTo({ top: 0, behavior: "smooth" });
   } else {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
-};
+}
 
 // Load comments realtime
 function loadCommentsRealtime(storyId) {
@@ -242,7 +236,7 @@ function loadCommentsRealtime(storyId) {
 
 // Post comment
 async function postComment(storyId) {
-  if (!currentUserData) { 
+  if (!state.currentUser) { 
     showNotification("Đăng nhập để bình luận", true); 
     return; 
   }
@@ -255,14 +249,11 @@ async function postComment(storyId) {
   const newCommentRef = push(commentsRef);
   await set(newCommentRef, {
     text: text,
-    userId: currentUserData.uid || currentUserData.displayName,
-    userName: currentUserData.displayName,
+    userId: state.currentUser.uid || state.currentUser.displayName,
+    userName: state.currentUser.displayName,
     createdAt: Date.now()
   });
   
   document.getElementById("commentText").value = "";
   showNotification("✅ Đã gửi bình luận");
 }
-
-// Make functions global
-window.closeReaderModal = closeReaderModal;
