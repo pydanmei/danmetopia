@@ -551,6 +551,20 @@ body {
   background: #FF69B4;
   color: black;
 }
+.chapter-actions {
+  display: flex;
+  gap: 8px;
+}
+.chapter-edit-btn, .chapter-delete-btn {
+  padding: 4px 10px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: bold;
+}
+.chapter-edit-btn { background: #FFCC00; color: black; }
+.chapter-delete-btn { background: #ff4444; color: white; }
 .notification {
   position: fixed;
   bottom: 20px;
@@ -729,6 +743,7 @@ body {
 <div id="storyModal" class="modal"><div class="modal-content"><span class="close-modal" onclick="closeModal('storyModal')">&times;</span><div id="storyDetailContent"></div><div id="storyChapters"></div><div id="storyActions"></div></div></div>
 <div id="editStoryModal" class="modal"><div class="modal-content"><span class="close-modal" onclick="closeModal('editStoryModal')">&times;</span><h2>📝 CHỈNH SỬA TRUYỆN</h2><div id="editStoryContent"></div></div></div>
 <div id="addChapterModal" class="modal"><div class="modal-content"><span class="close-modal" onclick="closeModal('addChapterModal')">&times;</span><h2>📖 THÊM CHAPTER MỚI</h2><div id="addChapterContent"></div></div></div>
+<div id="editChapterModal" class="modal"><div class="modal-content"><span class="close-modal" onclick="closeModal('editChapterModal')">&times;</span><h2>✏️ CHỈNH SỬA CHAPTER</h2><div id="editChapterContent"></div></div></div>
 <div id="readerModal" class="modal"><div class="modal-content"><span class="close-modal" onclick="closeReaderModal()">&times;</span><div id="readerContent"></div></div></div>
 <div id="profileModal" class="modal"><div class="modal-content"><span class="close-modal" onclick="closeModal('profileModal')">&times;</span><h2>👤 THÔNG TIN</h2><div id="profileContent"></div></div></div>
 
@@ -736,7 +751,7 @@ body {
 // ==================== IMGBB CONFIG ====================
 const IMGBB_API_KEY = "d16b5595d7f6044476d254c8f428cc28";
 
-// ==================== GENRE LIST (MỚI - 33 THỂ LOẠI) ====================
+// ==================== GENRE LIST ====================
 const GENRE_LIST = [
   { name: "3D", icon: "🎮", desc: "Truyện được vẽ bằng đồ họa 3D" },
   { name: "Action", icon: "⚔️", desc: "Truyện có nhiều cảnh đánh nhau, hành động" },
@@ -889,20 +904,16 @@ async function uploadImage(file) {
     const formData = new FormData();
     formData.append("image", file);
     formData.append("key", IMGBB_API_KEY);
-    console.log(`📤 Uploading ${file.name} to ImgBB...`);
     const response = await fetch("https://api.imgbb.com/1/upload", { method: "POST", body: formData });
     const result = await response.json();
     if (result.success) {
-      console.log(`✅ Upload thành công: ${result.data.url}`);
       return result.data.url;
     } else {
-      console.error("ImgBB error:", result.error);
-      showNotification(`Lỗi ImgBB: ${result.error?.message || "Upload thất bại"}`, true);
-      return null;
+      throw new Error(result.error?.message || "Upload thất bại");
     }
   } catch (err) {
     console.error("Upload error:", err);
-    showNotification(`Lỗi kết nối: ${err.message}`, true);
+    showNotification("Lỗi upload: " + err.message, true);
     return null;
   }
 }
@@ -1304,9 +1315,12 @@ async function getChapters(storyId) {
   return chapters;
 }
 
+async function getChapter(storyId, chapterId) {
+  const snap = await get(ref(db, `chapters/${storyId}/${chapterId}`));
+  return snap.exists() ? { id: chapterId, ...snap.val() } : null;
+}
+
 async function addChapter(storyId, title, pages, chapterNumber) {
-  console.log("📖 addChapter called:", { storyId, title, pagesCount: pages.length });
-  
   if (!title) {
     showNotification("Thiếu tên chapter", true);
     throw new Error("Thiếu title");
@@ -1332,12 +1346,33 @@ async function addChapter(storyId, title, pages, chapterNumber) {
   const currentChapters = snap.val() || {};
   currentChapters[newChapterRef.key] = true;
   await set(storyRef, currentChapters);
+}
+
+async function updateChapter(storyId, chapterId, data) {
+  await update(ref(db, `chapters/${storyId}/${chapterId}`), data);
+  showNotification("✅ Đã cập nhật chapter");
+}
+
+async function deleteChapter(storyId, chapterId) {
+  // CHỈ ADMIN MỚI ĐƯỢC XÓA
+  if (!isAdmin(currentUserData)) {
+    showNotification("⚠️ Chỉ Admin mới có quyền xóa chapter!", true);
+    return;
+  }
   
-  console.log("✅ Chapter added");
+  if (!confirm("Xóa chapter này? Hành động không thể hoàn tác!")) return;
+  
+  await remove(ref(db, `chapters/${storyId}/${chapterId}`));
+  const storyRef = ref(db, `stories/${storyId}/chapters`);
+  const snap = await get(storyRef);
+  const chapters = snap.val() || {};
+  delete chapters[chapterId];
+  await set(storyRef, chapters);
+  showNotification("✅ Đã xóa chapter");
+  openStoryDetail(storyId);
 }
 
 window.openAddChapter = (storyId) => {
-  console.log("🔘 openAddChapter for storyId:", storyId);
   selectedChapterImages = [];
   
   document.getElementById("addChapterContent").innerHTML = `
@@ -1378,8 +1413,6 @@ window.openAddChapter = (storyId) => {
 };
 
 window.saveAddChapter = async (storyId) => {
-  console.log("🔘 saveAddChapter called for storyId:", storyId);
-  
   const title = document.getElementById("chapterTitle")?.value;
   const pagesText = document.getElementById("chapterPages")?.value;
   const chapterNumber = parseInt(document.getElementById("chapterNumber")?.value) || 0;
@@ -1428,6 +1461,54 @@ window.saveAddChapter = async (storyId) => {
     console.error("Add chapter error:", err);
     showNotification("Lỗi: " + err.message, true);
   }
+};
+
+window.openEditChapter = async (storyId, chapterId) => {
+  const story = allStories.find(s => s.id === storyId);
+  if (!story) return;
+  
+  // Kiểm tra quyền sửa chapter: Admin hoặc thành viên nhóm dịch hoặc chủ truyện
+  const canEdit = currentUserData && (isAdmin(currentUserData) || (currentUserData.privileges?.groupId && story.groupId === currentUserData.privileges?.groupId) || story.ownerUid === currentUserData?.uid);
+  
+  if (!canEdit) {
+    showNotification("⚠️ Bạn không có quyền chỉnh sửa chapter này!", true);
+    return;
+  }
+  
+  const chapter = await getChapter(storyId, chapterId);
+  if (!chapter) return;
+  
+  document.getElementById("editChapterContent").innerHTML = `
+    <input id="editChapterTitle" value="${escapeHtml(chapter.title)}" placeholder="Tên chapter *">
+    <input id="editChapterNumber" value="${chapter.chapterNumber || 0}" placeholder="Số chapter" type="number">
+    <textarea id="editChapterPages" placeholder="Link ảnh (mỗi dòng 1 link)" rows="5">${chapter.pages ? chapter.pages.join('\n') : ''}</textarea>
+    <button class="btn-pink" id="saveChapterEditBtn">💾 LƯU THAY ĐỔI</button>
+  `;
+  
+  document.getElementById("saveChapterEditBtn")?.addEventListener("click", async () => {
+    const newTitle = document.getElementById("editChapterTitle").value;
+    const newNumber = parseInt(document.getElementById("editChapterNumber").value) || 0;
+    const newPages = document.getElementById("editChapterPages").value.split('\n').filter(p => p.trim());
+    
+    if (!newTitle) {
+      showNotification("Nhập tên chapter", true);
+      return;
+    }
+    if (newPages.length === 0) {
+      showNotification("Thêm ít nhất 1 ảnh", true);
+      return;
+    }
+    
+    await updateChapter(storyId, chapterId, {
+      title: newTitle,
+      chapterNumber: newNumber,
+      pages: newPages
+    });
+    closeModal("editChapterModal");
+    openStoryDetail(storyId);
+  });
+  
+  document.getElementById("editChapterModal").style.display = "flex";
 };
 
 // ==================== FOLLOW SYSTEM ====================
@@ -1531,8 +1612,13 @@ window.openStoryDetail = async (storyId) => {
   const story = allStories.find(s => s.id === storyId);
   if (!story) return;
   const chapters = await getChapters(storyId);
-  const isEditable = currentUserData && (isAdmin(currentUserData) || (currentUserData.privileges?.groupId && story.groupId === currentUserData.privileges?.groupId) || story.ownerUid === currentUserData?.uid);
+  
+  // Kiểm tra quyền
+  const canEditStory = currentUserData && (isAdmin(currentUserData) || (currentUserData.privileges?.groupId && story.groupId === currentUserData.privileges?.groupId) || story.ownerUid === currentUserData?.uid);
+  const canEditChapter = currentUserData && (isAdmin(currentUserData) || (currentUserData.privileges?.groupId && story.groupId === currentUserData.privileges?.groupId) || story.ownerUid === currentUserData?.uid);
+  const canDeleteChapter = currentUserData && isAdmin(currentUserData);
   const isMod = canModerate(currentUserData);
+  
   document.getElementById("storyDetailContent").innerHTML = `
     <div class="story-detail-grid">
       <img class="story-detail-cover" src="${escapeHtml(story.cover) || 'https://placehold.co/300x450?text=No+Cover'}" onerror="this.src='https://placehold.co/300x450?text=ERROR'">
@@ -1551,15 +1637,28 @@ window.openStoryDetail = async (storyId) => {
       </div>
     </div>
   `;
+  
   let chaptersHtml = `<h3>📖 DANH SÁCH CHAPTER</h3><div class="chapter-list">`;
-  chapters.forEach((chap, idx) => {
-    chaptersHtml += `<div class="chapter-item" onclick="event.stopPropagation(); openReader('${storyId}', ${idx})"><span>${escapeHtml(chap.title)}</span><span>📅 ${new Date(chap.createdAt).toLocaleDateString()}</span></div>`;
+  chapters.forEach((chap) => {
+    chaptersHtml += `
+      <div class="chapter-item">
+        <div style="flex:1; cursor:pointer;" onclick="openReader('${storyId}', ${chap.chapterNumber - 1})">
+          <span>${escapeHtml(chap.title)}</span>
+          <span style="font-size:12px; color:#888;">📅 ${new Date(chap.createdAt).toLocaleDateString()}</span>
+        </div>
+        <div class="chapter-actions">
+          ${canEditChapter ? `<button class="chapter-edit-btn" onclick="event.stopPropagation(); openEditChapter('${storyId}', '${chap.id}')">✏️ Sửa</button>` : ''}
+          ${canDeleteChapter ? `<button class="chapter-delete-btn" onclick="event.stopPropagation(); deleteChapter('${storyId}', '${chap.id}')">🗑 Xóa</button>` : ''}
+        </div>
+      </div>
+    `;
   });
   chaptersHtml += `</div>`;
   document.getElementById("storyChapters").innerHTML = chaptersHtml;
+  
   let actionsHtml = `<button onclick="likeStoryAndRefresh('${storyId}')">❤️ Thích</button>`;
   if (currentUserData && currentUserData.role !== "guest") actionsHtml += `<button onclick="toggleFollow('${storyId}')">${isFollowing(storyId) ? '⭐ Đã theo dõi' : '➕ Theo dõi'}</button>`;
-  if (isEditable) actionsHtml += `<button onclick="openEditStory('${storyId}')">✏️ Chỉnh sửa truyện</button><button onclick="openAddChapter('${storyId}')">📖 Thêm chapter mới</button>`;
+  if (canEditStory) actionsHtml += `<button onclick="openEditStory('${storyId}')">✏️ Chỉnh sửa truyện</button><button onclick="openAddChapter('${storyId}')">📖 Thêm chapter mới</button>`;
   if (isMod && story.approved === false) actionsHtml += `<button onclick="approveStoryAction('${storyId}')">✅ Duyệt truyện</button><button onclick="rejectStoryAction('${storyId}')">❌ Từ chối</button>`;
   if (isAdmin(currentUserData)) actionsHtml += `<button onclick="deleteStoryAction('${storyId}')" style="background:#ff4444;">🗑 Xóa truyện</button>`;
   document.getElementById("storyActions").innerHTML = actionsHtml;
@@ -1778,7 +1877,6 @@ function renderUploadPanel() {
       
       <label style="color:#FF69B4; margin-top:10px; display:block;">🏷️ Tags</label>
       <input id="uploadTags" placeholder="Ví dụ: School, Omegaverse, One Shot" list="tagsList">
-      <datalist id="tagsList"></datalist>
       
       <select id="uploadStatus">
         <option value="Đang tiến hành">📖 Đang tiến hành</option>
