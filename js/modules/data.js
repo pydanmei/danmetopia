@@ -1,9 +1,7 @@
-import { initFirebase, db, ref, get, child, push, update, remove, onValue, GENRE_LIST } from './db.js';
+import { db, ref, get, set, update, remove, onValue } from '../core/firebase.js';
+import { GENRE_LIST } from '../core/constants.js';
 import { currentUserData, refreshUserSession } from './auth.js';
 import { isAdmin, canModerate, showNotification, escapeHtml } from './utils.js';
-
-// Initialize Firebase
-initFirebase();
 
 export let allStories = [];
 export let allGroups = [];
@@ -104,6 +102,59 @@ export async function getChapters(storyId) {
 export async function getChapter(storyId, chapterId) {
   const snap = await get(ref(db, `chapters/${storyId}/${chapterId}`));
   return snap.exists() ? { id: chapterId, ...snap.val() } : null;
+}
+
+// Add chapter
+export async function addChapter(storyId, title, pages, chapterNumber) {
+  if (!title) {
+    showNotification("Thiếu tên chapter", true);
+    throw new Error("Thiếu title");
+  }
+  
+  const existingChapters = await getChapters(storyId);
+  const newChapterNumber = chapterNumber || existingChapters.length + 1;
+  
+  const chaptersRef = ref(db, `chapters/${storyId}`);
+  const newChapterRef = push(chaptersRef);
+  
+  const chapterData = {
+    title: title,
+    pages: pages,
+    chapterNumber: newChapterNumber,
+    createdAt: Date.now()
+  };
+  
+  await set(newChapterRef, chapterData);
+  
+  const storyRef = ref(db, `stories/${storyId}/chapters`);
+  const snap = await get(storyRef);
+  const currentChapters = snap.val() || {};
+  currentChapters[newChapterRef.key] = true;
+  await set(storyRef, currentChapters);
+}
+
+// Update chapter
+export async function updateChapter(storyId, chapterId, data) {
+  await update(ref(db, `chapters/${storyId}/${chapterId}`), data);
+  showNotification("✅ Đã cập nhật chapter");
+}
+
+// Delete chapter
+export async function deleteChapter(storyId, chapterId) {
+  if (!currentUserData || !isAdmin(currentUserData)) {
+    showNotification("⚠️ Chỉ Admin mới có quyền xóa chapter!", true);
+    return;
+  }
+  
+  if (!confirm("Xóa chapter này? Hành động không thể hoàn tác!")) return;
+  
+  await remove(ref(db, `chapters/${storyId}/${chapterId}`));
+  const storyRef = ref(db, `stories/${storyId}/chapters`);
+  const snap = await get(storyRef);
+  const chapters = snap.val() || {};
+  delete chapters[chapterId];
+  await set(storyRef, chapters);
+  showNotification("✅ Đã xóa chapter thành công!");
 }
 
 // Render functions
