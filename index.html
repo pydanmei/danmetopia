@@ -2115,6 +2115,10 @@ window.openReader = async (storyId, chapterIndex) => {
       currentChapters = [];
     }
     renderChapter();
+    // Auto scroll to top when chapter loads
+    setTimeout(() => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, 100);
   });
   
   document.getElementById("readerModal").style.display = "flex";
@@ -2191,18 +2195,26 @@ window.changeChapter = (delta) => {
   if (newIdx >= 0 && newIdx < currentChapters.length) {
     currentChapterIndex = newIdx;
     renderChapter();
-    window.scrollTo(0, 0);
+    // Scroll to top immediately when changing chapter
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 };
 
 window.changeChapterTo = (index) => {
   currentChapterIndex = index;
   renderChapter();
-  window.scrollTo(0, 0);
+  // Scroll to top immediately when changing chapter
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 };
 
 window.scrollToTopReader = () => {
-  window.scrollTo({ top: 0, behavior: "smooth" });
+  // Find the reader-page element and scroll to it
+  const readerPage = document.querySelector('.reader-page');
+  if (readerPage) {
+    readerPage.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  } else {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
 };
 
 async function loadComments(storyId) {
@@ -2250,11 +2262,6 @@ function renderUploadPanel() {
   const panel = document.getElementById("uploadPanel");
   if (!panel) return;
   if (!canUpload(currentUserData) || currentUserData?.role === "guest") { panel.innerHTML = ""; return; }
-  
-  let genreOptions = '<option value="">-- Chọn thể loại --</option>';
-  for (const genre of GENRE_LIST) {
-    genreOptions += `<option value="${genre.name}">${genre.icon} ${genre.name}</option>`;
-  }
   
   panel.innerHTML = `
     <div class="upload-panel">
