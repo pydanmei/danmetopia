@@ -719,7 +719,7 @@ body {
 
 <div id="mainContainer">
   <div class="topbar">
-    <div class="logo" onclick="showHome()">🌸 DANMETOPIA 🌸</div>
+   <div class="logo" onclick="showHome()">🌸 DANMETOPIA 🌸</div>
     <div class="user-area">
       <span id="userDisplay">👤 Đang tải...</span>
       <a href="groups.html" id="groupsLink" class="nav-link" style="display:none">📚 Nhóm</a>
@@ -2179,7 +2179,30 @@ window.createNewGroup = async () => {
   showLoading(false);
 };
 
-window.showHome = () => { closeReaderModal(); scheduleRender(); };
+window.showHome = () => { 
+  // Đóng tất cả modal đang mở
+  closeReaderModal();
+  closeModal("storyModal");
+  closeModal("editStoryModal");
+  closeModal("addChapterModal");
+  closeModal("editChapterModal");
+  closeModal("groupModal");
+  closeModal("profileModal");
+  closeModal("readerModal");
+  
+  // Reset tab về "all" (Tất cả truyện)
+  currentTab = "all";
+  document.querySelectorAll(".tab-btn").forEach(btn => {
+    btn.classList.remove("active");
+    if (btn.dataset.tab === "all") btn.classList.add("active");
+  });
+  
+  // Cuộn lên đầu trang
+  window.scrollTo({ top: 0, behavior: "smooth" });
+  
+  // Render lại danh sách truyện
+  scheduleRender();
+};
 function closeModal(modalId) { document.getElementById(modalId).style.display = "none"; }
 window.closeModal = closeModal;
 
