@@ -1,5 +1,3 @@
-import { ref, get, child, db } from './db.js';
-
 // Show notification
 export function showNotification(msg, isError = false) {
   console.log("🔔 Notification:", msg, isError ? "ERROR" : "INFO");
@@ -65,49 +63,6 @@ export function canUpload(userData) {
   return userData && (userData.role === "admin" || userData.role === "user"); 
 }
 
-// Get user data by UID
-export async function getUserData(uid) {
-  const snap = await get(child(ref(db), `users/${uid}`));
-  return snap.exists() ? snap.val() : null;
-}
-
-// Get user group
-export async function getUserGroup(uid) {
-  const userData = await getUserData(uid);
-  if (userData?.privileges?.groupId) {
-    const snap = await get(child(ref(db), `groups/${userData.privileges.groupId}`));
-    return snap.exists() ? { id: userData.privileges.groupId, ...snap.val() } : null;
-  }
-  return null;
-}
-
-// Get user's groups
-export async function getUserGroups(uid) {
-  const userGroups = [];
-  const groupsSnap = await get(ref(db, "groups"));
-  const groups = groupsSnap.val() || {};
-  for (const gid in groups) {
-    if (groups[gid].members && groups[gid].members.includes(uid)) {
-      userGroups.push({ id: gid, ...groups[gid] });
-    }
-  }
-  return userGroups;
-}
-
-// Get display name
-export async function getDisplayName(uid, email, userData) {
-  if (!userData) userData = await getUserData(uid);
-  if (!userData) return generateRandomGuestName();
-  const nickname = userData?.nickname || email?.split("@")[0] || "Người dùng";
-  if (userData?.role === "admin") return `${nickname} (Admin)`;
-  if (userData?.role === "user" && userData?.privileges?.moderator) return `${nickname} (Quản lý)`;
-  if (userData?.role === "user" && userData?.privileges?.groupId) {
-    const group = await getUserGroup(uid);
-    return `${nickname} (${group?.groupName || "Nhóm dịch"})`;
-  }
-  return nickname;
-}
-
 // Initialize scroll buttons
 export function initScrollButtons() {
   const scrollBtn = document.getElementById("scrollTopBtn");
@@ -134,30 +89,3 @@ export function initScrollButtons() {
 
 // Image cache for preloading
 export const imageCache = new Map();
-
-// Load image with skeleton
-export function loadImageWithSkeleton(imgElement, src) {
-  if (!imgElement) return;
-  
-  if (imageCache.has(src)) {
-    imgElement.src = imageCache.get(src);
-    imgElement.classList.add("loaded");
-    return;
-  }
-  
-  imgElement.classList.add("skeleton-img");
-  
-  const tempImg = new Image();
-  tempImg.onload = () => {
-    imgElement.src = src;
-    imageCache.set(src, src);
-    imgElement.classList.remove("skeleton-img");
-    imgElement.classList.add("loaded");
-  };
-  tempImg.onerror = () => {
-    imgElement.src = "https://placehold.co/800x1200?text=Image+Load+Error";
-    imgElement.classList.remove("skeleton-img");
-    imgElement.classList.add("loaded");
-  };
-  tempImg.src = src;
-}
