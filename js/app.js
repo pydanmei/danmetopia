@@ -20,41 +20,41 @@ const IMGBB_API_KEY = "d16b5595d7f6044476d254c8f428cc28";
 
 emailjs.init("fPq8fpw1OqzOtj-lk");
 
-// ==================== GENRE LIST (33 THỂ LOẠI) ====================
+// ==================== GENRE LIST ====================
 const GENRE_LIST = [
   { name: "3D", icon: "🎮", desc: "Truyện được vẽ bằng đồ họa 3D" },
   { name: "Action", icon: "⚔️", desc: "Truyện có nhiều cảnh đánh nhau, hành động" },
   { name: "Bara/Muscle", icon: "💪", desc: "Truyện về cơ bắp, nam tính" },
   { name: "Biography", icon: "📖", desc: "Truyện tiểu sử, dựa trên nhân vật có thật" },
   { name: "Cakeverse", icon: "🎂", desc: "Thể loại đặc biệt liên quan đến bánh kem" },
-  { name: "Comedy", icon: "😂", desc: "Truyện hài hước, mang lại tiếng cười" },
-  { name: "Crime", icon: "🔫", desc: "Truyện về tội phạm, xã hội đen" },
+  { name: "Comedy", icon: "😂", desc: "Truyện hài hước" },
+  { name: "Crime", icon: "🔫", desc: "Truyện về tội phạm" },
   { name: "Documentary", icon: "🎥", desc: "Truyện dạng phim tài liệu" },
   { name: "Dom/Sub verse", icon: "⛓️", desc: "Truyện có yếu tố thống trị/phục tùng" },
-  { name: "Drama", icon: "💗", desc: "Truyện tình cảm, nhiều cung bậc cảm xúc" },
-  { name: "Family", icon: "👨‍👩‍👧", desc: "Truyện về gia đình, tình thân" },
-  { name: "Fantasy", icon: "🐉", desc: "Truyện giả tưởng, ma thuật, thế giới khác" },
+  { name: "Drama", icon: "💗", desc: "Truyện tình cảm" },
+  { name: "Family", icon: "👨‍👩‍👧", desc: "Truyện về gia đình" },
+  { name: "Fantasy", icon: "🐉", desc: "Truyện giả tưởng" },
   { name: "Furry", icon: "🐾", desc: "Truyện thú nhân hóa" },
-  { name: "HET/Hentai", icon: "🔞", desc: "Truyện dị tính có yếu tố 18+" },
+  { name: "HET/Hentai", icon: "🔞", desc: "Truyện 18+ dị tính" },
   { name: "Historical", icon: "🏯", desc: "Truyện cổ trang, lịch sử" },
-  { name: "Horror", icon: "👻", desc: "Truyện kinh dị, rùng rợn" },
-  { name: "Music", icon: "🎵", desc: "Truyện về âm nhạc, ca hát" },
-  { name: "Mystery", icon: "🔍", desc: "Truyện trinh thám, bí ẩn, phá án" },
-  { name: "Omegaverse", icon: "🔥", desc: "Truyện ABO (Alpha/Beta/Omega)" },
-  { name: "Psychological", icon: "🧠", desc: "Truyện tâm lý, có chiều sâu nội tâm" },
-  { name: "Romance", icon: "💕", desc: "Truyện tập trung vào tình cảm lãng mạn" },
-  { name: "School Life", icon: "📚", desc: "Truyện bối cảnh trường học, học đường" },
+  { name: "Horror", icon: "👻", desc: "Truyện kinh dị" },
+  { name: "Music", icon: "🎵", desc: "Truyện về âm nhạc" },
+  { name: "Mystery", icon: "🔍", desc: "Truyện trinh thám" },
+  { name: "Omegaverse", icon: "🔥", desc: "Truyện ABO" },
+  { name: "Psychological", icon: "🧠", desc: "Truyện tâm lý" },
+  { name: "Romance", icon: "💕", desc: "Truyện lãng mạn" },
+  { name: "School Life", icon: "📚", desc: "Truyện học đường" },
   { name: "Sci-fi", icon: "🚀", desc: "Truyện khoa học viễn tưởng" },
-  { name: "Shounen Ai", icon: "💖", desc: "Truyện BL nhẹ nhàng, thuần khiết" },
-  { name: "Slice of Life", icon: "🌿", desc: "Truyện đời thường, nhẹ nhàng" },
-  { name: "Sports", icon: "⚽", desc: "Truyện về thể thao, thi đấu" },
+  { name: "Shounen Ai", icon: "💖", desc: "BL nhẹ nhàng" },
+  { name: "Slice of Life", icon: "🌿", desc: "Truyện đời thường" },
+  { name: "Sports", icon: "⚽", desc: "Truyện thể thao" },
   { name: "Supernatural", icon: "👻", desc: "Truyện siêu nhiên" },
-  { name: "Thriller", icon: "🔪", desc: "Truyện gây cấn, hồi hộp" },
-  { name: "Tragedy", icon: "💔", desc: "Truyện bi kịch, buồn" },
-  { name: "War", icon: "🏆", desc: "Truyện về chiến tranh" },
-  { name: "Wuxia", icon: "🗡️", desc: "Truyện võ hiệp Trung Quốc" },
-  { name: "Yaoi", icon: "🔥", desc: "Truyện BL có yếu tố 18+" },
-  { name: "Yuri", icon: "💕", desc: "Truyện GL (girl love)" }
+  { name: "Thriller", icon: "🔪", desc: "Truyện gây cấn" },
+  { name: "Tragedy", icon: "💔", desc: "Truyện bi kịch" },
+  { name: "War", icon: "🏆", desc: "Truyện chiến tranh" },
+  { name: "Wuxia", icon: "🗡️", desc: "Truyện võ hiệp" },
+  { name: "Yaoi", icon: "🔥", desc: "BL 18+" },
+  { name: "Yuri", icon: "💕", desc: "GL" }
 ];
 
 // ==================== STATE ====================
@@ -113,7 +113,7 @@ function canModerate(userData) { return isAdmin(userData) || isModerator(userDat
 function canUpload(userData) { return userData && (userData.role === "admin" || userData.role === "user"); }
 function hasGroup(userData) { return userData?.privileges?.groupId !== null; }
 
-// ==================== SESSION MANAGEMENT ====================
+// ==================== SESSION ====================
 const SESSION_CONFIG = { guest: 60 * 60 * 1000, user: 7 * 24 * 60 * 60 * 1000 };
 
 function setUserSession(userData) {
@@ -150,8 +150,8 @@ async function sendOTPEmail(email) {
   await set(ref(db, `otp_requests/${email.replace(/\./g, "_")}`), { code: otp, expires: Date.now() + 5 * 60 * 1000 });
   try {
     await emailjs.send("service_8bxh5mm", "template_8ahbuhu", { otp: otp, to_email: email });
-    showNotification("📩 Mã OTP đã gửi đến email của bạn");
-  } catch { showNotification(`⚠️ Mã OTP demo: ${otp}`, true); }
+    showNotification("📩 Mã OTP đã gửi");
+  } catch { showNotification(`⚠️ Mã OTP: ${otp}`, true); }
 }
 
 async function verifyOTP(email, inputCode) {
@@ -175,7 +175,7 @@ async function createNewUser(uid, email, nickname) {
   const ADMIN_EMAILS = ["pydanmeii@gmail.com", "pepyl4298@gmail.com", "maihuong4298@gmail.com"];
   await set(ref(db, `users/${uid}`), {
     email, nickname, role: ADMIN_EMAILS.includes(email) ? "admin" : "user",
-    privileges: { moderator: false, groupId: null }, follows: {}, history: [], genrePref: {}, strike: 0, bannedUntil: 0, createdAt: Date.now()
+    privileges: { moderator: false, groupId: null }, follows: {}, history: [], createdAt: Date.now()
   });
 }
 
@@ -190,7 +190,7 @@ async function loadUserData(uid, email) {
     const groupSnap = await get(ref(db, `groups/${userData.privileges.groupId}`));
     if (groupSnap.exists()) displayName = `${nickname} (${groupSnap.val().groupName})`;
   }
-  return { uid, email, role: userData?.role || "user", privileges: userData?.privileges || { moderator: false, groupId: null }, nickname, displayName };
+  return { uid, email, role: userData?.role || "user", privileges: userData?.privileges || { moderator: false, groupId: null }, nickname, displayName, avatar: userData?.avatar };
 }
 
 // ==================== AUTH HANDLERS ====================
@@ -222,12 +222,10 @@ async function handleCheckEmail() {
   if (emailExists) {
     document.getElementById("passwordGroup").style.display = "block";
     document.getElementById("otpGroup").style.display = "none";
-    document.getElementById("loginMsg").innerHTML = "";
   } else {
     await sendOTPEmail(email);
     document.getElementById("otpGroup").style.display = "block";
     document.getElementById("passwordGroup").style.display = "none";
-    document.getElementById("loginMsg").innerHTML = "📩 Mã OTP đã gửi, vui lòng kiểm tra email";
   }
 }
 
@@ -352,14 +350,11 @@ async function loadAllGroups() {
     const groupsSnap = await get(ref(db, "groups"));
     if (groupsSnap.exists()) {
       state.allGroups = Object.entries(groupsSnap.val()).map(([id, g]) => ({ id, ...g }));
-      console.log("✅ Loaded", state.allGroups.length, "groups");
     } else {
       state.allGroups = [];
-      console.log("📭 No groups found");
     }
     return state.allGroups;
   } catch (err) {
-    console.error("Error loading groups:", err);
     state.allGroups = [];
     return [];
   }
@@ -368,12 +363,10 @@ async function loadAllGroups() {
 async function getUserGroups(uid) {
   if (!uid) return [];
   if (state.allGroups.length === 0) await loadAllGroups();
-  const userGroups = [];
-  for (const group of state.allGroups) {
+  return state.allGroups.filter(group => {
     const members = group.members || [];
-    if (members.includes(uid)) userGroups.push(group);
-  }
-  return userGroups;
+    return members.includes(uid);
+  });
 }
 
 async function getUserGroupOptions() {
@@ -507,19 +500,6 @@ async function updateChapter(storyId, chapterId, data) {
   showNotification("✅ Đã cập nhật chapter");
 }
 
-window.deleteChapter = async (storyId, chapterId) => {
-  if (!isAdmin(state.currentUser)) { showNotification("⚠️ Chỉ Admin mới có quyền xóa chapter!", true); return; }
-  if (!confirm("Xóa chapter này?")) return;
-  await remove(ref(db, `chapters/${storyId}/${chapterId}`));
-  const storyRef = ref(db, `stories/${storyId}/chapters`);
-  const snap = await get(storyRef);
-  const chapters = snap.val() || {};
-  delete chapters[chapterId];
-  await set(storyRef, chapters);
-  showNotification("✅ Đã xóa chapter!");
-  window.openStoryDetail(storyId);
-};
-
 // ==================== RENDER GENRE FILTER ====================
 function renderGenreFilter() {
   const container = document.getElementById("genreFilterContainer");
@@ -578,10 +558,10 @@ function renderUploadPanel() {
         <option value="Đã hoàn thành">✅ Đã hoàn thành</option>
         <option value="Tạm ngưng">⏸ Tạm ngưng</option>
       </select>
-      <select id="uploadGroupId"><option value="">-- Chọn nhóm dịch (không bắt buộc) --</option></select>
+      <select id="uploadGroupId"><option value="">-- Chọn nhóm dịch --</option></select>
       <input type="file" id="uploadCoverFile" accept="image/*">
       <div id="uploadCoverPreview"></div>
-      <h4>📷 Ảnh chapter đầu tiên (không bắt buộc)</h4>
+      <h4>📷 Ảnh chapter đầu tiên</h4>
       <input type="file" id="uploadChapterImages" accept="image/*" multiple>
       <div id="uploadChapterPreview" class="images-preview"></div>
       <textarea id="uploadDesc" placeholder="Mô tả truyện"></textarea>
@@ -625,15 +605,20 @@ function renderUploadPanel() {
         title, otherName: document.getElementById("uploadOtherName").value, author: document.getElementById("uploadAuthor").value,
         genres: document.getElementById("uploadGenre").value, tags: document.getElementById("uploadTags").value,
         status: document.getElementById("uploadStatus").value, desc: document.getElementById("uploadDesc").value,
-        cover: "", groupId: groupId || null, groupName: groupName, ownerUid: state.currentUser.uid,
-        ownerNickname: state.currentUser.nickname || state.currentUser.email
+        cover: "", groupId: groupId || null, groupName: groupName
       }, selectedCoverFile, chapterImageUrls);
-      document.getElementById("uploadTitle").value = ""; document.getElementById("uploadOtherName").value = "";
-      document.getElementById("uploadAuthor").value = ""; document.getElementById("uploadGenre").value = "";
-      document.getElementById("uploadTags").value = ""; document.getElementById("uploadDesc").value = "";
-      document.getElementById("uploadCoverFile").value = ""; document.getElementById("uploadChapterImages").value = "";
-      document.getElementById("uploadCoverPreview").innerHTML = ""; document.getElementById("uploadChapterPreview").innerHTML = "";
-      selectedCoverFile = null; selectedChapterFiles = [];
+      document.getElementById("uploadTitle").value = "";
+      document.getElementById("uploadOtherName").value = "";
+      document.getElementById("uploadAuthor").value = "";
+      document.getElementById("uploadGenre").value = "";
+      document.getElementById("uploadTags").value = "";
+      document.getElementById("uploadDesc").value = "";
+      document.getElementById("uploadCoverFile").value = "";
+      document.getElementById("uploadChapterImages").value = "";
+      document.getElementById("uploadCoverPreview").innerHTML = "";
+      document.getElementById("uploadChapterPreview").innerHTML = "";
+      selectedCoverFile = null;
+      selectedChapterFiles = [];
     } catch (err) { showNotification("Lỗi: " + err.message, true); }
     finally { showLoading(false); }
   });
@@ -669,7 +654,16 @@ window.openStoryDetail = async (storyId) => {
   `;
   let chaptersHtml = `<h3>📖 DANH SÁCH CHAPTER</h3><div class="chapter-list">`;
   chapters.forEach((chap, idx) => {
-    chaptersHtml += `<div class="chapter-item" onclick="window.openStoryDetailChapter('${storyId}', ${idx})"><span>${escapeHtml(chap.title)}</span><span style="font-size:12px;">📅 ${new Date(chap.createdAt).toLocaleDateString()}</span></div>`;
+    chaptersHtml += `
+      <div class="chapter-item" onclick="window.openStoryDetailChapter('${storyId}', ${idx})">
+        <span>${escapeHtml(chap.title)}</span>
+        <span style="font-size:12px;">📅 ${new Date(chap.createdAt).toLocaleDateString()}</span>
+        <div class="chapter-actions">
+          ${canEdit ? `<button class="chapter-edit-btn" onclick="event.stopPropagation(); window.openEditChapter('${storyId}', '${chap.id}')">✏️ Sửa</button>` : ''}
+          ${isAdmin(state.currentUser) ? `<button class="chapter-delete-btn" onclick="event.stopPropagation(); window.deleteChapter('${storyId}', '${chap.id}')">🗑 Xóa</button>` : ''}
+        </div>
+      </div>
+    `;
   });
   chaptersHtml += `</div>`;
   document.getElementById("storyChapters").innerHTML = chaptersHtml;
@@ -704,9 +698,9 @@ window.openEditStory = async (storyId) => {
     <input id="editTitle" value="${escapeHtml(story.title)}" placeholder="Tên truyện *">
     <input id="editOtherName" value="${escapeHtml(story.otherName || '')}" placeholder="Tên khác">
     <input id="editAuthor" value="${escapeHtml(story.author || '')}" placeholder="Tác giả">
-    <input id="editGenre" list="genreDropdown" value="${escapeHtml(story.genres || '')}" placeholder="Thể loại (cách nhau bằng dấu phẩy)">
-    <input id="editTags" value="${escapeHtml(story.tags || '')}" placeholder="Tags (cách nhau bằng dấu phẩy)">
-    <select id="editStatus"><option value="Đang tiến hành" ${story.status === "Đang tiến hành" ? "selected" : ""}>📖 Đang tiến hành</option><option value="Đã hoàn thành" ${story.status === "Đã hoàn thành" ? "selected" : ""}>✅ Đã hoàn thành</option><option value="Tạm ngưng" ${story.status === "Tạm ngưng" ? "selected" : ""}>⏸ Tạm ngưng</option></select>
+    <input id="editGenre" list="genreDropdown" value="${escapeHtml(story.genres || '')}" placeholder="Thể loại">
+    <input id="editTags" value="${escapeHtml(story.tags || '')}" placeholder="Tags">
+    <select id="editStatus"><option value="Đang tiến hành" ${story.status === "Đang tiến hành" ? "selected" : ""}>📖 Đang tiến hành</option><option value="Đã hoàn thành" ${story.status === "Đã hoàn thành" ? "selected" : ""}>✅ Đã hoàn thành</option></select>
     <select id="editGroupId">${groupOptions}</select>
     <input type="file" id="editCoverFile" accept="image/*">
     <input id="editCover" value="${escapeHtml(story.cover || '')}" placeholder="Link ảnh bìa">
@@ -807,30 +801,58 @@ window.saveAddChapter = async (storyId) => {
 };
 
 window.openEditChapter = async (storyId, chapterId) => {
+  const story = state.stories.find(s => s.id === storyId);
+  if (!story) { showNotification("Không tìm thấy truyện", true); return; }
+  
+  const canEdit = state.currentUser && (isAdmin(state.currentUser) || story.ownerUid === state.currentUser?.uid || (state.currentUser.privileges?.groupId && story.groupId === state.currentUser.privileges?.groupId));
+  if (!canEdit) { showNotification("⚠️ Bạn không có quyền chỉnh sửa chapter này!", true); return; }
+  
   const chapter = await getChapter(storyId, chapterId);
-  if (!chapter) return;
+  if (!chapter) { showNotification("Không tìm thấy chapter", true); return; }
+  
   let existingPages = chapter.pages || [];
+  let newImageFiles = [];
+  
   document.getElementById("editChapterContent").innerHTML = `
     <input id="editChapterTitle" value="${escapeHtml(chapter.title)}" placeholder="Tên chapter *">
     <input id="editChapterNumber" value="${chapter.chapterNumber || 0}" type="number">
-    <label>📷 Ảnh hiện tại (kéo thả để sắp xếp)</label>
-    <div id="existingImagesPreview" class="images-preview"></div>
+    <label style="color:#FF69B4;">📷 Ảnh hiện tại (kéo thả để sắp xếp)</label>
+    <div id="existingImagesPreview" class="images-preview" style="min-height:120px;"></div>
+    <label style="color:#FF69B4;">➕ Thêm ảnh mới</label>
     <input type="file" id="editNewChapterImages" accept="image/*" multiple>
     <div id="editNewChapterPreview" class="images-preview"></div>
-    <textarea id="editChapterPages" rows="10">${existingPages.join('\n')}</textarea>
-    <button class="btn-pink" id="saveChapterEditBtn">💾 LƯU</button>
+    <label style="color:#FF69B4;">🔗 Hoặc nhập link ảnh (mỗi dòng 1 link)</label>
+    <textarea id="editChapterPages" rows="8">${existingPages.join('\n')}</textarea>
+    <button class="btn-pink" id="saveChapterEditBtn">💾 LƯU THAY ĐỔI</button>
   `;
+  
   const existingPreviewDiv = document.getElementById("existingImagesPreview");
+  existingPreviewDiv.innerHTML = "";
   for (let i = 0; i < existingPages.length; i++) {
     const imgDiv = document.createElement("div");
     imgDiv.className = "img-preview-item";
-    imgDiv.innerHTML = `<img src="${escapeHtml(existingPages[i])}" style="width:100%;height:100%;object-fit:cover;"><button onclick="this.parentElement.remove()">✕</button>`;
+    imgDiv.innerHTML = `
+      <img src="${escapeHtml(existingPages[i])}" style="width:100%; height:100%; object-fit:cover; border-radius:8px;">
+      <button class="remove-existing-img" data-index="${i}" style="position:absolute; top:-8px; right:-8px; width:22px; height:22px; border-radius:50%; background:#ff4444; color:white; border:none; cursor:pointer; font-size:12px;">✕</button>
+    `;
     existingPreviewDiv.appendChild(imgDiv);
   }
-  let sortableInstance = new Sortable(existingPreviewDiv, { animation: 150, handle: '.img-preview-item',
-    onEnd: () => { const newOrder = []; for (let i = 0; i < existingPreviewDiv.children.length; i++) { const img = existingPreviewDiv.children[i].querySelector('img'); newOrder.push(img.src); } existingPages = newOrder; }
+  
+  document.querySelectorAll('.remove-existing-img').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const idx = parseInt(btn.dataset.index);
+      existingPages.splice(idx, 1);
+      btn.parentElement.remove();
+      document.querySelectorAll('.remove-existing-img').forEach((b, newIdx) => { b.dataset.index = newIdx; });
+      showNotification("Đã xóa ảnh khỏi danh sách");
+    });
   });
-  let newImageFiles = [];
+  
+  new Sortable(existingPreviewDiv, { animation: 150, handle: '.img-preview-item',
+    onEnd: () => { const newOrder = []; for (let i = 0; i < existingPreviewDiv.children.length; i++) { const img = existingPreviewDiv.children[i].querySelector('img'); if (img) newOrder.push(img.src); } existingPages = newOrder; }
+  });
+  
   document.getElementById("editNewChapterImages")?.addEventListener("change", (e) => {
     newImageFiles = Array.from(e.target.files);
     const previewDiv = document.getElementById("editNewChapterPreview");
@@ -840,12 +862,13 @@ window.openEditChapter = async (storyId, chapterId) => {
       reader.onload = (ev) => {
         const imgDiv = document.createElement("div");
         imgDiv.className = "img-preview-item";
-        imgDiv.innerHTML = `<img src="${ev.target.result}" style="width:100%;height:100%;object-fit:cover;"><button onclick="this.parentElement.remove()">✕</button>`;
+        imgDiv.innerHTML = `<img src="${ev.target.result}" style="width:100%; height:100%; object-fit:cover; border-radius:8px;"><button onclick="this.parentElement.remove()" style="position:absolute; top:-8px; right:-8px; width:22px; height:22px; border-radius:50%; background:#ff4444; color:white; border:none; cursor:pointer; font-size:12px;">✕</button>`;
         previewDiv.appendChild(imgDiv);
       };
       reader.readAsDataURL(file);
     }
   });
+  
   const saveBtn = document.getElementById("saveChapterEditBtn");
   if (saveBtn) {
     const newBtn = saveBtn.cloneNode(true);
@@ -861,12 +884,37 @@ window.openEditChapter = async (storyId, chapterId) => {
         newPages = [...newPages, ...newImageUrls];
       }
       if (!newTitle) { showNotification("Nhập tên chapter", true); return; }
+      if (newPages.length === 0) { showNotification("Chapter phải có ít nhất 1 ảnh", true); return; }
       await updateChapter(storyId, chapterId, { title: newTitle, chapterNumber: newNumber, pages: newPages });
       closeModal("editChapterModal");
+      showNotification("✅ Đã cập nhật chapter!");
       window.openStoryDetail(storyId);
     });
   }
   document.getElementById("editChapterModal").style.display = "flex";
+};
+
+window.deleteChapter = async (storyId, chapterId) => {
+  if (!state.currentUser || !isAdmin(state.currentUser)) {
+    showNotification("⚠️ Chỉ Admin mới có quyền xóa chapter!", true);
+    return;
+  }
+  if (!confirm("🗑 Xóa chapter này? Không thể hoàn tác!")) return;
+  try {
+    showLoading(true);
+    await remove(ref(db, `chapters/${storyId}/${chapterId}`));
+    const storyRef = ref(db, `stories/${storyId}/chapters`);
+    const snap = await get(storyRef);
+    const chapters = snap.val() || {};
+    delete chapters[chapterId];
+    await set(storyRef, chapters);
+    showNotification("✅ Đã xóa chapter!");
+    showLoading(false);
+    window.openStoryDetail(storyId);
+  } catch (err) {
+    showNotification("Lỗi: " + err.message, true);
+    showLoading(false);
+  }
 };
 
 // ==================== READER ====================
@@ -926,7 +974,7 @@ window.changeChapterTo = (index) => { currentChapterIndex = index; renderReader(
 window.scrollToTop = () => { window.scrollTo({ top: 0, behavior: "smooth" }); };
 window.closeReaderModal = () => { document.getElementById("readerModal").style.display = "none"; document.body.style.overflow = ""; };
 
-// ==================== COMMENTS REALTIME ====================
+// ==================== COMMENTS ====================
 let commentUnsubscribe = null;
 async function loadCommentsRealtime(storyId) {
   if (commentUnsubscribe) commentUnsubscribe();
@@ -1018,13 +1066,7 @@ window.createNewGroup = async () => {
   showLoading(true);
   try {
     const newGroupRef = push(ref(db, 'groups'));
-    await set(newGroupRef, {
-      groupName: groupName,
-      description: document.getElementById("groupDescInput").value || '',
-      ownerId: state.currentUser.uid,
-      members: [state.currentUser.uid],
-      createdAt: Date.now()
-    });
+    await set(newGroupRef, { groupName, description: document.getElementById("groupDescInput").value || '', ownerId: state.currentUser.uid, members: [state.currentUser.uid], createdAt: Date.now() });
     await update(ref(db, `users/${state.currentUser.uid}/privileges`), { groupId: newGroupRef.key });
     closeModal("groupModal");
     showNotification("✅ Tạo nhóm thành công!");
