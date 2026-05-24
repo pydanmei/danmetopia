@@ -5,22 +5,114 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>🌸 DANMETOPIA - Trang quản trị 🌸</title>
   <link rel="stylesheet" href="style.css">
+  <style>
+    .admin-dashboard {
+      padding: 20px;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+    .stat-card {
+      background: #1c1c1c;
+      padding: 20px;
+      border-radius: 16px;
+      text-align: center;
+      border: 1px solid #FF69B4;
+    }
+    .stat-number {
+      font-size: 36px;
+      font-weight: bold;
+      color: #FF69B4;
+    }
+    .stat-label {
+      color: #aaa;
+      margin-top: 5px;
+    }
+    .admin-section {
+      background: #1c1c1c;
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 30px;
+    }
+    .admin-section h3 {
+      color: #FF69B4;
+      margin-bottom: 15px;
+      border-bottom: 1px solid #333;
+      padding-bottom: 10px;
+    }
+    .pending-item, .user-item, .group-item {
+      background: #2a2a2a;
+      padding: 15px;
+      border-radius: 12px;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .btn-small {
+      padding: 6px 12px;
+      font-size: 12px;
+      margin: 0 5px;
+    }
+    .broadcast-area {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
+      flex-wrap: wrap;
+    }
+    .broadcast-area input {
+      flex: 1;
+      padding: 10px;
+      background: #2a2a2a;
+      border: none;
+      border-radius: 8px;
+      color: white;
+    }
+  </style>
 </head>
-<body data-page="admin">
+<body>
   <div id="mainContainer">
     <div id="header-placeholder"></div>
     
-    <div class="admin-panel" style="padding: 20px;">
-      <h2>👑 Quản trị hệ thống</h2>
+    <div class="admin-dashboard">
+      <h2>👑 BẢNG ĐIỀU KHIỂN ADMIN</h2>
+      
+      <div class="stats-grid" id="statsGrid">
+        <div class="stat-card"><div class="stat-number" id="statStories">0</div><div class="stat-label">Tổng truyện</div></div>
+        <div class="stat-card"><div class="stat-number" id="statUsers">0</div><div class="stat-label">Người dùng</div></div>
+        <div class="stat-card"><div class="stat-number" id="statGroups">0</div><div class="stat-label">Nhóm dịch</div></div>
+        <div class="stat-card"><div class="stat-number" id="statViews">0</div><div class="stat-label">Lượt xem</div></div>
+        <div class="stat-card"><div class="stat-number" id="statLikes">0</div><div class="stat-label">Lượt thích</div></div>
+      </div>
       
       <div class="admin-section">
-        <h3>📚 Truyện chờ duyệt</h3>
+        <h3>📚 TRUYỆN CHỜ DUYỆT</h3>
         <div id="pendingStories"></div>
       </div>
       
       <div class="admin-section">
-        <h3>👥 Quản lý người dùng</h3>
+        <h3>📢 GỬI THÔNG BÁO</h3>
+        <div class="broadcast-area">
+          <input type="text" id="broadcastMsg" placeholder="Nhập thông báo...">
+          <button class="btn-pink" id="sendBroadcastBtn">📢 GỬI</button>
+        </div>
+      </div>
+      
+      <div class="admin-section">
+        <h3>👥 QUẢN LÝ NGƯỜI DÙNG</h3>
         <div id="usersList"></div>
+      </div>
+      
+      <div class="admin-section">
+        <h3>📖 QUẢN LÝ NHÓM DỊCH</h3>
+        <div id="groupsList"></div>
       </div>
     </div>
     
@@ -29,82 +121,156 @@
   
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
   <script type="module">
-    import { API } from './js/core/api.js';
-    import { state } from './js/core/state.js';
-    import { FirebaseService } from './js/core/firebaseService.js';
+    import { initFirebase, db, ref, get, update, remove, set, push, onValue } from './js/db.js';
+    import { restoreSession, state, isAdmin } from './js/auth.js';
+    import { showNotification, escapeHtml, showLoading } from './js/utils.js';
+    import { loadAllGroups } from './js/data.js';
     
-    const { db, ref, get, update } = FirebaseService;
-    
+    initFirebase();
     emailjs.init("fPq8fpw1OqzOtj-lk");
     
+    let allUsers = {};
+    let allStories = [];
+    let allComments = {};
+    
     async function loadAdminData() {
-      if (!state.currentUser || !API.isAdmin(state.currentUser)) {
+      if (!state.currentUser || !isAdmin(state.currentUser)) {
         window.location.href = 'index.html';
         return;
       }
       
-      // Load pending stories
-      const storiesSnap = await get(ref(db, 'stories'));
-      const stories = storiesSnap.val() || {};
-      const pending = Object.entries(stories).filter(([id, s]) => s.approved === false);
+      showLoading(true);
       
+      const storiesSnap = await get(ref(db, 'stories'));
+      allStories = storiesSnap.val() ? Object.entries(storiesSnap.val()).map(([id, s]) => ({ id, ...s })) : [];
+      document.getElementById('statStories').innerText = allStories.length;
+      
+      const totalViews = allStories.reduce((sum, s) => sum + (s.views || 0), 0);
+      const totalLikes = allStories.reduce((sum, s) => sum + (s.likes || 0), 0);
+      document.getElementById('statViews').innerText = totalViews;
+      document.getElementById('statLikes').innerText = totalLikes;
+      
+      const usersSnap = await get(ref(db, 'users'));
+      allUsers = usersSnap.val() || {};
+      document.getElementById('statUsers').innerText = Object.keys(allUsers).length;
+      
+      await loadAllGroups();
+      document.getElementById('statGroups').innerText = state.allGroups.length;
+      
+      const pending = allStories.filter(s => s.approved === false);
       const pendingDiv = document.getElementById('pendingStories');
       if (pending.length === 0) {
-        pendingDiv.innerHTML = '<p>Không có truyện chờ duyệt</p>';
+        pendingDiv.innerHTML = '<div style="padding:20px;text-align:center;color:#aaa;">✅ Không có truyện chờ duyệt</div>';
       } else {
-        pendingDiv.innerHTML = pending.map(([id, story]) => `
-          <div class="admin-story-item" style="background:#2a2a2a; margin:10px 0; padding:15px; border-radius:12px;">
-            <strong>${API.escapeHtml(story.title)}</strong> - by ${API.escapeHtml(story.ownerNickname)}
-            <div style="margin-top:10px;">
-              <button onclick="API.approveStory('${id}')" class="btn-pink">✅ Duyệt</button>
-              <button onclick="API.rejectStory('${id}')" class="btn-red">❌ Từ chối</button>
+        pendingDiv.innerHTML = pending.map(story => `
+          <div class="pending-item">
+            <div><strong>${escapeHtml(story.title)}</strong><br><span style="font-size:12px;color:#888;">by ${escapeHtml(story.ownerNickname)}</span></div>
+            <div>
+              <button class="btn-pink btn-small" onclick="approveStory('${story.id}')">✅ Duyệt</button>
+              <button class="btn-red btn-small" onclick="rejectStory('${story.id}')">❌ Từ chối</button>
             </div>
           </div>
         `).join('');
       }
       
-      // Load users
-      const usersSnap = await get(ref(db, 'users'));
-      const users = usersSnap.val() || {};
       const usersList = document.getElementById('usersList');
-      usersList.innerHTML = Object.entries(users).map(([uid, user]) => `
-        <div class="admin-user-item" style="background:#2a2a2a; margin:10px 0; padding:15px; border-radius:12px;">
-          <div><strong>${API.escapeHtml(user.nickname)}</strong> - ${API.escapeHtml(user.email)}</div>
-          <div>Role: ${user.role}</div>
-          <div style="margin-top:10px;">
-            <button onclick="promoteToMod('${uid}')" class="btn-pink">⭐ Thành Mod</button>
-            <button onclick="demoteUser('${uid}')" class="btn-red">⬇️ Hạ cấp</button>
+      usersList.innerHTML = Object.entries(allUsers).map(([uid, user]) => `
+        <div class="user-item">
+          <div><strong>${escapeHtml(user.nickname)}</strong><br><span style="font-size:12px;color:#888;">${escapeHtml(user.email)} | Role: ${user.role} | Mod: ${user.privileges?.moderator ? '✅' : '❌'}</span></div>
+          <div>
+            ${!user.privileges?.moderator ? `<button class="btn-small" style="background:#FFCC00;" onclick="promoteToMod('${uid}')">⭐ Thành Mod</button>` : `<button class="btn-small" style="background:#ff6666;" onclick="demoteMod('${uid}')">⬇️ Hạ Mod</button>`}
+            <button class="btn-red btn-small" onclick="deleteUser('${uid}')">🗑 Xóa</button>
           </div>
         </div>
       `).join('');
+      
+      const groupsList = document.getElementById('groupsList');
+      groupsList.innerHTML = state.allGroups.map(group => `
+        <div class="group-item">
+          <div><strong>${escapeHtml(group.groupName)}</strong><br><span style="font-size:12px;color:#888;">Thành viên: ${group.members?.length || 0} | Chủ: ${escapeHtml(group.ownerId)}</span></div>
+          <div>
+            <button class="btn-red btn-small" onclick="deleteGroup('${group.id}')">🗑 Xóa nhóm</button>
+          </div>
+        </div>
+      `).join('');
+      
+      showLoading(false);
     }
+    
+    window.approveStory = async (storyId) => {
+      await update(ref(db, `stories/${storyId}`), { approved: true });
+      showNotification('✅ Đã duyệt truyện');
+      loadAdminData();
+    };
+    
+    window.rejectStory = async (storyId) => {
+      await update(ref(db, `stories/${storyId}`), { approved: false });
+      showNotification('❌ Đã từ chối truyện');
+      loadAdminData();
+    };
     
     window.promoteToMod = async (uid) => {
       await update(ref(db, `users/${uid}/privileges`), { moderator: true });
-      API.showNotification('Đã nâng cấp thành Mod');
+      showNotification('⭐ Đã nâng cấp thành Moderator');
       loadAdminData();
     };
     
-    window.demoteUser = async (uid) => {
+    window.demoteMod = async (uid) => {
       await update(ref(db, `users/${uid}/privileges`), { moderator: false });
-      API.showNotification('Đã hạ cấp user');
+      showNotification('⬇️ Đã hạ cấp Moderator');
       loadAdminData();
     };
+    
+    window.deleteUser = async (uid) => {
+      if (confirm('Xóa người dùng này? Không thể hoàn tác!')) {
+        await remove(ref(db, `users/${uid}`));
+        showNotification('🗑 Đã xóa người dùng');
+        loadAdminData();
+      }
+    };
+    
+    window.deleteGroup = async (groupId) => {
+      if (confirm('Xóa nhóm này? Truyện thuộc nhóm sẽ chuyển về "Cá nhân"')) {
+        const group = state.allGroups.find(g => g.id === groupId);
+        if (group && group.members) {
+          for (const memberId of group.members) {
+            await update(ref(db, `users/${memberId}/privileges`), { groupId: null });
+          }
+        }
+        const storiesSnap = await get(ref(db, 'stories'));
+        const stories = storiesSnap.val() || {};
+        for (const [sid, story] of Object.entries(stories)) {
+          if (story.groupId === groupId) {
+            await update(ref(db, `stories/${sid}`), { groupId: null, groupName: "Cá nhân" });
+          }
+        }
+        await remove(ref(db, `groups/${groupId}`));
+        showNotification('🗑 Đã xóa nhóm');
+        loadAdminData();
+      }
+    };
+    
+    document.getElementById('sendBroadcastBtn')?.addEventListener('click', async () => {
+      const msg = document.getElementById('broadcastMsg').value.trim();
+      if (!msg) { showNotification('Nhập nội dung thông báo', true); return; }
+      const broadcastRef = push(ref(db, 'broadcasts'));
+      await set(broadcastRef, { message: msg, timestamp: Date.now(), sender: state.currentUser?.displayName });
+      showNotification('📢 Đã gửi thông báo đến tất cả người dùng');
+      document.getElementById('broadcastMsg').value = '';
+    });
     
     async function loadComponents() {
       const headerRes = await fetch('components/header.html');
       const headerHtml = await headerRes.text();
       document.getElementById('header-placeholder').innerHTML = headerHtml;
-      
       const footerRes = await fetch('components/footer.html');
       const footerHtml = await footerRes.text();
       document.getElementById('footer-placeholder').innerHTML = footerHtml;
-      
       document.getElementById('homeLogo')?.addEventListener('click', () => window.location.href = 'index.html');
     }
     
-    const restored = await API.restoreSession();
-    if (!restored || !API.isAdmin(state.currentUser)) {
+    const restored = await restoreSession();
+    if (!restored || !isAdmin(state.currentUser)) {
       window.location.href = 'index.html';
     } else {
       await loadComponents();
