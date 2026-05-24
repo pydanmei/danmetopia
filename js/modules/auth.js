@@ -309,3 +309,7 @@ export async function logout() {
   setState('currentUser', null);
   window.location.reload();
 }
+// Export currentUserData từ state
+import { state } from '../core/state.js';
+export const currentUserData = state.currentUser;
+}
