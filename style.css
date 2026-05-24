@@ -1120,4 +1120,129 @@ body {
   background: #FF69B4;
   color: black;
 }
+/* Nút lên đầu trang */
+.scroll-top-btn {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  width: 50px;
+  height: 50px;
+  background: #FF69B4;
+  color: black;
+  border: none;
+  border-radius: 50%;
+  font-size: 24px;
+  cursor: pointer;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+  z-index: 9999;
+  transition: all 0.3s;
+}
+
+.scroll-top-btn:hover {
+  background: #FF1493;
+  color: white;
+  transform: scale(1.1);
+}
+
+.floating-top-btn {
+  position: fixed;
+  bottom: 100px;
+  right: 30px;
+  width: 45px;
+  height: 45px;
+  background: rgba(0,0,0,0.5);
+  backdrop-filter: blur(8px);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 20px;
+  cursor: pointer;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  transition: all 0.3s;
+}
+
+.floating-top-btn:hover {
+  background: #FF69B4;
+  color: black;
+}
+
+/* Nút chỉnh sửa và xóa chapter */
+.chapter-edit-btn, .chapter-delete-btn {
+  padding: 4px 12px;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: bold;
+  transition: all 0.2s;
+}
+.chapter-edit-btn { 
+  background: #FFCC00; 
+  color: black; 
+}
+.chapter-edit-btn:hover { 
+  background: #ffaa00; 
+  transform: scale(1.02);
+}
+.chapter-delete-btn { 
+  background: #ff4444; 
+  color: white; 
+}
+.chapter-delete-btn:hover { 
+  background: #cc0000; 
+  transform: scale(1.02);
+}
+
+/* Hiển thị rõ nút trong story detail */
+#storyChapters .chapter-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+#storyChapters .chapter-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* Genre và Tags dạng hashtag */
+.genre-hashtag, .tag-hashtag {
+  display: inline-block;
+  background: #2a2a2a;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  margin: 2px 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.genre-hashtag:hover, .tag-hashtag:hover {
+  background: #FF69B4;
+  color: black;
+}
+
+/* Responsive mobile */
+@media (max-width: 600px) {
+  .scroll-top-btn {
+    width: 40px;
+    height: 40px;
+    font-size: 18px;
+    bottom: 20px;
+    right: 20px;
+  }
+  .floating-top-btn {
+    width: 40px;
+    height: 40px;
+    font-size: 18px;
+    bottom: 80px;
+    right: 20px;
+  }
 }
