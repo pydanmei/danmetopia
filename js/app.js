@@ -113,7 +113,7 @@ function canModerate(userData) { return isAdmin(userData) || isModerator(userDat
 function canUpload(userData) { return userData && (userData.role === "admin" || userData.role === "user"); }
 function hasGroup(userData) { return userData?.privileges?.groupId !== null; }
 
-// ==================== SESSION MANAGEMENT (FIXED) ====================
+// ==================== SESSION MANAGEMENT ====================
 const SESSION_CONFIG = { guest: 60 * 60 * 1000, user: 7 * 24 * 60 * 60 * 1000 };
 
 function setUserSession(userData) {
@@ -333,7 +333,11 @@ function updateUserDisplay() {
     if (groupsLink) groupsLink.style.display = "inline-block";
     if (createGroupBtn) createGroupBtn.style.display = "none";
   } else {
-    userDisplay.innerHTML = `👤 ${escapeHtml(state.currentUser.displayName)}`;
+    if (state.currentUser?.avatar) {
+      userDisplay.innerHTML = `<img src="${state.currentUser.avatar}" style="width:28px; height:28px; border-radius:50%; object-fit:cover; margin-right:8px;"> ${escapeHtml(state.currentUser.displayName)}`;
+    } else {
+      userDisplay.innerHTML = `👤 ${escapeHtml(state.currentUser.displayName)}`;
+    }
     if (profileBtn) profileBtn.style.display = "inline-block";
     if (logoutBtn) logoutBtn.style.display = "inline-block";
     if (adminLink) adminLink.style.display = isAdmin(state.currentUser) ? "inline-block" : "none";
@@ -344,17 +348,37 @@ function updateUserDisplay() {
 
 // ==================== LOAD DATA ====================
 async function loadAllGroups() {
-  const groupsSnap = await get(ref(db, "groups"));
-  state.allGroups = groupsSnap.val() ? Object.entries(groupsSnap.val()).map(([id, g]) => ({ id, ...g })) : [];
+  try {
+    const groupsSnap = await get(ref(db, "groups"));
+    if (groupsSnap.exists()) {
+      state.allGroups = Object.entries(groupsSnap.val()).map(([id, g]) => ({ id, ...g }));
+      console.log("✅ Loaded", state.allGroups.length, "groups");
+    } else {
+      state.allGroups = [];
+      console.log("📭 No groups found");
+    }
+    return state.allGroups;
+  } catch (err) {
+    console.error("Error loading groups:", err);
+    state.allGroups = [];
+    return [];
+  }
 }
 
 async function getUserGroups(uid) {
   if (!uid) return [];
+  if (state.allGroups.length === 0) await loadAllGroups();
   const userGroups = [];
   for (const group of state.allGroups) {
-    if (group.members && group.members.includes(uid)) userGroups.push(group);
+    const members = group.members || [];
+    if (members.includes(uid)) userGroups.push(group);
   }
   return userGroups;
+}
+
+async function getUserGroupOptions() {
+  if (!state.currentUser || state.currentUser.role === "guest") return [];
+  return await getUserGroups(state.currentUser.uid);
 }
 
 async function loadFollows() {
@@ -397,13 +421,6 @@ function loadHistory() {
   if (saved) state.readingHistory = JSON.parse(saved);
 }
 function saveHistory() { localStorage.setItem("danmetopia_history", JSON.stringify(state.readingHistory)); }
-function addToHistory(storyId, chapterId, chapterIndex) {
-  const existing = state.readingHistory.find(h => h.storyId === storyId);
-  if (existing) { existing.chapterId = chapterId; existing.chapterIndex = chapterIndex; existing.timestamp = Date.now(); }
-  else { state.readingHistory.unshift({ storyId, chapterId, chapterIndex, timestamp: Date.now() }); }
-  if (state.readingHistory.length > 50) state.readingHistory.pop();
-  saveHistory();
-}
 
 // ==================== STORIES CRUD ====================
 async function loadStoriesRealtime() {
@@ -503,7 +520,7 @@ window.deleteChapter = async (storyId, chapterId) => {
   window.openStoryDetail(storyId);
 };
 
-// ==================== RENDER GENRE FILTER (DROPDOWN STYLE) ====================
+// ==================== RENDER GENRE FILTER ====================
 function renderGenreFilter() {
   const container = document.getElementById("genreFilterContainer");
   if (!container) return;
@@ -572,7 +589,7 @@ function renderUploadPanel() {
     </div>
   `;
   (async () => {
-    const userGroups = await getUserGroups(state.currentUser?.uid);
+    const userGroups = await getUserGroupOptions();
     const groupSelect = document.getElementById("uploadGroupId");
     if (groupSelect) {
       for (const group of userGroups) { groupSelect.innerHTML += `<option value="${group.id}">${escapeHtml(group.groupName)}</option>`; }
@@ -680,7 +697,7 @@ window.toggleBookmarkAction = (storyId) => { if (isBookmarked(storyId)) removeBo
 // ==================== EDIT STORY ====================
 window.openEditStory = async (storyId) => {
   const story = state.stories.find(s => s.id === storyId);
-  const userGroups = await getUserGroups(state.currentUser?.uid);
+  const userGroups = await getUserGroupOptions();
   let groupOptions = '<option value="">-- Không có nhóm --</option>';
   for (const group of userGroups) { groupOptions += `<option value="${group.id}" ${story.groupId === group.id ? 'selected' : ''}>${escapeHtml(group.groupName)}</option>`; }
   document.getElementById("editStoryContent").innerHTML = `
@@ -852,7 +869,7 @@ window.openEditChapter = async (storyId, chapterId) => {
   document.getElementById("editChapterModal").style.display = "flex";
 };
 
-// ==================== READER (FULLSCREEN) ====================
+// ==================== READER ====================
 let currentChapters = [];
 let currentChapterIndex = 0;
 let currentStoryId = null;
@@ -936,7 +953,7 @@ async function postComment(storyId) {
   showNotification("✅ Đã gửi bình luận");
 }
 
-// ==================== SCROLL BUTTONS (HIỆN SỚM) ====================
+// ==================== SCROLL BUTTONS ====================
 function initScrollButtons() {
   const scrollBtn = document.getElementById("scrollTopBtn");
   const floatingBtn = document.getElementById("floatingTopBtn");
@@ -951,8 +968,7 @@ function initScrollButtons() {
 function closeModal(modalId) { const modal = document.getElementById(modalId); if (modal) modal.style.display = "none"; }
 window.closeModal = closeModal;
 
-// ==================== PROFILE & GROUP ====================
-// ==================== AVATAR UPLOAD ====================
+// ==================== PROFILE & AVATAR ====================
 async function uploadAvatar(file) {
   if (!file) return null;
   if (file.size > 2 * 1024 * 1024) { showNotification("Ảnh đại diện tối đa 2MB", true); return null; }
@@ -966,7 +982,6 @@ async function uploadAvatar(file) {
   return url;
 }
 
-// Cập nhật hàm openProfile
 window.openProfile = () => {
   document.getElementById("profileContent").innerHTML = `
     <div class="profile-field">
@@ -987,17 +1002,6 @@ window.openProfile = () => {
   document.getElementById("profileModal").style.display = "flex";
 };
 
-// Cập nhật updateUserDisplay để hiển thị avatar
-function updateUserDisplay() {
-  const userDisplay = document.getElementById("userDisplay");
-  // ... existing code ...
-  // Thay đổi hiển thị userDisplay để có avatar
-  if (state.currentUser?.avatar) {
-    userDisplay.innerHTML = `<img src="${state.currentUser.avatar}" style="width:28px; height:28px; border-radius:50%; object-fit:cover; margin-right:8px;"> ${escapeHtml(state.currentUser.displayName)}`;
-  } else {
-    userDisplay.innerHTML = `👤 ${escapeHtml(state.currentUser?.displayName || "Guest")}`;
-  };
-  // ... rest of code ...
 window.saveProfile = async () => {
   const newNickname = document.getElementById("profileNickname").value;
   if (!newNickname) { showNotification("Nickname không được trống", true); return; }
@@ -1007,16 +1011,27 @@ window.saveProfile = async () => {
   showNotification("Đã cập nhật");
   closeModal("profileModal");
 };
+
 window.createNewGroup = async () => {
   const groupName = document.getElementById("groupNameInput").value;
   if (!groupName) { alert("Nhập tên nhóm"); return; }
   showLoading(true);
-  const newGroupRef = push(ref(db, 'groups'));
-  await set(newGroupRef, { groupName, description: document.getElementById("groupDescInput").value || "", ownerId: state.currentUser.uid, members: [state.currentUser.uid], createdAt: Date.now() });
-  await update(ref(db, `users/${state.currentUser.uid}/privileges`), { groupId: newGroupRef.key });
-  closeModal("groupModal");
-  showNotification("✅ Tạo nhóm thành công!");
-  setTimeout(() => window.location.reload(), 1000);
+  try {
+    const newGroupRef = push(ref(db, 'groups'));
+    await set(newGroupRef, {
+      groupName: groupName,
+      description: document.getElementById("groupDescInput").value || '',
+      ownerId: state.currentUser.uid,
+      members: [state.currentUser.uid],
+      createdAt: Date.now()
+    });
+    await update(ref(db, `users/${state.currentUser.uid}/privileges`), { groupId: newGroupRef.key });
+    closeModal("groupModal");
+    showNotification("✅ Tạo nhóm thành công!");
+    document.getElementById("groupNameInput").value = '';
+    document.getElementById("groupDescInput").value = '';
+    await loadAllGroups();
+  } catch (err) { showNotification("Lỗi: " + err.message, true); }
   showLoading(false);
 };
 
@@ -1059,8 +1074,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("verifyOtpBtn")?.addEventListener("click", handleVerifyOTP);
   document.getElementById("passwordLoginBtn")?.addEventListener("click", handlePasswordLogin);
   document.getElementById("completeRegisterBtn")?.addEventListener("click", handleCompleteRegistration);
-  document.getElementById("backToEmailBtn")?.addEventListener("click", () => { document.getElementById("otpGroup").style.display = "none"; });
-  document.getElementById("backToEmailBtn2")?.addEventListener("click", () => { document.getElementById("passwordGroup").style.display = "none"; });
+  document.getElementById("backToEmailBtn")?.addEventListener("click", () => { document.getElementById("otpGroup").style.display = "none"; document.getElementById("loginMsg").innerHTML = ""; });
+  document.getElementById("backToEmailBtn2")?.addEventListener("click", () => { document.getElementById("passwordGroup").style.display = "none"; document.getElementById("loginMsg").innerHTML = ""; });
   if (await restoreSession()) {
     document.getElementById("warningOverlay").style.display = "none";
     document.getElementById("loginPage").style.display = "none";
