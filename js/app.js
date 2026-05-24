@@ -1115,6 +1115,13 @@ window.createNewGroup = async () => {
   showLoading(false);
 };
 
+// ==================== LOAD COMPONENTS (FIXED - KHÔNG TẢI FILE NGOÀI) ====================
+async function loadComponents() {
+  // Header và Footer đã có trực tiếp trong HTML
+  console.log("✅ Components already in HTML, skipping load");
+  return true;
+}
+
 // ==================== INIT ====================
 async function initApp() {
   console.log("Initializing app...");
@@ -1197,6 +1204,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     document.getElementById("passwordGroup").style.display = "none";
     document.getElementById("loginMsg").innerHTML = "";
   });
+  
+  // Load components (GIỮ NGUYÊN - không xóa)
+  await loadComponents();
   
   // Restore session
   const restored = await restoreSession();
