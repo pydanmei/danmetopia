@@ -1,7 +1,7 @@
 // ==================== FIREBASE CONFIG ====================
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-import { getDatabase, ref, set, get, child, push, update, remove, onValue, off } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { getDatabase, ref, set, get, child, push, update, remove, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCDQk9DlMNKwn_508fDMI_3IB_dgpgHujA",
@@ -17,6 +17,9 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getDatabase(app);
 const IMGBB_API_KEY = "d16b5595d7f6044476d254c8f428cc28";
+
+// Khởi tạo EmailJS
+emailjs.init("fPq8fpw1OqzOtj-lk");
 
 // ==================== STATE MANAGEMENT ====================
 const state = {
@@ -100,6 +103,77 @@ function refreshUserSession() {
   } catch { return false; }
 }
 
+// ==================== OTP & EMAIL LOGIN FUNCTIONS ====================
+let pendingRegisterEmail = null;
+
+function generateOTP() {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+}
+
+async function sendOTPEmail(email) {
+  const otp = generateOTP();
+  await set(ref(db, `otp_requests/${email.replace(/\./g, "_")}`), {
+    code: otp,
+    expires: Date.now() + 5 * 60 * 1000
+  });
+  try {
+    await emailjs.send("service_8bxh5mm", "template_8ahbuhu", { otp: otp, to_email: email });
+    showNotification("📩 Mã OTP đã gửi đến email của bạn");
+    return true;
+  } catch (error) {
+    console.error("EmailJS error:", error);
+    showNotification(`⚠️ Mã OTP demo: ${otp}`, true);
+    return true;
+  }
+}
+
+async function verifyOTP(email, inputCode) {
+  const snap = await get(ref(db, `otp_requests/${email.replace(/\./g, "_")}`));
+  const data = snap.val();
+  if (!data) return { success: false, message: "Mã OTP không tồn tại" };
+  if (Date.now() > data.expires) return { success: false, message: "Mã OTP đã hết hạn" };
+  if (data.code !== inputCode) return { success: false, message: "Sai mã OTP" };
+  await remove(ref(db, `otp_requests/${email.replace(/\./g, "_")}`));
+  return { success: true };
+}
+
+async function checkEmailExists(email) {
+  const usersSnap = await get(ref(db, "users"));
+  const users = usersSnap.val() || {};
+  for (const uid in users) {
+    if (users[uid].email === email) return true;
+  }
+  return false;
+}
+
+async function createNewUser(uid, email, nickname) {
+  const ADMIN_EMAILS = ["pydanmeii@gmail.com", "pepyl4298@gmail.com", "maihuong4298@gmail.com"];
+  const isAdminEmail = ADMIN_EMAILS.includes(email);
+  await set(ref(db, `users/${uid}`), {
+    email, nickname,
+    role: isAdminEmail ? "admin" : "user",
+    privileges: { moderator: false, groupId: null },
+    follows: {}, history: [], genrePref: {}, strike: 0, bannedUntil: 0,
+    createdAt: Date.now()
+  });
+}
+
+async function loadUserData(uid, email) {
+  const snap = await get(ref(db, `users/${uid}`));
+  const userData = snap.exists() ? snap.val() : null;
+  const nickname = userData?.nickname || email?.split("@")[0] || "Người dùng";
+  let displayName = nickname;
+  if (userData?.role === "admin") displayName = `${nickname} (Admin)`;
+  else if (userData?.role === "user" && userData?.privileges?.moderator) displayName = `${nickname} (Quản lý)`;
+  return {
+    uid, email,
+    role: userData?.role || "user",
+    privileges: userData?.privileges || { moderator: false, groupId: null },
+    nickname: nickname,
+    displayName: displayName
+  };
+}
+
 // ==================== AUTH FUNCTIONS ====================
 async function handleGuestLogin() {
   const guestName = generateRandomGuestName();
@@ -109,6 +183,129 @@ async function handleGuestLogin() {
   document.getElementById("mainContainer").style.display = "block";
   showNotification(`👤 Chào mừng ${guestName} (Khách)`);
   initApp();
+}
+
+async function handleCheckEmail() {
+  console.log("handleCheckEmail called");
+  const email = document.getElementById("loginEmail").value.trim();
+  if (!email) { 
+    showNotification("Nhập email", true); 
+    return; 
+  }
+  
+  const ADMIN_EMAILS = ["pydanmeii@gmail.com", "pepyl4298@gmail.com", "maihuong4298@gmail.com"];
+  const isAdminEmail = ADMIN_EMAILS.includes(email);
+  showLoading(true);
+  const emailExists = await checkEmailExists(email);
+  showLoading(false);
+  
+  pendingRegisterEmail = email;
+  
+  if (isAdminEmail) {
+    document.getElementById("passwordGroup").style.display = "block";
+    document.getElementById("otpGroup").style.display = "none";
+    document.getElementById("loginMsg").innerHTML = "👑 Email Admin, vui lòng nhập mật khẩu";
+    return;
+  }
+  
+  if (emailExists) {
+    document.getElementById("passwordGroup").style.display = "block";
+    document.getElementById("otpGroup").style.display = "none";
+    document.getElementById("loginMsg").innerHTML = "";
+  } else {
+    await sendOTPEmail(email);
+    document.getElementById("otpGroup").style.display = "block";
+    document.getElementById("passwordGroup").style.display = "none";
+    document.getElementById("loginMsg").innerHTML = "📩 Mã OTP đã gửi, vui lòng kiểm tra email";
+  }
+}
+
+async function handleVerifyOTP() {
+  const otp = document.getElementById("otpCode").value.trim();
+  if (!otp || otp.length !== 6) { 
+    showNotification("Nhập mã OTP 6 số", true); 
+    return; 
+  }
+  showLoading(true);
+  const result = await verifyOTP(pendingRegisterEmail, otp);
+  showLoading(false);
+  if (!result.success) { 
+    showNotification(result.message, true); 
+    return; 
+  }
+  document.getElementById("verifiedEmail").innerText = pendingRegisterEmail;
+  document.getElementById("loginPage").style.display = "none";
+  document.getElementById("registerPage").style.display = "flex";
+}
+
+async function handlePasswordLogin() {
+  const email = document.getElementById("loginEmail").value.trim();
+  const password = document.getElementById("loginPassword").value;
+  if (!email || !password) { 
+    showNotification("Nhập email và mật khẩu", true); 
+    return; 
+  }
+  showLoading(true);
+  try {
+    const userCred = await signInWithEmailAndPassword(auth, email, password);
+    const userData = await loadUserData(userCred.user.uid, email);
+    state.currentUser = userData;
+    setUserSession(state.currentUser);
+    document.getElementById("loginPage").style.display = "none";
+    document.getElementById("mainContainer").style.display = "block";
+    showNotification(`✅ Chào mừng ${state.currentUser.displayName}`);
+    initApp();
+  } catch (err) {
+    console.error("Login error:", err);
+    if (err.code === "auth/invalid-credential") {
+      const ADMIN_EMAILS = ["pydanmeii@gmail.com", "pepyl4298@gmail.com", "maihuong4298@gmail.com"];
+      const isAdminEmail = ADMIN_EMAILS.includes(email);
+      if (isAdminEmail) {
+        const confirmCreate = confirm("Email Admin chưa có tài khoản. Bạn có muốn tạo tài khoản Admin mới không?");
+        if (confirmCreate) {
+          pendingRegisterEmail = email;
+          document.getElementById("verifiedEmail").innerText = email;
+          document.getElementById("loginPage").style.display = "none";
+          document.getElementById("registerPage").style.display = "flex";
+        } else {
+          showNotification("Vui lòng tạo tài khoản Admin", true);
+        }
+      } else {
+        showNotification("Sai email hoặc mật khẩu", true);
+      }
+    } else {
+      showNotification("Lỗi: " + err.message, true);
+    }
+  } finally { 
+    showLoading(false); 
+  }
+}
+
+async function handleCompleteRegistration() {
+  const nickname = document.getElementById("nicknameInput").value.trim();
+  const password = document.getElementById("newPassword").value;
+  const confirm = document.getElementById("confirmPassword").value;
+  const msg = document.getElementById("registerMsg");
+  if (!nickname) { msg.innerText = "Nhập nickname"; return; }
+  if (!password || password.length < 6) { msg.innerText = "Mật khẩu phải có ít nhất 6 ký tự"; return; }
+  if (password !== confirm) { msg.innerText = "Mật khẩu không khớp"; return; }
+  showLoading(true);
+  try {
+    const userCred = await createUserWithEmailAndPassword(auth, pendingRegisterEmail, password);
+    await createNewUser(userCred.user.uid, pendingRegisterEmail, nickname);
+    const userData = await loadUserData(userCred.user.uid, pendingRegisterEmail);
+    state.currentUser = userData;
+    setUserSession(state.currentUser);
+    document.getElementById("registerPage").style.display = "none";
+    document.getElementById("mainContainer").style.display = "block";
+    showNotification(`🎉 Chào mừng ${nickname}!`);
+    initApp();
+  } catch (err) {
+    console.error("Registration error:", err);
+    msg.innerText = "Lỗi: " + err.message;
+  } finally { 
+    showLoading(false); 
+  }
 }
 
 async function restoreSession() {
@@ -296,6 +493,9 @@ async function initApp() {
   document.getElementById("sortFilter")?.addEventListener("change", () => renderCurrentTab());
   document.getElementById("homeLogo")?.addEventListener("click", () => window.location.reload());
   document.getElementById("logoutBtn")?.addEventListener("click", logout);
+  document.getElementById("profileBtn")?.addEventListener("click", () => {
+    showNotification("Chức năng đang phát triển");
+  });
 }
 
 // ==================== STARTUP ====================
@@ -318,7 +518,22 @@ document.addEventListener("DOMContentLoaded", async () => {
     document.body.innerHTML = "<div style='height:100vh;display:flex;justify-content:center;align-items:center;background:black;color:white;'>ĐÃ THOÁT</div>";
   });
   
+  // Login buttons
   document.getElementById("guestBtn")?.addEventListener("click", handleGuestLogin);
+  document.getElementById("checkEmailBtn")?.addEventListener("click", handleCheckEmail);
+  document.getElementById("verifyOtpBtn")?.addEventListener("click", handleVerifyOTP);
+  document.getElementById("passwordLoginBtn")?.addEventListener("click", handlePasswordLogin);
+  document.getElementById("completeRegisterBtn")?.addEventListener("click", handleCompleteRegistration);
+  
+  // Back buttons
+  document.getElementById("backToEmailBtn")?.addEventListener("click", () => {
+    document.getElementById("otpGroup").style.display = "none";
+    document.getElementById("loginMsg").innerHTML = "";
+  });
+  document.getElementById("backToEmailBtn2")?.addEventListener("click", () => {
+    document.getElementById("passwordGroup").style.display = "none";
+    document.getElementById("loginMsg").innerHTML = "";
+  });
   
   const restored = await restoreSession();
   if (!restored) {
