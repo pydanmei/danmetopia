@@ -952,14 +952,52 @@ function closeModal(modalId) { const modal = document.getElementById(modalId); i
 window.closeModal = closeModal;
 
 // ==================== PROFILE & GROUP ====================
+// ==================== AVATAR UPLOAD ====================
+async function uploadAvatar(file) {
+  if (!file) return null;
+  if (file.size > 2 * 1024 * 1024) { showNotification("Ảnh đại diện tối đa 2MB", true); return null; }
+  const url = await uploadImage(file);
+  if (url) {
+    await update(ref(db, `users/${state.currentUser.uid}`), { avatar: url });
+    state.currentUser.avatar = url;
+    updateUserDisplay();
+    showNotification("✅ Đã cập nhật avatar");
+  }
+  return url;
+}
+
+// Cập nhật hàm openProfile
 window.openProfile = () => {
   document.getElementById("profileContent").innerHTML = `
+    <div class="profile-field">
+      <label>🖼️ Avatar</label>
+      <div style="display:flex; align-items:center; gap:15px; flex-wrap:wrap;">
+        <img src="${state.currentUser?.avatar || 'https://placehold.co/100x100?text=No+Avatar'}" style="width:80px; height:80px; border-radius:50%; object-fit:cover; border:2px solid #FF69B4;">
+        <input type="file" id="avatarInput" accept="image/*" style="flex:1;">
+      </div>
+    </div>
     <div class="profile-field"><label>📧 Email</label><input value="${escapeHtml(state.currentUser?.email || '')}" disabled></div>
     <div class="profile-field"><label>🏷️ Nickname</label><input id="profileNickname" value="${escapeHtml(state.currentUser?.nickname || '')}"></div>
     <button onclick="window.saveProfile()">💾 Lưu</button>
   `;
+  document.getElementById("avatarInput")?.addEventListener("change", async (e) => {
+    const file = e.target.files[0];
+    if (file) await uploadAvatar(file);
+  });
   document.getElementById("profileModal").style.display = "flex";
 };
+
+// Cập nhật updateUserDisplay để hiển thị avatar
+function updateUserDisplay() {
+  const userDisplay = document.getElementById("userDisplay");
+  // ... existing code ...
+  // Thay đổi hiển thị userDisplay để có avatar
+  if (state.currentUser?.avatar) {
+    userDisplay.innerHTML = `<img src="${state.currentUser.avatar}" style="width:28px; height:28px; border-radius:50%; object-fit:cover; margin-right:8px;"> ${escapeHtml(state.currentUser.displayName)}`;
+  } else {
+    userDisplay.innerHTML = `👤 ${escapeHtml(state.currentUser?.displayName || "Guest")}`;
+  };
+  // ... rest of code ...
 window.saveProfile = async () => {
   const newNickname = document.getElementById("profileNickname").value;
   if (!newNickname) { showNotification("Nickname không được trống", true); return; }
