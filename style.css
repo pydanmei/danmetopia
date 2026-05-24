@@ -1064,4 +1064,60 @@ body {
     font-size: 24px;
     white-space: nowrap;
   }
+  /* Nút chỉnh sửa và xóa chapter */
+.chapter-edit-btn, .chapter-delete-btn {
+  padding: 4px 12px;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: bold;
+  transition: all 0.2s;
+}
+.chapter-edit-btn { 
+  background: #FFCC00; 
+  color: black; 
+}
+.chapter-edit-btn:hover { 
+  background: #ffaa00; 
+  transform: scale(1.02);
+}
+.chapter-delete-btn { 
+  background: #ff4444; 
+  color: white; 
+}
+.chapter-delete-btn:hover { 
+  background: #cc0000; 
+  transform: scale(1.02);
+}
+
+/* Hiển thị rõ nút trong story detail */
+#storyChapters .chapter-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+#storyChapters .chapter-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* Genre và Tags dạng hashtag */
+.genre-hashtag, .tag-hashtag {
+  display: inline-block;
+  background: #2a2a2a;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  margin: 2px 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.genre-hashtag:hover, .tag-hashtag:hover {
+  background: #FF69B4;
+  color: black;
+}
 }
