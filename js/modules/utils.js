@@ -1,4 +1,7 @@
 import { state, setState } from '../core/state.js';
+import { FirebaseService } from '../core/firebaseService.js';
+
+const { db, ref, get, child } = FirebaseService;
 
 // Show notification
 export function showNotification(msg, isError = false) {
@@ -111,4 +114,74 @@ export function loadImage(imgElement, src) {
     imgElement.src = "https://placehold.co/800x1200?text=Error";
   };
   tempImg.src = src;
+}
+
+// ==================== USER GROUP FUNCTIONS (THÊM MỚI) ====================
+
+// Get user groups by UID
+export async function getUserGroups(uid) {
+  if (!uid) return [];
+  
+  const userGroups = [];
+  try {
+    const groupsSnap = await get(ref(db, "groups"));
+    const groups = groupsSnap.val() || {};
+    
+    for (const gid in groups) {
+      if (groups[gid].members && groups[gid].members.includes(uid)) {
+        userGroups.push({ id: gid, ...groups[gid] });
+      }
+    }
+    return userGroups;
+  } catch (err) {
+    console.error("Error getting user groups:", err);
+    return [];
+  }
+}
+
+// Get user group options for dropdown
+export async function getUserGroupOptions() {
+  if (!state.currentUser || state.currentUser.role === "guest") return [];
+  const userGroups = await getUserGroups(state.currentUser.uid);
+  return userGroups;
+}
+
+// Get user data by UID
+export async function getUserData(uid) {
+  try {
+    const snap = await get(child(ref(db), `users/${uid}`));
+    return snap.exists() ? snap.val() : null;
+  } catch (err) {
+    console.error("Error getting user data:", err);
+    return null;
+  }
+}
+
+// Get user group
+export async function getUserGroup(uid) {
+  const userData = await getUserData(uid);
+  if (userData?.privileges?.groupId) {
+    try {
+      const snap = await get(child(ref(db), `groups/${userData.privileges.groupId}`));
+      return snap.exists() ? { id: userData.privileges.groupId, ...snap.val() } : null;
+    } catch (err) {
+      console.error("Error getting user group:", err);
+      return null;
+    }
+  }
+  return null;
+}
+
+// Get display name
+export async function getDisplayName(uid, email, userData) {
+  if (!userData) userData = await getUserData(uid);
+  if (!userData) return generateRandomGuestName();
+  const nickname = userData?.nickname || email?.split("@")[0] || "Người dùng";
+  if (userData?.role === "admin") return `${nickname} (Admin)`;
+  if (userData?.role === "user" && userData?.privileges?.moderator) return `${nickname} (Quản lý)`;
+  if (userData?.role === "user" && userData?.privileges?.groupId) {
+    const group = await getUserGroup(uid);
+    return `${nickname} (${group?.groupName || "Nhóm dịch"})`;
+  }
+  return nickname;
 }
