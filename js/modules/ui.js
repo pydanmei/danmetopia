@@ -1,10 +1,10 @@
-import { FirebaseService } from '../core/firebaseService.js';
-import { state, setState } from '../core/state.js';
-import { currentUserData, refreshUserSession } from './auth.js';
+import { refreshUserSession } from './auth.js';
 import { getUserGroups } from './utils.js';
 import { isAdmin, canModerate, hasGroup, showNotification, showLoading, escapeHtml } from './utils.js';
 import { getChapters, followStory, unfollowStory, isFollowing, likeStory, approveStory, rejectStory, deleteStory } from './data.js';
 import { uploadImage } from './upload.js';
+import { state } from '../core/state.js';
+import { FirebaseService } from '../core/firebaseService.js';
 
 const { db, ref, get, update, push, set } = FirebaseService;
 
@@ -17,14 +17,15 @@ export function closeModal(modalId) {
 // Open story detail
 export async function openStoryDetail(storyId) {
   refreshUserSession();
-  const story = state.stories.find(s => s.id === storyId);
+  const story = state.stories?.find(s => s.id === storyId);
   if (!story) return;
   const chapters = await getChapters(storyId);
   
-  const canEditStory = state.currentUser && (isAdmin(state.currentUser) || (state.currentUser.privileges?.groupId && story.groupId === state.currentUser.privileges?.groupId) || story.ownerUid === state.currentUser?.uid);
-  const canEditChapter = state.currentUser && (isAdmin(state.currentUser) || (state.currentUser.privileges?.groupId && story.groupId === state.currentUser.privileges?.groupId) || story.ownerUid === state.currentUser?.uid);
-  const canDeleteChapter = state.currentUser && isAdmin(state.currentUser);
-  const isMod = canModerate(state.currentUser);
+  const currentUser = state.currentUser;
+  const canEditStory = currentUser && (isAdmin(currentUser) || (currentUser.privileges?.groupId && story.groupId === currentUser.privileges?.groupId) || story.ownerUid === currentUser?.uid);
+  const canEditChapter = currentUser && (isAdmin(currentUser) || (currentUser.privileges?.groupId && story.groupId === currentUser.privileges?.groupId) || story.ownerUid === currentUser?.uid);
+  const canDeleteChapter = currentUser && isAdmin(currentUser);
+  const isMod = canModerate(currentUser);
   
   document.getElementById("storyDetailContent").innerHTML = `
     <div class="story-detail-grid">
@@ -62,10 +63,10 @@ export async function openStoryDetail(storyId) {
   document.getElementById("storyChapters").innerHTML = chaptersHtml;
   
   let actionsHtml = `<button onclick="API.likeStoryAndRefresh('${storyId}')">❤️ Thích</button>`;
-  if (state.currentUser && state.currentUser.role !== "guest") actionsHtml += `<button onclick="API.toggleFollow('${storyId}')">${isFollowing(storyId) ? '⭐ Đã theo dõi' : '➕ Theo dõi'}</button>`;
+  if (currentUser && currentUser.role !== "guest") actionsHtml += `<button onclick="API.toggleFollow('${storyId}')">${isFollowing(storyId) ? '⭐ Đã theo dõi' : '➕ Theo dõi'}</button>`;
   if (canEditStory) actionsHtml += `<button onclick="API.openEditStory('${storyId}')">✏️ Chỉnh sửa truyện</button><button onclick="API.openAddChapter('${storyId}')">📖 Thêm chapter mới</button>`;
   if (isMod && story.approved === false) actionsHtml += `<button onclick="API.approveStoryAction('${storyId}')">✅ Duyệt truyện</button><button onclick="API.rejectStoryAction('${storyId}')">❌ Từ chối</button>`;
-  if (isAdmin(state.currentUser)) actionsHtml += `<button onclick="API.deleteStoryAction('${storyId}')" style="background:#ff4444;">🗑 Xóa truyện</button>`;
+  if (isAdmin(currentUser)) actionsHtml += `<button onclick="API.deleteStoryAction('${storyId}')" style="background:#ff4444;">🗑 Xóa truyện</button>`;
   document.getElementById("storyActions").innerHTML = actionsHtml;
   document.getElementById("storyModal").style.display = "flex";
 }
@@ -79,7 +80,7 @@ window.toggleFollow = async (storyId) => { if (isFollowing(storyId)) await unfol
 
 // Open edit story
 export async function openEditStory(storyId) {
-  const story = state.stories.find(s => s.id === storyId);
+  const story = state.stories?.find(s => s.id === storyId);
   const userGroups = await getUserGroups(state.currentUser?.uid);
   let groupOptions = '<option value="">-- Không có nhóm --</option>';
   for (const group of userGroups) {
@@ -216,6 +217,5 @@ export async function createNewGroup() {
 
 // Initialize UI
 export function initUI() {
-  // Make functions global via API
   window.closeModal = closeModal;
 }
