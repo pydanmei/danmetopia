@@ -59,17 +59,7 @@
 
 <!-- Main App Container -->
 <div id="mainContainer">
-  <div class="topbar">
-    <div class="logo" id="homeLogo">🌸 DANMETOPIA 🌸</div>
-    <div class="user-area">
-      <span id="userDisplay">👤 Đang tải...</span>
-      <a href="groups.html" id="groupsLink" class="nav-link" style="display:none">📚 Nhóm</a>
-      <button id="profileBtn" style="display:none">👤 Thông tin</button>
-      <a href="admin.html" id="adminLink" style="display:none" class="nav-link admin-link">👑 Admin</a>
-      <button id="logoutBtn" style="display:none">🚪 Đăng xuất</button>
-      <button id="createGroupBtn" style="display:none" class="nav-btn">➕ Tạo nhóm</button>
-    </div>
-  </div>
+  <div id="header-placeholder"></div>
   
   <div class="search-bar">
     <input type="text" id="searchInput" placeholder="🔍 Tìm kiếm truyện...">
@@ -96,14 +86,7 @@
     <div class="loading-container"><div class="loading-spinner"></div><p>Đang tải truyện...</p></div>
   </div>
   
-  <div class="footer-disclaimer">
-    <div class="disclaimer-content">
-      <p>🌸 <strong>DANMETOPIA</strong> là nền tảng phi lợi nhuận, hoạt động với mục đích <strong>tổng hợp và chia sẻ</strong> các bộ truyện tranh từ nhiều nguồn khác nhau.</p>
-      <p>📌 <strong>Miễn trừ trách nhiệm:</strong> Chúng tôi không sở hữu bản quyền nội dung.</p>
-      <p>📧 Liên hệ: <a href="mailto:pydanmeii@gmail.com">pydanmeii@gmail.com</a></p>
-      <p>© 2025 DANMETOPIA</p>
-    </div>
-  </div>
+  <div id="footer-placeholder"></div>
 </div>
 
 <!-- Modals -->
@@ -122,13 +105,22 @@
   </div>
 </div>
 
-<button class="scroll-top-btn" id="scrollTopBtn">⬆️</button>
-<button class="floating-top-btn" id="floatingTopBtn">↑</button>
+<!-- Nút lên đầu trang -->
+<button class="scroll-top-btn" id="scrollTopBtn" style="display:none;">⬆️</button>
+<button class="floating-top-btn" id="floatingTopBtn" style="display:none;">↑</button>
 
 <datalist id="genreDropdown">
-  <option>3D</option><option>Action</option><option>Comedy</option><option>Drama</option>
-  <option>Fantasy</option><option>Horror</option><option>Romance</option><option>School Life</option>
-  <option>Shounen Ai</option><option>Yaoi</option>
+  <option>3D</option><option>Action</option><option>Bara/Muscle</option>
+  <option>Biography</option><option>Cakeverse</option><option>Comedy</option>
+  <option>Crime</option><option>Documentary</option><option>Dom/Sub verse</option>
+  <option>Drama</option><option>Family</option><option>Fantasy</option>
+  <option>Furry</option><option>HET/Hentai</option><option>Historical</option>
+  <option>Horror</option><option>Music</option><option>Mystery</option>
+  <option>Omegaverse</option><option>Psychological</option><option>Romance</option>
+  <option>School Life</option><option>Sci-fi</option><option>Shounen Ai</option>
+  <option>Slice of Life</option><option>Sports</option><option>Supernatural</option>
+  <option>Thriller</option><option>Tragedy</option><option>War</option>
+  <option>Wuxia</option><option>Yaoi</option><option>Yuri</option>
 </datalist>
 
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
