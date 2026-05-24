@@ -71,6 +71,11 @@ const state = {
   sortBy: "likes"
 };
 
+// ==================== FIREBASE SUBSCRIPTIONS ====================
+let chapterUnsubscribe = null;
+let commentUnsubscribe = null;
+let storiesUnsubscribe = null;
+
 // ==================== HELPER FUNCTIONS ====================
 function showNotification(msg, isError = false) {
   const notif = document.createElement("div");
@@ -197,8 +202,8 @@ async function loadUserData(uid, email) {
 async function handleGuestLogin() {
   state.currentUser = { role: "guest", displayName: generateRandomGuestName(), nickname: "", uid: null };
   setUserSession(state.currentUser);
-  document.getElementById("loginPage").style.display = "none";
-  document.getElementById("mainContainer").style.display = "block";
+  document.getElementById("loginPage")?.style.display = "none";
+  document.getElementById("mainContainer")?.style.display = "block";
   showNotification(`👤 Chào mừng ${state.currentUser.displayName} (Khách)`);
   updateUserDisplay();
   initApp();
@@ -417,8 +422,9 @@ function saveHistory() { localStorage.setItem("danmetopia_history", JSON.stringi
 
 // ==================== STORIES CRUD ====================
 async function loadStoriesRealtime() {
+  if (storiesUnsubscribe) storiesUnsubscribe();
   const storiesRef = ref(db, 'stories');
-  onValue(storiesRef, (snapshot) => {
+  storiesUnsubscribe = onValue(storiesRef, (snapshot) => {
     const data = snapshot.val();
     state.stories = data ? Object.entries(data).map(([id, value]) => ({ id, ...value })) : [];
     renderCurrentTab();
@@ -744,10 +750,11 @@ window.saveEditStory = async (storyId) => {
   window.openStoryDetail(storyId);
 };
 
-// ==================== ADD/EDIT CHAPTER ====================
+// ==================== ADD/EDIT CHAPTER (FIXED SORTABLE) ====================
 window.openAddChapter = (storyId) => {
   selectedChapterImages = [];
   let sortableInstance = null;
+  
   document.getElementById("addChapterContent").innerHTML = `
     <input id="chapterTitle" placeholder="Tên chapter *">
     <input id="chapterNumber" placeholder="Số chapter (để trống tự động)">
@@ -757,34 +764,67 @@ window.openAddChapter = (storyId) => {
     <textarea id="chapterPages" placeholder="Hoặc nhập link ảnh (mỗi dòng 1 link)" rows="10"></textarea>
     <button class="btn-pink" id="saveChapterBtn">📤 ĐĂNG CHAPTER</button>
   `;
+  
   const previewDiv = document.getElementById("chapterImagesPreview");
+  
   const updateSortable = () => {
     if (sortableInstance) sortableInstance.destroy();
     if (previewDiv.children.length > 0) {
-      sortableInstance = new Sortable(previewDiv, { animation: 150, handle: '.img-preview-item',
-        onEnd: () => { const newOrder = []; for (let i = 0; i < previewDiv.children.length; i++) newOrder.push(selectedChapterImages[i]); if (newOrder.length === selectedChapterImages.length) selectedChapterImages = newOrder; }
+      sortableInstance = new Sortable(previewDiv, {
+        animation: 150,
+        handle: '.img-preview-item',
+        onEnd: () => {
+          const reordered = [];
+          [...previewDiv.children].forEach(child => {
+            const idx = parseInt(child.dataset.index);
+            reordered.push(selectedChapterImages[idx]);
+          });
+          selectedChapterImages = reordered;
+          [...previewDiv.children].forEach((child, idx) => {
+            child.dataset.index = idx;
+          });
+        }
       });
     }
   };
+  
   document.getElementById("chapterImages")?.addEventListener("change", (e) => {
     const files = Array.from(e.target.files);
     selectedChapterImages = files;
     previewDiv.innerHTML = "";
-    for (const file of files) {
+    
+    files.forEach((file, index) => {
       const reader = new FileReader();
       reader.onload = (ev) => {
         const imgDiv = document.createElement("div");
         imgDiv.className = "img-preview-item";
-        imgDiv.innerHTML = `<img src="${ev.target.result}" style="width:100%;height:100%;object-fit:cover;"><button onclick="this.parentElement.remove()">✕</button>`;
+        imgDiv.dataset.index = index;
+        imgDiv.innerHTML = `
+          <img src="${ev.target.result}" style="width:100%;height:100%;object-fit:cover;">
+          <button class="remove-img-btn" style="position:absolute; top:-8px; right:-8px; width:22px; height:22px; border-radius:50%; background:#ff4444; color:white; border:none; cursor:pointer; font-size:12px;">✕</button>
+        `;
+        imgDiv.querySelector(".remove-img-btn").addEventListener("click", () => {
+          const removeIndex = parseInt(imgDiv.dataset.index);
+          selectedChapterImages.splice(removeIndex, 1);
+          imgDiv.remove();
+          [...previewDiv.children].forEach((child, idx) => {
+            child.dataset.index = idx;
+          });
+          updateSortable();
+        });
         previewDiv.appendChild(imgDiv);
         updateSortable();
       };
       reader.readAsDataURL(file);
-    }
-    updateSortable();
+    });
   });
+  
   const saveBtn = document.getElementById("saveChapterBtn");
-  if (saveBtn) { const newBtn = saveBtn.cloneNode(true); saveBtn.parentNode.replaceChild(newBtn, saveBtn); newBtn.addEventListener("click", () => window.saveAddChapter(storyId)); }
+  if (saveBtn) {
+    const newBtn = saveBtn.cloneNode(true);
+    saveBtn.parentNode.replaceChild(newBtn, saveBtn);
+    newBtn.addEventListener("click", () => window.saveAddChapter(storyId));
+  }
   document.getElementById("addChapterModal").style.display = "flex";
 };
 
@@ -826,14 +866,14 @@ window.openEditChapter = async (storyId, chapterId) => {
   document.getElementById("editChapterContent").innerHTML = `
     <input id="editChapterTitle" value="${escapeHtml(chapter.title)}" placeholder="Tên chapter *">
     <input id="editChapterNumber" value="${chapter.chapterNumber || 0}" type="number">
-    <label style="color:#FF69B4;">📷 Ảnh hiện tại (kéo thả để sắp xếp)</label>
+    <label style="color:#FF69B4;">📷 ẢNH HIỆN TẠI (kéo thả để sắp xếp)</label>
     <div id="existingImagesPreview" class="images-preview" style="min-height:120px;"></div>
-    <label style="color:#FF69B4;">➕ Thêm ảnh mới</label>
+    <label style="color:#FF69B4;">➕ THÊM ẢNH MỚI</label>
     <input type="file" id="editNewChapterImages" accept="image/*" multiple>
     <div id="editNewChapterPreview" class="images-preview"></div>
-    <label style="color:#FF69B4;">🔗 Hoặc nhập link ảnh (mỗi dòng 1 link)</label>
-    <textarea id="editChapterPages" rows="8">${existingPages.join('\n')}</textarea>
-    <button class="btn-pink" id="saveChapterEditBtn">💾 LƯU THAY ĐỔI</button>
+    <label style="color:#FF69B4;">🔗 HOẶC NHẬP LINK ẢNH MỚI (mỗi dòng 1 link)</label>
+    <textarea id="editChapterPages" rows="8" placeholder="https://example.com/image1.jpg"></textarea>
+    <button class="btn-pink" id="saveChapterEditBtn" style="margin-top:15px;">💾 LƯU THAY ĐỔI</button>
   `;
   
   const existingPreviewDiv = document.getElementById("existingImagesPreview");
@@ -841,6 +881,7 @@ window.openEditChapter = async (storyId, chapterId) => {
   for (let i = 0; i < existingPages.length; i++) {
     const imgDiv = document.createElement("div");
     imgDiv.className = "img-preview-item";
+    imgDiv.dataset.index = i;
     imgDiv.innerHTML = `
       <img src="${escapeHtml(existingPages[i])}" style="width:100%; height:100%; object-fit:cover; border-radius:8px;">
       <button class="remove-existing-img" data-index="${i}" style="position:absolute; top:-8px; right:-8px; width:22px; height:22px; border-radius:50%; background:#ff4444; color:white; border:none; cursor:pointer; font-size:12px;">✕</button>
@@ -859,8 +900,17 @@ window.openEditChapter = async (storyId, chapterId) => {
     });
   });
   
-  new Sortable(existingPreviewDiv, { animation: 150, handle: '.img-preview-item',
-    onEnd: () => { const newOrder = []; for (let i = 0; i < existingPreviewDiv.children.length; i++) { const img = existingPreviewDiv.children[i].querySelector('img'); if (img) newOrder.push(img.src); } existingPages = newOrder; }
+  new Sortable(existingPreviewDiv, {
+    animation: 150,
+    handle: '.img-preview-item',
+    onEnd: () => {
+      const newOrder = [];
+      for (let i = 0; i < existingPreviewDiv.children.length; i++) {
+        const img = existingPreviewDiv.children[i].querySelector('img');
+        if (img) newOrder.push(img.src);
+      }
+      existingPages = newOrder;
+    }
   });
   
   document.getElementById("editNewChapterImages")?.addEventListener("change", (e) => {
@@ -927,7 +977,7 @@ window.deleteChapter = async (storyId, chapterId) => {
   }
 };
 
-// ==================== READER ====================
+// ==================== READER (FIXED MEMORY LEAK) ====================
 let currentChapters = [];
 let currentChapterIndex = 0;
 let currentStoryId = null;
@@ -936,13 +986,26 @@ window.openReader = async (storyId, chapterIndex) => {
   refreshUserSession();
   currentStoryId = storyId;
   currentChapterIndex = chapterIndex || 0;
+  
   const story = state.stories.find(s => s.id === storyId);
-  if (story) { const viewRef = ref(db, `stories/${storyId}/views`); const snapshot = await get(viewRef); await set(viewRef, (snapshot.val() || 0) + 1); }
+  if (story) { 
+    const viewRef = ref(db, `stories/${storyId}/views`); 
+    const snapshot = await get(viewRef); 
+    await set(viewRef, (snapshot.val() || 0) + 1); 
+  }
+  
   const chaptersRef = ref(db, `chapters/${storyId}`);
-  onValue(chaptersRef, (snapshot) => {
+  
+  if (chapterUnsubscribe) chapterUnsubscribe();
+  chapterUnsubscribe = onValue(chaptersRef, (snapshot) => {
     const data = snapshot.val();
-    if (data) { currentChapters = Object.entries(data).map(([id, value]) => ({ id, ...value })); currentChapters.sort((a, b) => (a.chapterNumber || 0) - (b.chapterNumber || 0)); renderReader(); }
+    if (data) { 
+      currentChapters = Object.entries(data).map(([id, value]) => ({ id, ...value })); 
+      currentChapters.sort((a, b) => (a.chapterNumber || 0) - (b.chapterNumber || 0)); 
+      renderReader(); 
+    }
   });
+  
   document.getElementById("readerModal").style.display = "flex";
   document.body.style.overflow = "hidden";
   setTimeout(() => window.scrollTo(0, 0), 50);
@@ -954,6 +1017,7 @@ function renderReader() {
   const readerDiv = document.getElementById("readerContent");
   const hasPrev = currentChapterIndex > 0;
   const hasNext = currentChapterIndex < currentChapters.length - 1;
+  
   readerDiv.innerHTML = `
     <div class="reader-page">
       <div class="chapter-nav">
@@ -972,20 +1036,46 @@ function renderReader() {
     </div>
   `;
   loadCommentsRealtime(currentStoryId);
+  
   const postBtn = document.getElementById("postCommentBtn");
-  if (postBtn) { const newPostBtn = postBtn.cloneNode(true); postBtn.parentNode.replaceChild(newPostBtn, postBtn); newPostBtn.addEventListener("click", () => postComment(currentStoryId)); }
+  if (postBtn) { 
+    const newPostBtn = postBtn.cloneNode(true); 
+    postBtn.parentNode.replaceChild(newPostBtn, postBtn); 
+    newPostBtn.addEventListener("click", () => postComment(currentStoryId)); 
+  }
 }
 
 window.changeChapter = (delta) => {
   const newIdx = currentChapterIndex + delta;
-  if (newIdx >= 0 && newIdx < currentChapters.length) { currentChapterIndex = newIdx; renderReader(); window.scrollTo(0, 0); }
+  if (newIdx >= 0 && newIdx < currentChapters.length) { 
+    currentChapterIndex = newIdx; 
+    renderChapter(); 
+    window.scrollTo(0, 0); 
+  }
 };
-window.changeChapterTo = (index) => { currentChapterIndex = index; renderReader(); window.scrollTo(0, 0); };
-window.scrollToTop = () => { window.scrollTo({ top: 0, behavior: "smooth" }); };
-window.closeReaderModal = () => { document.getElementById("readerModal").style.display = "none"; document.body.style.overflow = ""; };
+window.changeChapterTo = (index) => { 
+  currentChapterIndex = index; 
+  renderChapter(); 
+  window.scrollTo(0, 0); 
+};
+window.scrollToTop = () => { 
+  window.scrollTo({ top: 0, behavior: "smooth" }); 
+};
+window.closeReaderModal = () => { 
+  document.getElementById("readerModal").style.display = "none"; 
+  document.body.style.overflow = ""; 
+  
+  if (chapterUnsubscribe) { 
+    chapterUnsubscribe(); 
+    chapterUnsubscribe = null; 
+  } 
+  if (commentUnsubscribe) { 
+    commentUnsubscribe(); 
+    commentUnsubscribe = null; 
+  } 
+};
 
 // ==================== COMMENTS ====================
-let commentUnsubscribe = null;
 async function loadCommentsRealtime(storyId) {
   if (commentUnsubscribe) commentUnsubscribe();
   const commentsRef = ref(db, `comments/${storyId}`);
@@ -1000,6 +1090,7 @@ async function loadCommentsRealtime(storyId) {
     }
   });
 }
+
 async function postComment(storyId) {
   if (!state.currentUser) { showNotification("Đăng nhập để bình luận", true); return; }
   const text = document.getElementById("commentText")?.value.trim();
@@ -1051,7 +1142,10 @@ function initScrollButtons() {
 }
 
 // ==================== MODAL ====================
-function closeModal(modalId) { const modal = document.getElementById(modalId); if (modal) modal.style.display = "none"; }
+function closeModal(modalId) { 
+  const modal = document.getElementById(modalId); 
+  if (modal) modal.style.display = "none"; 
+}
 window.closeModal = closeModal;
 
 // ==================== PROFILE & AVATAR ====================
@@ -1115,10 +1209,10 @@ window.createNewGroup = async () => {
   showLoading(false);
 };
 
-// ==================== LOAD COMPONENTS (FIXED - KHÔNG TẢI FILE NGOÀI) ====================
+// ==================== LOAD COMPONENTS (FIXED) ====================
 async function loadComponents() {
-  // Header và Footer đã có trực tiếp trong HTML
-  console.log("✅ Components already in HTML, skipping load");
+  // Header, Footer đã có trực tiếp trong HTML
+  console.log("✅ Components ready");
   return true;
 }
 
@@ -1173,7 +1267,6 @@ async function initApp() {
 document.addEventListener("DOMContentLoaded", async () => {
   console.log("DOM ready - Starting app...");
   
-  // Warning screen handler
   document.getElementById("warningContinueBtn")?.addEventListener("click", () => {
     const mainPass = document.getElementById("mainPassword").value;
     if (mainPass !== "danmei") {
@@ -1189,7 +1282,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     document.body.innerHTML = "<div style='height:100vh;display:flex;justify-content:center;align-items:center;background:black;color:white;'>ĐÃ THOÁT</div>";
   });
   
-  // Login handlers
   document.getElementById("guestBtn")?.addEventListener("click", handleGuestLogin);
   document.getElementById("checkEmailBtn")?.addEventListener("click", handleCheckEmail);
   document.getElementById("verifyOtpBtn")?.addEventListener("click", handleVerifyOTP);
@@ -1205,10 +1297,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     document.getElementById("loginMsg").innerHTML = "";
   });
   
-  // Load components (GIỮ NGUYÊN - không xóa)
   await loadComponents();
   
-  // Restore session
   const restored = await restoreSession();
   if (!restored) {
     document.getElementById("warningOverlay").style.display = "flex";
@@ -1219,27 +1309,3 @@ document.addEventListener("DOMContentLoaded", async () => {
     await initApp();
   }
 });
-
-// Export global functions
-window.openStoryDetail = window.openStoryDetail;
-window.openReader = window.openReader;
-window.closeReaderModal = window.closeReaderModal;
-window.changeChapter = window.changeChapter;
-window.changeChapterTo = window.changeChapterTo;
-window.scrollToTop = window.scrollToTop;
-window.openEditChapter = window.openEditChapter;
-window.deleteChapter = window.deleteChapter;
-window.openAddChapter = window.openAddChapter;
-window.openEditStory = window.openEditStory;
-window.saveEditStory = window.saveEditStory;
-window.likeStoryAction = window.likeStoryAction;
-window.approveStoryAction = window.approveStoryAction;
-window.deleteStoryAction = window.deleteStoryAction;
-window.toggleFollowAction = window.toggleFollowAction;
-window.toggleBookmarkAction = window.toggleBookmarkAction;
-window.filterByGenre = window.filterByGenre;
-window.filterByTag = window.filterByTag;
-window.openProfile = window.openProfile;
-window.saveProfile = window.saveProfile;
-window.createNewGroup = window.createNewGroup;
-window.closeModal = closeModal;
