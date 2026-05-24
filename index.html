@@ -5,7 +5,156 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>🌸 DANMETOPIA - Đọc truyện tranh online 🌸</title>
   <meta name="theme-color" content="#FF69B4">
+  <link rel="stylesheet" href="style.cs<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>🌸 DANMETOPIA - Đọc truyện tranh online 🌸</title>
+  <meta name="theme-color" content="#FF69B4">
   <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- Warning Overlay -->
+<div id="warningOverlay">
+  <div class="warning-box">
+    <h2>⚠️ CẢNH BÁO 18+ ⚠️</h2>
+    <p>Trang web này có thể chứa nội dung dành cho người trưởng thành (18+).<br><br>
+    Bằng việc tiếp tục, bạn xác nhận rằng bạn đủ 18 tuổi trở lên và việc xem nội dung này hợp pháp tại khu vực của bạn.</p>
+    <input type="password" id="mainPassword" placeholder="Mật khẩu chính *">
+    <button class="btn-pink" id="warningContinueBtn">TIẾP TỤC</button>
+    <button class="btn-red" id="exitBtn">THOÁT</button>
+  </div>
+</div>
+
+<!-- Login Overlay -->
+<div id="loginPage">
+  <div class="login-box">
+    <h2>🌸 DANMETOPIA 🌸</h2>
+    <button id="guestBtn" class="btn-pink">🎭 BỎ QUA (Guest)</button>
+    <hr>
+    <p>📧 Đăng nhập bằng email</p>
+    <input type="email" id="loginEmail" placeholder="Email">
+    <button id="checkEmailBtn" class="btn-pink">TRUY CẬP</button>
+    <div id="otpGroup" class="otp-group">
+      <input type="text" id="otpCode" placeholder="Nhập mã OTP 6 số" maxlength="6">
+      <button id="verifyOtpBtn" class="btn-pink">XÁC NHẬN OTP</button>
+      <div class="toggle-link" id="backToEmailBtn">← Quay lại</div>
+    </div>
+    <div id="passwordGroup" class="password-group">
+      <input type="password" id="loginPassword" placeholder="Mật khẩu">
+      <button id="passwordLoginBtn" class="btn-pink">ĐĂNG NHẬP</button>
+      <div class="toggle-link" id="backToEmailBtn2">← Quay lại</div>
+    </div>
+    <p id="loginMsg"></p>
+  </div>
+</div>
+
+<!-- Register Overlay -->
+<div id="registerPage">
+  <div class="login-box">
+    <h2>🎉 HOÀN TẤT ĐĂNG KÝ</h2>
+    <p>Email: <strong id="verifiedEmail"></strong> đã được xác nhận!</p>
+    <input type="text" id="nicknameInput" placeholder="Nickname của bạn">
+    <input type="password" id="newPassword" placeholder="Mật khẩu (tối thiểu 6 ký tự)">
+    <input type="password" id="confirmPassword" placeholder="Xác nhận mật khẩu">
+    <button id="completeRegisterBtn" class="btn-pink">HOÀN TẤT</button>
+    <p id="registerMsg"></p>
+  </div>
+</div>
+
+<!-- Main App Container -->
+<div id="mainContainer">
+  <!-- HEADER TRỰC TIẾP TRONG HTML -->
+  <div class="topbar">
+    <div class="logo" id="homeLogo">🌸 DANMETOPIA 🌸</div>
+    <div class="user-area">
+      <span id="userDisplay">👤 Đang tải...</span>
+      <a href="groups.html" id="groupsLink" class="nav-link" style="display:none">📚 Nhóm</a>
+      <button id="profileBtn" style="display:none">👤 Thông tin</button>
+      <a href="admin.html" id="adminLink" style="display:none" class="nav-link admin-link">👑 Admin</a>
+      <button id="logoutBtn" style="display:none">🚪 Đăng xuất</button>
+      <button id="createGroupBtn" style="display:none" class="nav-btn">➕ Tạo nhóm</button>
+    </div>
+  </div>
+  
+  <div class="search-bar">
+    <input type="text" id="searchInput" placeholder="🔍 Tìm kiếm truyện...">
+  </div>
+  
+  <div class="filter-row">
+    <select id="sortFilter">
+      <option value="likes">🔥 Hot nhất</option>
+      <option value="newest">📅 Mới nhất</option>
+      <option value="views">👁 Xem nhiều nhất</option>
+    </select>
+    <div class="filter-genres" id="genreFilterContainer"></div>
+  </div>
+  
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="all">📚 Tất cả truyện</button>
+    <button class="tab-btn" data-tab="recommend">🎯 Gợi ý cho bạn</button>
+    <button class="tab-btn" data-tab="follows">⭐ Truyện theo dõi</button>
+  </div>
+  
+  <div id="uploadPanel"></div>
+  
+  <div class="manga-grid" id="mangaGrid">
+    <div class="loading-container"><div class="loading-spinner"></div><p>Đang tải truyện...</p></div>
+  </div>
+  
+  <!-- FOOTER DISCLAIMER TRỰC TIẾP -->
+  <div class="footer-disclaimer">
+    <div class="disclaimer-content">
+      <p>🌸 <strong>DANMETOPIA</strong> là nền tảng phi lợi nhuận, hoạt động với mục đích <strong>tổng hợp và chia sẻ</strong> các bộ truyện tranh từ nhiều nguồn khác nhau.</p>
+      <p style="margin:10px 0;">📌 <strong>Miễn trừ trách nhiệm:</strong> Chúng tôi không sở hữu bản quyền đối với bất kỳ nội dung nào được đăng tải. Toàn bộ bản quyền thuộc về tác giả và nhà xuất bản gốc. Nếu có bất kỳ vi phạm nào, vui lòng liên hệ để được gỡ bỏ.</p>
+      <p>📧 Liên hệ: <a href="mailto:pydanmeii@gmail.com">pydanmeii@gmail.com</a></p>
+      <p style="margin-top:10px;">© 2025 DANMETOPIA - Đọc truyện tranh online miễn phí</p>
+    </div>
+  </div>
+</div>
+
+<!-- Modals -->
+<div id="groupModal" class="modal"><div class="modal-content"><span class="close-modal" onclick="closeModal('groupModal')">&times;</span><h3>📚 TẠO NHÓM DỊCH</h3><input id="groupNameInput" placeholder="Tên nhóm"><textarea id="groupDescInput" placeholder="Mô tả" rows="3"></textarea><button id="confirmGroupBtn">TẠO NHÓM</button></div></div>
+<div id="storyModal" class="modal"><div class="modal-content"><span class="close-modal" onclick="closeModal('storyModal')">&times;</span><div id="storyDetailContent"></div><div id="storyChapters"></div><div id="storyActions"></div></div></div>
+<div id="editStoryModal" class="modal"><div class="modal-content"><span class="close-modal" onclick="closeModal('editStoryModal')">&times;</span><h2>📝 CHỈNH SỬA TRUYỆN</h2><div id="editStoryContent"></div></div></div>
+<div id="addChapterModal" class="modal"><div class="modal-content"><span class="close-modal" onclick="closeModal('addChapterModal')">&times;</span><h2>📖 THÊM CHAPTER MỚI</h2><div id="addChapterContent"></div></div></div>
+<div id="editChapterModal" class="modal"><div class="modal-content"><span class="close-modal" onclick="closeModal('editChapterModal')">&times;</span><h2>✏️ CHỈNH SỬA CHAPTER</h2><div id="editChapterContent"></div></div></div>
+<div id="profileModal" class="modal"><div class="modal-content"><span class="close-modal" onclick="closeModal('profileModal')">&times;</span><h2>👤 THÔNG TIN</h2><div id="profileContent"></div></div></div>
+
+<!-- Reader Modal -->
+<div id="readerModal" class="modal">
+  <div class="modal-content fullscreen-reader">
+    <button class="reader-close-btn close-modal" onclick="window.closeReaderModal()">✕</button>
+    <div id="readerContent"></div>
+  </div>
+</div>
+
+<!-- Nút lên đầu trang -->
+<button class="scroll-top-btn" id="scrollTopBtn" style="display:none;">⬆️</button>
+<button class="floating-top-btn" id="floatingTopBtn" style="display:none;">↑</button>
+
+<datalist id="genreDropdown">
+  <option>3D</option><option>Action</option><option>Bara/Muscle</option>
+  <option>Biography</option><option>Cakeverse</option><option>Comedy</option>
+  <option>Crime</option><option>Documentary</option><option>Dom/Sub verse</option>
+  <option>Drama</option><option>Family</option><option>Fantasy</option>
+  <option>Furry</option><option>HET/Hentai</option><option>Historical</option>
+  <option>Horror</option><option>Music</option><option>Mystery</option>
+  <option>Omegaverse</option><option>Psychological</option><option>Romance</option>
+  <option>School Life</option><option>Sci-fi</option><option>Shounen Ai</option>
+  <option>Slice of Life</option><option>Sports</option><option>Supernatural</option>
+  <option>Thriller</option><option>Tragedy</option><option>War</option>
+  <option>Wuxia</option><option>Yaoi</option><option>Yuri</option>
+</datalist>
+
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+<script type="module" src="js/app.js"></script>
+
+</body>
+</html>s">
 </head>
 <body>
 
