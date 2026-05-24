@@ -426,66 +426,28 @@ async function loadStoriesRealtime() {
 }
 
 async function uploadImage(file) {
-  if (!file) {
-    console.error("No file provided");
-    return null;
-  }
-  
+  if (!file) return null;
   if (file.size > 10 * 1024 * 1024) {
     showNotification(`Ảnh ${file.name} quá lớn (tối đa 10MB)`, true);
     return null;
   }
-  
-  console.log("Uploading file:", file.name, "size:", file.size);
-  
   const formData = new FormData();
   formData.append("image", file);
   formData.append("key", IMGBB_API_KEY);
-  
   try {
-    showNotification(`📤 Đang upload ${file.name}...`, false);
-    
-    const response = await fetch("https://api.imgbb.com/1/upload", {
-      method: "POST",
-      body: formData
-    });
-    
+    const response = await fetch("https://api.imgbb.com/1/upload", { method: "POST", body: formData });
     const result = await response.json();
-    console.log("Upload response:", result);
-    
-    if (result.success) {
-      showNotification(`✅ Đã upload ${file.name}`, false);
-      return result.data.url;
-    } else {
-      console.error("Upload failed:", result.error);
-      showNotification(`Lỗi upload: ${result.error?.message || "Unknown error"}`, true);
-      return null;
-    }
+    if (result.success) return result.data.url;
+    else throw new Error(result.error?.message || "Upload thất bại");
   } catch (err) {
-    console.error("Upload error:", err);
-    showNotification(`Lỗi kết nối: ${err.message}`, true);
+    showNotification("Lỗi upload: " + err.message, true);
     return null;
   }
 }
 
 async function uploadMultipleImages(files) {
-  if (!files || files.length === 0) return [];
-  
   const urls = [];
-  showNotification(`📤 Đang upload ${files.length} ảnh...`, false);
-  
-  for (let i = 0; i < files.length; i++) {
-    const file = files[i];
-    const url = await uploadImage(file);
-    if (url) {
-      urls.push(url);
-      console.log(`✅ Uploaded ${i + 1}/${files.length}: ${url}`);
-    } else {
-      console.error(`❌ Failed to upload ${file.name}`);
-    }
-  }
-  
-  showNotification(`✅ Đã upload ${urls.length}/${files.length} ảnh thành công`, urls.length === 0);
+  for (const file of files) { const url = await uploadImage(file); if (url) urls.push(url); }
   return urls;
 }
 
@@ -1049,9 +1011,8 @@ async function postComment(storyId) {
   showNotification("✅ Đã gửi bình luận");
 }
 
-// ==================== SCROLL BUTTONS (FIXED) ====================
+// ==================== SCROLL BUTTONS ====================
 function initScrollButtons() {
-  // Tạo nút nếu chưa có
   if (!document.getElementById("scrollTopBtn")) {
     const btn1 = document.createElement("button");
     btn1.id = "scrollTopBtn";
@@ -1087,8 +1048,6 @@ function initScrollButtons() {
   
   if (scrollBtn) scrollBtn.onclick = scrollToTop;
   if (floatingBtn) floatingBtn.onclick = scrollToTop;
-  
-  console.log("✅ Scroll buttons initialized");
 }
 
 // ==================== MODAL ====================
@@ -1158,6 +1117,7 @@ window.createNewGroup = async () => {
 
 // ==================== INIT ====================
 async function initApp() {
+  console.log("Initializing app...");
   updateUserDisplay();
   initScrollButtons();
   renderGenreFilter();
@@ -1167,40 +1127,109 @@ async function initApp() {
   loadBookmarks();
   loadHistory();
   loadStoriesRealtime();
+  
   document.querySelectorAll(".tab-btn").forEach(btn => {
-    btn.addEventListener("click", () => { document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active")); btn.classList.add("active"); state.currentTab = btn.dataset.tab; renderCurrentTab(); });
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      state.currentTab = btn.dataset.tab;
+      renderCurrentTab();
+    });
   });
-  document.getElementById("searchInput")?.addEventListener("input", (e) => { state.searchKeyword = e.target.value.toLowerCase(); renderCurrentTab(); });
-  document.getElementById("sortFilter")?.addEventListener("change", (e) => { state.sortBy = e.target.value; renderCurrentTab(); });
+  
+  document.getElementById("searchInput")?.addEventListener("input", (e) => {
+    state.searchKeyword = e.target.value.toLowerCase();
+    renderCurrentTab();
+  });
+  
+  document.getElementById("sortFilter")?.addEventListener("change", (e) => {
+    state.sortBy = e.target.value;
+    renderCurrentTab();
+  });
+  
   document.getElementById("homeLogo")?.addEventListener("click", () => window.location.reload());
   document.getElementById("logoutBtn")?.addEventListener("click", logout);
   document.getElementById("profileBtn")?.addEventListener("click", window.openProfile);
   document.getElementById("createGroupBtn")?.addEventListener("click", () => document.getElementById("groupModal").style.display = "flex");
   document.getElementById("confirmGroupBtn")?.addEventListener("click", window.createNewGroup);
-  document.getElementById("adminLink")?.addEventListener("click", (e) => { e.preventDefault(); window.location.href = "admin.html"; });
-  document.getElementById("groupsLink")?.addEventListener("click", (e) => { e.preventDefault(); window.location.href = "groups.html"; });
+  document.getElementById("adminLink")?.addEventListener("click", (e) => {
+    e.preventDefault();
+    window.location.href = "admin.html";
+  });
+  document.getElementById("groupsLink")?.addEventListener("click", (e) => {
+    e.preventDefault();
+    window.location.href = "groups.html";
+  });
 }
 
 // ==================== STARTUP ====================
 document.addEventListener("DOMContentLoaded", async () => {
+  console.log("DOM ready - Starting app...");
+  
+  // Warning screen handler
   document.getElementById("warningContinueBtn")?.addEventListener("click", () => {
-    if (document.getElementById("mainPassword").value !== "danmei") { showNotification("Sai mật khẩu!", true); return; }
+    const mainPass = document.getElementById("mainPassword").value;
+    if (mainPass !== "danmei") {
+      showNotification("Sai mật khẩu!", true);
+      return;
+    }
     localStorage.setItem("mainPasswordExpiry", Date.now() + 86400000);
     document.getElementById("warningOverlay").style.display = "none";
     document.getElementById("loginPage").style.display = "flex";
   });
-  document.getElementById("exitBtn")?.addEventListener("click", () => { document.body.innerHTML = "<div style='height:100vh;display:flex;justify-content:center;align-items:center;background:black;color:white;'>ĐÃ THOÁT</div>"; });
+  
+  document.getElementById("exitBtn")?.addEventListener("click", () => {
+    document.body.innerHTML = "<div style='height:100vh;display:flex;justify-content:center;align-items:center;background:black;color:white;'>ĐÃ THOÁT</div>";
+  });
+  
+  // Login handlers
   document.getElementById("guestBtn")?.addEventListener("click", handleGuestLogin);
   document.getElementById("checkEmailBtn")?.addEventListener("click", handleCheckEmail);
   document.getElementById("verifyOtpBtn")?.addEventListener("click", handleVerifyOTP);
   document.getElementById("passwordLoginBtn")?.addEventListener("click", handlePasswordLogin);
   document.getElementById("completeRegisterBtn")?.addEventListener("click", handleCompleteRegistration);
-  document.getElementById("backToEmailBtn")?.addEventListener("click", () => { document.getElementById("otpGroup").style.display = "none"; document.getElementById("loginMsg").innerHTML = ""; });
-  document.getElementById("backToEmailBtn2")?.addEventListener("click", () => { document.getElementById("passwordGroup").style.display = "none"; document.getElementById("loginMsg").innerHTML = ""; });
-  if (await restoreSession()) {
+  
+  document.getElementById("backToEmailBtn")?.addEventListener("click", () => {
+    document.getElementById("otpGroup").style.display = "none";
+    document.getElementById("loginMsg").innerHTML = "";
+  });
+  document.getElementById("backToEmailBtn2")?.addEventListener("click", () => {
+    document.getElementById("passwordGroup").style.display = "none";
+    document.getElementById("loginMsg").innerHTML = "";
+  });
+  
+  // Restore session
+  const restored = await restoreSession();
+  if (!restored) {
+    document.getElementById("warningOverlay").style.display = "flex";
+  } else {
     document.getElementById("warningOverlay").style.display = "none";
     document.getElementById("loginPage").style.display = "none";
     document.getElementById("mainContainer").style.display = "block";
     await initApp();
-  } else document.getElementById("warningOverlay").style.display = "flex";
+  }
 });
+
+// Export global functions
+window.openStoryDetail = window.openStoryDetail;
+window.openReader = window.openReader;
+window.closeReaderModal = window.closeReaderModal;
+window.changeChapter = window.changeChapter;
+window.changeChapterTo = window.changeChapterTo;
+window.scrollToTop = window.scrollToTop;
+window.openEditChapter = window.openEditChapter;
+window.deleteChapter = window.deleteChapter;
+window.openAddChapter = window.openAddChapter;
+window.openEditStory = window.openEditStory;
+window.saveEditStory = window.saveEditStory;
+window.likeStoryAction = window.likeStoryAction;
+window.approveStoryAction = window.approveStoryAction;
+window.deleteStoryAction = window.deleteStoryAction;
+window.toggleFollowAction = window.toggleFollowAction;
+window.toggleBookmarkAction = window.toggleBookmarkAction;
+window.filterByGenre = window.filterByGenre;
+window.filterByTag = window.filterByTag;
+window.openProfile = window.openProfile;
+window.saveProfile = window.saveProfile;
+window.createNewGroup = window.createNewGroup;
+window.closeModal = closeModal;
