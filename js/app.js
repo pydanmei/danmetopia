@@ -25,7 +25,7 @@ const GENRE_LIST = [
   { name: "3D", icon: "🎮", desc: "Truyện được vẽ bằng đồ họa 3D" },
   { name: "Action", icon: "⚔️", desc: "Truyện có nhiều cảnh đánh nhau, hành động" },
   { name: "Bara/Muscle", icon: "💪", desc: "Truyện về cơ bắp, nam tính" },
-  { name: "Biography", icon: "📖", desc: "Truyện tiểu sử, dựa trên nhân vật có thật" },
+  { name: "Biography", icon: "📖", desc: "Truyện tiểu sử" },
   { name: "Cakeverse", icon: "🎂", desc: "Thể loại đặc biệt liên quan đến bánh kem" },
   { name: "Comedy", icon: "😂", desc: "Truyện hài hước" },
   { name: "Crime", icon: "🔫", desc: "Truyện về tội phạm" },
@@ -36,7 +36,7 @@ const GENRE_LIST = [
   { name: "Fantasy", icon: "🐉", desc: "Truyện giả tưởng" },
   { name: "Furry", icon: "🐾", desc: "Truyện thú nhân hóa" },
   { name: "HET/Hentai", icon: "🔞", desc: "Truyện 18+ dị tính" },
-  { name: "Historical", icon: "🏯", desc: "Truyện cổ trang, lịch sử" },
+  { name: "Historical", icon: "🏯", desc: "Truyện cổ trang" },
   { name: "Horror", icon: "👻", desc: "Truyện kinh dị" },
   { name: "Music", icon: "🎵", desc: "Truyện về âm nhạc" },
   { name: "Mystery", icon: "🔍", desc: "Truyện trinh thám" },
@@ -426,18 +426,66 @@ async function loadStoriesRealtime() {
 }
 
 async function uploadImage(file) {
-  if (!file || file.size > 10 * 1024 * 1024) return null;
+  if (!file) {
+    console.error("No file provided");
+    return null;
+  }
+  
+  if (file.size > 10 * 1024 * 1024) {
+    showNotification(`Ảnh ${file.name} quá lớn (tối đa 10MB)`, true);
+    return null;
+  }
+  
+  console.log("Uploading file:", file.name, "size:", file.size);
+  
   const formData = new FormData();
   formData.append("image", file);
   formData.append("key", IMGBB_API_KEY);
-  const response = await fetch("https://api.imgbb.com/1/upload", { method: "POST", body: formData });
-  const result = await response.json();
-  return result.success ? result.data.url : null;
+  
+  try {
+    showNotification(`📤 Đang upload ${file.name}...`, false);
+    
+    const response = await fetch("https://api.imgbb.com/1/upload", {
+      method: "POST",
+      body: formData
+    });
+    
+    const result = await response.json();
+    console.log("Upload response:", result);
+    
+    if (result.success) {
+      showNotification(`✅ Đã upload ${file.name}`, false);
+      return result.data.url;
+    } else {
+      console.error("Upload failed:", result.error);
+      showNotification(`Lỗi upload: ${result.error?.message || "Unknown error"}`, true);
+      return null;
+    }
+  } catch (err) {
+    console.error("Upload error:", err);
+    showNotification(`Lỗi kết nối: ${err.message}`, true);
+    return null;
+  }
 }
 
 async function uploadMultipleImages(files) {
+  if (!files || files.length === 0) return [];
+  
   const urls = [];
-  for (const file of files) { const url = await uploadImage(file); if (url) urls.push(url); }
+  showNotification(`📤 Đang upload ${files.length} ảnh...`, false);
+  
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i];
+    const url = await uploadImage(file);
+    if (url) {
+      urls.push(url);
+      console.log(`✅ Uploaded ${i + 1}/${files.length}: ${url}`);
+    } else {
+      console.error(`❌ Failed to upload ${file.name}`);
+    }
+  }
+  
+  showNotification(`✅ Đã upload ${urls.length}/${files.length} ảnh thành công`, urls.length === 0);
   return urls;
 }
 
@@ -1001,15 +1049,46 @@ async function postComment(storyId) {
   showNotification("✅ Đã gửi bình luận");
 }
 
-// ==================== SCROLL BUTTONS ====================
+// ==================== SCROLL BUTTONS (FIXED) ====================
 function initScrollButtons() {
+  // Tạo nút nếu chưa có
+  if (!document.getElementById("scrollTopBtn")) {
+    const btn1 = document.createElement("button");
+    btn1.id = "scrollTopBtn";
+    btn1.className = "scroll-top-btn";
+    btn1.innerHTML = "⬆️";
+    btn1.style.cssText = "position:fixed;bottom:30px;right:30px;width:50px;height:50px;background:#FF69B4;color:black;border:none;border-radius:50%;font-size:24px;cursor:pointer;display:none;align-items:center;justify-content:center;z-index:9999;";
+    document.body.appendChild(btn1);
+  }
+  
+  if (!document.getElementById("floatingTopBtn")) {
+    const btn2 = document.createElement("button");
+    btn2.id = "floatingTopBtn";
+    btn2.className = "floating-top-btn";
+    btn2.innerHTML = "↑";
+    btn2.style.cssText = "position:fixed;bottom:100px;right:30px;width:45px;height:45px;background:rgba(0,0,0,0.5);backdrop-filter:blur(8px);color:white;border:none;border-radius:12px;font-size:20px;cursor:pointer;display:none;align-items:center;justify-content:center;z-index:9999;";
+    document.body.appendChild(btn2);
+  }
+  
   const scrollBtn = document.getElementById("scrollTopBtn");
   const floatingBtn = document.getElementById("floatingTopBtn");
-  if (scrollBtn && floatingBtn) {
-    window.addEventListener("scroll", () => { const show = window.scrollY > 50; scrollBtn.style.display = show ? "flex" : "none"; floatingBtn.style.display = show ? "flex" : "none"; });
-    scrollBtn.onclick = () => window.scrollTo(0, 0);
-    floatingBtn.onclick = () => window.scrollTo(0, 0);
-  }
+  
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    const readerContent = document.getElementById("readerContent");
+    if (readerContent) readerContent.scrollTo({ top: 0, behavior: "smooth" });
+  };
+  
+  window.addEventListener("scroll", () => {
+    const show = window.scrollY > 100;
+    if (scrollBtn) scrollBtn.style.display = show ? "flex" : "none";
+    if (floatingBtn) floatingBtn.style.display = show ? "flex" : "none";
+  });
+  
+  if (scrollBtn) scrollBtn.onclick = scrollToTop;
+  if (floatingBtn) floatingBtn.onclick = scrollToTop;
+  
+  console.log("✅ Scroll buttons initialized");
 }
 
 // ==================== MODAL ====================
