@@ -1,6 +1,6 @@
+// Chỉ import state DUY NHẤT một lần
 import { refreshUserSession } from './auth.js';
-import { getUserGroups } from './utils.js';
-import { isAdmin, canModerate, hasGroup, showNotification, showLoading, escapeHtml } from './utils.js';
+import { getUserGroups, isAdmin, canModerate, hasGroup, showNotification, showLoading, escapeHtml } from './utils.js';
 import { getChapters, followStory, unfollowStory, isFollowing, likeStory, approveStory, rejectStory, deleteStory } from './data.js';
 import { uploadImage } from './upload.js';
 import { state } from '../core/state.js';
@@ -71,12 +71,14 @@ export async function openStoryDetail(storyId) {
   document.getElementById("storyModal").style.display = "flex";
 }
 
-// Helper functions
-window.likeStoryAndRefresh = async (storyId) => { await likeStory(storyId); openStoryDetail(storyId); };
-window.approveStoryAction = async (storyId) => { await approveStory(storyId); closeModal("storyModal"); };
-window.rejectStoryAction = async (storyId) => { await rejectStory(storyId); closeModal("storyModal"); };
-window.deleteStoryAction = async (storyId) => { if (confirm("Xóa truyện?")) { await deleteStory(storyId); closeModal("storyModal"); } };
-window.toggleFollow = async (storyId) => { if (isFollowing(storyId)) await unfollowStory(storyId); else await followStory(storyId); openStoryDetail(storyId); };
+// Helper functions (gán vào window)
+if (typeof window !== 'undefined') {
+  window.likeStoryAndRefresh = async (storyId) => { await likeStory(storyId); openStoryDetail(storyId); };
+  window.approveStoryAction = async (storyId) => { await approveStory(storyId); closeModal("storyModal"); };
+  window.rejectStoryAction = async (storyId) => { await rejectStory(storyId); closeModal("storyModal"); };
+  window.deleteStoryAction = async (storyId) => { if (confirm("Xóa truyện?")) { await deleteStory(storyId); closeModal("storyModal"); } };
+  window.toggleFollow = async (storyId) => { if (isFollowing(storyId)) await unfollowStory(storyId); else await followStory(storyId); openStoryDetail(storyId); };
+}
 
 // Open edit story
 export async function openEditStory(storyId) {
@@ -185,8 +187,8 @@ export async function saveProfile() {
   if (!newNickname) { showNotification("Nickname không được trống", true); return; }
   try {
     await update(ref(db, `users/${state.currentUser.uid}`), { nickname: newNickname });
-    state.currentUser.nickname = newNickname;
-    document.getElementById("userDisplay").innerHTML = `👤 ${escapeHtml(state.currentUser.displayName)}`;
+    if (state.currentUser) state.currentUser.nickname = newNickname;
+    document.getElementById("userDisplay").innerHTML = `👤 ${escapeHtml(state.currentUser?.displayName || '')}`;
     showNotification("Đã cập nhật");
     closeModal("profileModal");
   } catch (err) { showNotification(err.message, true); }
@@ -217,5 +219,7 @@ export async function createNewGroup() {
 
 // Initialize UI
 export function initUI() {
-  window.closeModal = closeModal;
+  if (typeof window !== 'undefined') {
+    window.closeModal = closeModal;
+  }
 }
