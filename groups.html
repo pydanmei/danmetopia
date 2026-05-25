@@ -21,6 +21,7 @@
     .invite-input input { flex: 1; padding: 8px; background: #2a2a2a; border: none; border-radius: 8px; color: white; }
     .refresh-btn { background: #2a2a2a; border: 1px solid #FF69B4; padding: 8px 16px; border-radius: 30px; cursor: pointer; margin-bottom: 20px; }
     .refresh-btn:hover { background: #FF69B4; color: black; }
+    .btn-small { padding: 6px 12px; font-size: 12px; border-radius: 20px; cursor: pointer; border: none; }
   </style>
 </head>
 <body>
@@ -33,8 +34,16 @@
         <button class="refresh-btn" id="refreshGroupsBtn">🔄 Làm mới</button>
       </div>
       
-      <div id="myGroupsList"></div>
-      <div style="margin-top: 40px;"><h3>🌐 TẤT CẢ NHÓM</h3><div id="allGroupsList"></div></div>
+      <div id="myGroupsList">
+        <div style="text-align:center; padding:40px;"><div class="loading-spinner"></div><p>Đang tải nhóm của bạn...</p></div>
+      </div>
+      
+      <div style="margin-top: 40px;">
+        <h3>🌐 TẤT CẢ NHÓM</h3>
+        <div id="allGroupsList">
+          <div style="text-align:center; padding:40px;"><div class="loading-spinner"></div><p>Đang tải danh sách nhóm...</p></div>
+        </div>
+      </div>
     </div>
     
     <div id="footer-placeholder"></div>
@@ -51,6 +60,297 @@
   </div>
   
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
-  <script type="module" src="js/app.js"></script>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getAuth } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { getDatabase, ref, get, update, remove, push, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+    
+    const firebaseConfig = {
+      apiKey: "AIzaSyCDQk9DlMNKwn_508fDMI_3IB_dgpgHujA",
+      authDomain: "danmetopia.firebaseapp.com",
+      projectId: "danmetopia",
+      databaseURL: "https://danmetopia-default-rtdb.asia-southeast1.firebasedatabase.app/",
+      storageBucket: "danmetopia.appspot.com",
+      messagingSenderId: "178240377870",
+      appId: "1:178240377870:web:d094b222ebabadccc5585f"
+    };
+    
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getDatabase(app);
+    
+    emailjs.init("fPq8fpw1OqzOtj-lk");
+    
+    let currentUser = null;
+    let allGroups = [];
+    
+    function showNotification(msg, isError = false) {
+      const notif = document.createElement("div");
+      notif.className = "notification";
+      notif.style.background = isError ? "#ff4444" : "#FF69B4";
+      notif.style.color = "black";
+      notif.innerText = msg;
+      document.body.appendChild(notif);
+      setTimeout(() => notif.remove(), 3000);
+    }
+    
+    function showLoading(show) {
+      let spinner = document.getElementById("globalSpinner");
+      if (show) {
+        if (!spinner) {
+          spinner = document.createElement("div");
+          spinner.id = "globalSpinner";
+          spinner.className = "spinner-overlay";
+          spinner.innerHTML = '<div class="loading-spinner"></div>';
+          document.body.appendChild(spinner);
+        }
+        spinner.style.display = "flex";
+      } else {
+        if (spinner) spinner.style.display = "none";
+      }
+    }
+    
+    function escapeHtml(str) {
+      if (!str) return "";
+      return str.replace(/[&<>]/g, m => m === "&" ? "&amp;" : m === "<" ? "&lt;" : "&gt;");
+    }
+    
+    function closeModal(modalId) {
+      const modal = document.getElementById(modalId);
+      if (modal) modal.style.display = "none";
+    }
+    
+    async function restoreSession() {
+      const sessionStr = localStorage.getItem("userSession");
+      if (!sessionStr) return false;
+      try {
+        const session = JSON.parse(sessionStr);
+        if (!session.expireAt || Date.now() > session.expireAt) {
+          localStorage.removeItem("userSession");
+          return false;
+        }
+        if (session.role === "guest") {
+          currentUser = session;
+          return true;
+        } else if (session.uid) {
+          const userSnap = await get(ref(db, `users/${session.uid}`));
+          if (userSnap.exists()) {
+            currentUser = { ...session, ...userSnap.val() };
+            return true;
+          }
+        }
+        return false;
+      } catch { return false; }
+    }
+    
+    async function loadAllGroups() {
+      try {
+        const groupsSnap = await get(ref(db, "groups"));
+        if (groupsSnap.exists()) {
+          allGroups = Object.entries(groupsSnap.val()).map(([id, g]) => ({ id, ...g }));
+        } else {
+          allGroups = [];
+        }
+        return allGroups;
+      } catch (err) {
+        allGroups = [];
+        return [];
+      }
+    }
+    
+    async function getUserGroups(uid) {
+      if (!uid) return [];
+      if (allGroups.length === 0) await loadAllGroups();
+      return allGroups.filter(group => group.members?.includes(uid));
+    }
+    
+    async function loadGroups() {
+      if (!currentUser) return;
+      showLoading(true);
+      console.log("Loading groups for user:", currentUser.uid);
+      
+      await loadAllGroups();
+      const userGroups = await getUserGroups(currentUser.uid);
+      
+      const myGroupsDiv = document.getElementById('myGroupsList');
+      if (userGroups.length === 0) {
+        myGroupsDiv.innerHTML = `
+          <div style="padding:40px;text-align:center;background:#1c1c1c;border-radius:16px;">
+            <p>📭 Bạn chưa tham gia nhóm nào</p>
+            <button id="showCreateGroupBtn" class="btn-pink">➕ Tạo nhóm mới</button>
+          </div>
+        `;
+        document.getElementById('showCreateGroupBtn')?.addEventListener('click', () => {
+          document.getElementById('groupModal').style.display = 'flex';
+        });
+      } else {
+        myGroupsDiv.innerHTML = userGroups.map(group => `
+          <div class="group-card">
+            <div class="group-header">
+              <div class="group-name">${escapeHtml(group.groupName)}</div>
+              <div class="group-owner">${group.ownerId === currentUser.uid ? '👑 Chủ nhóm' : 'Thành viên'}</div>
+            </div>
+            <div class="group-desc">${escapeHtml(group.description) || 'Chưa có mô tả'}</div>
+            <div class="group-members">
+              <strong>Thành viên (${group.members?.length || 0}):</strong>
+              ${group.members?.map(mid => `<span class="member-tag ${mid === group.ownerId ? 'owner' : ''}">${mid === currentUser.uid ? 'Bạn' : mid.substring(0, 8) + '...'}</span>`).join('') || 'Chưa có thành viên'}
+            </div>
+            ${group.ownerId === currentUser.uid ? `
+              <div class="group-actions">
+                <button class="btn-small" style="background:#FFCC00;" onclick="editGroup('${group.id}')">✏️ Sửa</button>
+                <button class="btn-small" style="background:#ff4444;color:white;" onclick="deleteGroupConfirm('${group.id}')">🗑 Xóa nhóm</button>
+              </div>
+              <div class="invite-input">
+                <input type="email" id="inviteEmail_${group.id}" placeholder="Nhập email người dùng">
+                <button class="btn-small btn-pink" onclick="inviteToGroup('${group.id}')">📧 Mời</button>
+              </div>
+            ` : ''}
+          </div>
+        `).join('');
+      }
+      
+      const allGroupsDiv = document.getElementById('allGroupsList');
+      const otherGroups = allGroups.filter(g => !userGroups.some(ug => ug.id === g.id));
+      if (otherGroups.length === 0) {
+        allGroupsDiv.innerHTML = '<div style="padding:40px;text-align:center;background:#1c1c1c;border-radius:16px;color:#aaa;">📭 Không có nhóm nào khác</div>';
+      } else {
+        allGroupsDiv.innerHTML = otherGroups.map(group => `
+          <div class="group-card">
+            <div class="group-header">
+              <div class="group-name">${escapeHtml(group.groupName)}</div>
+            </div>
+            <div class="group-desc">${escapeHtml(group.description) || 'Chưa có mô tả'}</div>
+            <div class="group-members">
+              <span class="member-tag">👥 ${group.members?.length || 0} thành viên</span>
+            </div>
+            <div class="group-actions">
+              <button class="btn-small btn-pink" onclick="requestJoinGroup('${group.id}')">➕ Tham gia</button>
+            </div>
+          </div>
+        `).join('');
+      }
+      showLoading(false);
+    }
+    
+    window.editGroup = async (groupId) => {
+      const group = allGroups.find(g => g.id === groupId);
+      const newName = prompt('Tên nhóm mới:', group?.groupName);
+      if (newName && newName.trim()) {
+        await update(ref(db, `groups/${groupId}`), { groupName: newName.trim() });
+        showNotification('✅ Đã cập nhật nhóm');
+        loadGroups();
+      }
+    };
+    
+    window.deleteGroupConfirm = async (groupId) => {
+      if (confirm('Xóa nhóm này? Không thể hoàn tác!')) {
+        const group = allGroups.find(g => g.id === groupId);
+        if (group && group.members) {
+          for (const memberId of group.members) {
+            await update(ref(db, `users/${memberId}/privileges`), { groupId: null });
+          }
+        }
+        const storiesSnap = await get(ref(db, 'stories'));
+        const stories = storiesSnap.val() || {};
+        for (const [sid, story] of Object.entries(stories)) {
+          if (story.groupId === groupId) {
+            await update(ref(db, `stories/${sid}`), { groupId: null, groupName: "Cá nhân" });
+          }
+        }
+        await remove(ref(db, `groups/${groupId}`));
+        showNotification('🗑 Đã xóa nhóm');
+        loadGroups();
+      }
+    };
+    
+    window.inviteToGroup = async (groupId) => {
+      const email = document.getElementById(`inviteEmail_${groupId}`).value.trim();
+      if (!email) { showNotification('Nhập email', true); return; }
+      const usersSnap = await get(ref(db, 'users'));
+      const users = usersSnap.val() || {};
+      let targetUid = null;
+      for (const [uid, user] of Object.entries(users)) {
+        if (user.email === email) targetUid = uid;
+      }
+      if (!targetUid) { showNotification('Không tìm thấy người dùng với email này', true); return; }
+      const groupRef = ref(db, `groups/${groupId}/members`);
+      const snapshot = await get(groupRef);
+      const members = snapshot.val() || [];
+      if (members.includes(targetUid)) { showNotification('Người dùng đã trong nhóm', true); return; }
+      members.push(targetUid);
+      await set(groupRef, members);
+      await update(ref(db, `users/${targetUid}/privileges`), { groupId: groupId });
+      showNotification('✅ Đã mời thành viên');
+      document.getElementById(`inviteEmail_${groupId}`).value = '';
+      loadGroups();
+    };
+    
+    window.requestJoinGroup = async (groupId) => {
+      if (!currentUser || currentUser.role === 'guest') {
+        showNotification('Vui lòng đăng nhập để tham gia nhóm', true);
+        return;
+      }
+      showNotification('Chức năng đang phát triển. Vui lòng liên hệ chủ nhóm.', true);
+    };
+    
+    window.createNewGroup = async () => {
+      const groupName = document.getElementById('groupNameInput').value.trim();
+      if (!groupName) { alert('Nhập tên nhóm'); return; }
+      showLoading(true);
+      try {
+        const newGroupRef = push(ref(db, 'groups'));
+        await set(newGroupRef, {
+          groupName: groupName,
+          description: document.getElementById('groupDescInput').value || '',
+          ownerId: currentUser.uid,
+          members: [currentUser.uid],
+          createdAt: Date.now()
+        });
+        await update(ref(db, `users/${currentUser.uid}/privileges`), { groupId: newGroupRef.key });
+        closeModal('groupModal');
+        showNotification('✅ Tạo nhóm thành công!');
+        document.getElementById('groupNameInput').value = '';
+        document.getElementById('groupDescInput').value = '';
+        await loadGroups();
+      } catch (err) {
+        showNotification('Lỗi: ' + err.message, true);
+      }
+      showLoading(false);
+    };
+    
+    async function loadComponents() {
+      try {
+        const headerRes = await fetch('components/header.html');
+        const headerHtml = await headerRes.text();
+        document.getElementById('header-placeholder').innerHTML = headerHtml;
+        
+        const footerRes = await fetch('components/footer.html');
+        const footerHtml = await footerRes.text();
+        document.getElementById('footer-placeholder').innerHTML = footerHtml;
+        
+        document.getElementById('homeLogo')?.addEventListener('click', () => window.location.href = 'index.html');
+        document.getElementById('confirmGroupBtn')?.addEventListener('click', createNewGroup);
+        document.getElementById('refreshGroupsBtn')?.addEventListener('click', () => loadGroups());
+        document.getElementById('logoutBtn')?.addEventListener('click', () => {
+          localStorage.removeItem('userSession');
+          window.location.href = 'index.html';
+        });
+      } catch (err) {
+        console.error("Error loading components:", err);
+      }
+    }
+    
+    const restored = await restoreSession();
+    console.log("Session restored:", restored, "User:", currentUser);
+    
+    if (!restored) {
+      window.location.href = 'index.html';
+    } else {
+      await loadComponents();
+      await loadGroups();
+    }
+    
+    window.closeModal = closeModal;
+  </script>
 </body>
 </html>
