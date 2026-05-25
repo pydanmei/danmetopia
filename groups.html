@@ -38,7 +38,6 @@
     .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); justify-content: center; align-items: center; z-index: 10002; }
     .modal-content { background: #1c1c1c; width: 90%; max-width: 500px; padding: 25px; border-radius: 24px; position: relative; border: 1px solid #FF69B4; }
     .close-modal { position: absolute; top: 15px; right: 20px; font-size: 28px; cursor: pointer; color: #aaa; }
-    /* Topbar style */
     .topbar { background: #FF69B4; color: black; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; flex-wrap: wrap; gap: 10px; }
     .logo { font-size: 22px; font-weight: bold; cursor: pointer; white-space: nowrap; }
     .user-area { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
@@ -49,6 +48,7 @@
     .tab-buttons { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
     .tab-btn { background: #2a2a2a; border: none; padding: 8px 20px; border-radius: 30px; cursor: pointer; color: white; }
     .tab-btn.active { background: #FF69B4; color: black; }
+    .guest-message { background: #2a2a2a; border-radius: 16px; padding: 40px; text-align: center; color: #aaa; }
   </style>
 </head>
 <body>
@@ -72,15 +72,7 @@
     <button class="refresh-btn" id="refreshGroupsBtn">🔄 Làm mới</button>
   </div>
   
-  <div class="tab-buttons">
-    <button class="tab-btn active" data-tab="my">📖 Nhóm của tôi</button>
-    <button class="tab-btn" data-tab="all">🌐 Tất cả nhóm</button>
-    <button class="tab-btn" data-tab="requests" id="requestsTabBtn" style="display:none">📬 Lời mời & Yêu cầu <span id="requestsBadge" style="background:#ff4444; border-radius:50%; padding:2px 6px; font-size:10px; margin-left:5px;"></span></button>
-  </div>
-  
-  <div id="myGroupsList"></div>
-  <div id="allGroupsList" style="display:none;"></div>
-  <div id="requestsList" style="display:none;"></div>
+  <div id="groupsContent"></div>
 </div>
 
 <!-- Footer -->
@@ -120,7 +112,7 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
   import { getAuth } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-  import { getDatabase, ref, get, update, remove, push, set, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+  import { getDatabase, ref, get, update, remove, push, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
   
   const firebaseConfig = {
     apiKey: "AIzaSyCDQk9DlMNKwn_508fDMI_3IB_dgpgHujA",
@@ -143,8 +135,7 @@
   let allUsers = {};
   let allStories = [];
   let currentTab = "my";
-  let pendingRequests = []; // Yêu cầu tham gia nhóm
-  let pendingInvites = [];   // Lời mời vào nhóm
+  let pendingRequests = [];
   
   function showNotification(msg, isError = false) {
     const notif = document.createElement("div");
@@ -183,6 +174,7 @@
   }
   
   function isAdmin(userData) { return userData?.role === "admin"; }
+  function isLoggedInUser() { return currentUser && currentUser.role !== "guest" && currentUser.uid; }
   
   async function restoreSession() {
     const sessionStr = localStorage.getItem("userSession");
@@ -235,32 +227,24 @@
   async function loadPendingRequests() {
     const requestsSnap = await get(ref(db, "groupRequests"));
     pendingRequests = requestsSnap.val() ? Object.entries(requestsSnap.val()).map(([id, r]) => ({ id, ...r })) : [];
-    
-    // Lọc yêu cầu cho user hiện tại
-    if (currentUser) {
-      const myRequests = pendingRequests.filter(r => r.userId === currentUser.uid && r.status === "pending");
-      const invitesForMe = pendingRequests.filter(r => r.targetUserId === currentUser.uid && r.type === "invite" && r.status === "pending");
-      return { myRequests, invitesForMe };
-    }
-    return { myRequests: [], invitesForMe: [] };
+    return pendingRequests;
   }
   
   async function sendJoinRequest(groupId) {
-    if (!currentUser || currentUser.role === "guest") {
-      showNotification("Vui lòng đăng nhập để tham gia nhóm", true);
+    // CHỈ USER ĐĂNG NHẬP MỚI ĐƯỢC THAM GIA
+    if (!isLoggedInUser()) {
+      showNotification("Vui lòng đăng nhập bằng email để tham gia nhóm", true);
       return;
     }
     
     const group = allGroups.find(g => g.id === groupId);
     if (!group) return;
     
-    // Kiểm tra đã là thành viên chưa
     if (group.members?.includes(currentUser.uid)) {
       showNotification("Bạn đã là thành viên của nhóm này", true);
       return;
     }
     
-    // Kiểm tra đã gửi yêu cầu chưa
     const existingRequest = pendingRequests.find(r => r.userId === currentUser.uid && r.groupId === groupId && r.status === "pending");
     if (existingRequest) {
       showNotification("Bạn đã gửi yêu cầu tham gia nhóm này rồi", true);
@@ -286,9 +270,8 @@
   }
   
   async function sendInvite(groupId, targetEmail) {
-    if (!targetEmail) return;
+    if (!targetEmail || !isLoggedInUser()) return;
     
-    // Tìm user theo email
     await loadAllUsers();
     let targetUser = null;
     for (const [uid, user] of Object.entries(allUsers)) {
@@ -306,13 +289,11 @@
     const group = allGroups.find(g => g.id === groupId);
     if (!group) return;
     
-    // Kiểm tra đã là thành viên chưa
     if (group.members?.includes(targetUser.uid)) {
       showNotification("Người dùng đã là thành viên của nhóm", true);
       return;
     }
     
-    // Kiểm tra đã gửi lời mời chưa
     const existingInvite = pendingRequests.find(r => r.targetUserId === targetUser.uid && r.groupId === groupId && r.status === "pending");
     if (existingInvite) {
       showNotification("Đã gửi lời mời đến người dùng này rồi", true);
@@ -410,7 +391,6 @@
         description: newDesc
       });
       
-      // Chuyển quyền chủ nhóm
       if (transferEmail && (currentUser.uid === group.ownerId || isAdmin(currentUser))) {
         await loadAllUsers();
         let newOwner = null;
@@ -448,7 +428,6 @@
         }
       }
       
-      // Cập nhật truyện thuộc nhóm
       await loadAllStories();
       for (const story of allStories) {
         if (story.groupId === groupId) {
@@ -480,173 +459,213 @@
   }
   
   async function loadGroups() {
-    if (!currentUser) return;
     showLoading(true);
     
     await loadAllGroups();
     await loadAllUsers();
     await loadAllStories();
-    const { myRequests, invitesForMe } = await loadPendingRequests();
+    await loadPendingRequests();
     
-    // Hiển thị badge
-    const badge = document.getElementById("requestsBadge");
-    const totalPending = myRequests.length + invitesForMe.length;
-    if (totalPending > 0) {
-      badge.style.display = "inline-block";
-      badge.innerText = totalPending;
-      document.getElementById("requestsTabBtn").style.display = "inline-block";
-    } else {
-      badge.style.display = "none";
-    }
+    const isLoggedIn = isLoggedInUser();
+    const userGroups = isLoggedIn ? allGroups.filter(g => g.members?.includes(currentUser.uid)) : [];
+    const isGroupMember = userGroups.length > 0;
     
-    document.getElementById('userDisplay').innerHTML = `👤 ${escapeHtml(currentUser.displayName)}`;
+    document.getElementById('userDisplay').innerHTML = `👤 ${escapeHtml(currentUser?.displayName || "Guest")}`;
     
-    // Hiển thị admin link nếu là admin
     if (isAdmin(currentUser)) {
       document.getElementById("adminLink").style.display = "inline-block";
+    } else {
+      document.getElementById("adminLink").style.display = "none";
     }
     
-    // Hiển thị nút tạo nhóm nếu chưa có nhóm
-    const userGroups = allGroups.filter(g => g.members?.includes(currentUser.uid));
-    document.getElementById("createGroupBtn").style.display = userGroups.length === 0 && !isAdmin(currentUser) ? "inline-block" : "none";
+    // Chỉ user đăng nhập chưa có nhóm mới thấy nút tạo nhóm
+    if (isLoggedIn && !isGroupMember && !isAdmin(currentUser)) {
+      document.getElementById("createGroupBtn").style.display = "inline-block";
+    } else {
+      document.getElementById("createGroupBtn").style.display = "none";
+    }
     
-    // NHÓM CỦA TÔI
-    const myGroupsDiv = document.getElementById('myGroupsList');
-    if (userGroups.length === 0) {
-      myGroupsDiv.innerHTML = `
-        <div style="padding:40px;text-align:center;background:#1c1c1c;border-radius:16px;">
-          <p>📭 Bạn chưa tham gia nhóm nào</p>
-          <button id="showCreateGroupBtn" class="btn-pink">➕ Tạo nhóm mới</button>
+    const contentDiv = document.getElementById('groupsContent');
+    
+    // GUEST KHÔNG ĐƯỢC LÀM GÌ CẢ
+    if (!isLoggedIn) {
+      contentDiv.innerHTML = `
+        <div class="guest-message">
+          <p>🌸 Bạn đang ở chế độ Khách (Guest) 🌸</p>
+          <p>Để xem và tham gia nhóm dịch, vui lòng <strong>đăng ký tài khoản bằng email</strong>.</p>
+          <button class="btn-pink" onclick="window.location.href='index.html'">🏠 Về trang chủ</button>
         </div>
       `;
-      document.getElementById('showCreateGroupBtn')?.addEventListener('click', () => {
-        document.getElementById('groupModal').style.display = 'flex';
+      showLoading(false);
+      return;
+    }
+    
+    // Hiển thị tabs cho user đã đăng nhập
+    const myRequests = pendingRequests.filter(r => r.userId === currentUser.uid && r.status === "pending");
+    const invitesForMe = pendingRequests.filter(r => r.targetUserId === currentUser.uid && r.type === "invite" && r.status === "pending");
+    const requestsForOwner = pendingRequests.filter(r => {
+      const group = allGroups.find(g => g.id === r.groupId);
+      return group && group.ownerId === currentUser.uid && r.type === "join" && r.status === "pending";
+    });
+    
+    let html = `
+      <div class="tab-buttons">
+        <button class="tab-btn active" data-tab="my">📖 Nhóm của tôi</button>
+        <button class="tab-btn" data-tab="all">🌐 Tất cả nhóm</button>
+    `;
+    if (invitesForMe.length > 0 || requestsForOwner.length > 0 || myRequests.length > 0) {
+      html += `<button class="tab-btn" data-tab="requests">📬 Yêu cầu & Lời mời <span style="background:#ff4444; border-radius:50%; padding:2px 6px; font-size:10px; margin-left:5px;">${invitesForMe.length + requestsForOwner.length + myRequests.length}</span></button>`;
+    }
+    html += `</div><div id="tabContent"></div>`;
+    contentDiv.innerHTML = html;
+    
+    // Tab switching
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        renderTabContent(btn.dataset.tab, userGroups, myRequests, invitesForMe, requestsForOwner);
       });
-    } else {
-      myGroupsDiv.innerHTML = userGroups.map(group => {
-        const isOwner = group.ownerId === currentUser.uid;
-        const membersList = (group.members || []).map(mid => {
-          const user = allUsers[mid];
-          const canSeeEmail = isOwner || isAdmin(currentUser);
-          return `<span class="member-item ${mid === group.ownerId ? 'owner' : ''}">
-            ${escapeHtml(user?.nickname || mid.substring(0, 8))}
-            ${canSeeEmail && user?.email ? `<span class="member-email">(${escapeHtml(user.email)})</span>` : ''}
-            ${isOwner && mid !== currentUser.uid ? `<button class="btn-small" style="background:#ff4444;color:white;margin-left:5px;" onclick="removeMember('${group.id}', '${mid}')">🗑</button>` : ''}
-          </span>`;
-        }).join('');
-        
-        // Truyện của nhóm
-        const groupStories = allStories.filter(s => s.groupId === group.id);
-        
-        return `
-          <div class="group-card">
-            <div class="group-header">
-              <div class="group-name">${escapeHtml(group.groupName)}</div>
-              <div class="group-owner">${isOwner ? '👑 Chủ nhóm' : 'Thành viên'}</div>
-            </div>
-            <div class="group-stats">
-              <span>👥 ${group.members?.length || 0} thành viên</span>
-              <span>📖 ${groupStories.length} truyện</span>
-            </div>
-            <div class="group-desc">${escapeHtml(group.description) || 'Chưa có mô tả'}</div>
-            
-            <div class="group-members">
-              <h4>👥 Thành viên</h4>
-              <div class="members-list">${membersList || 'Chưa có thành viên'}</div>
-            </div>
-            
-            <div class="group-stories">
-              <h4>📖 Truyện của nhóm</h4>
-              <div class="story-list">
-                ${groupStories.map(s => `<span class="story-tag" onclick="window.location.href='index.html'">${escapeHtml(s.title)}</span>`).join('') || 'Chưa có truyện nào'}
+    });
+    
+    renderTabContent('my', userGroups, myRequests, invitesForMe, requestsForOwner);
+    showLoading(false);
+  }
+  
+  function renderTabContent(tab, userGroups, myRequests, invitesForMe, requestsForOwner) {
+    const tabContent = document.getElementById('tabContent');
+    
+    if (tab === 'my') {
+      if (userGroups.length === 0) {
+        tabContent.innerHTML = `
+          <div style="padding:40px;text-align:center;background:#1c1c1c;border-radius:16px;">
+            <p>📭 Bạn chưa tham gia nhóm nào</p>
+            <button id="showCreateGroupBtn" class="btn-pink">➕ Tạo nhóm mới</button>
+          </div>
+        `;
+        document.getElementById('showCreateGroupBtn')?.addEventListener('click', () => {
+          document.getElementById('groupModal').style.display = 'flex';
+        });
+      } else {
+        tabContent.innerHTML = userGroups.map(group => {
+          const isOwner = group.ownerId === currentUser.uid;
+          const membersList = (group.members || []).map(mid => {
+            const user = allUsers[mid];
+            const canSeeEmail = isOwner || isAdmin(currentUser);
+            return `<span class="member-item ${mid === group.ownerId ? 'owner' : ''}">
+              ${escapeHtml(user?.nickname || mid.substring(0, 8))}
+              ${canSeeEmail && user?.email ? `<span class="member-email">(${escapeHtml(user.email)})</span>` : ''}
+              ${isOwner && mid !== currentUser.uid ? `<button class="btn-small" style="background:#ff4444;color:white;margin-left:5px;" onclick="removeMember('${group.id}', '${mid}')">🗑</button>` : ''}
+            </span>`;
+          }).join('');
+          
+          const groupStories = allStories.filter(s => s.groupId === group.id);
+          
+          return `
+            <div class="group-card">
+              <div class="group-header">
+                <div class="group-name">${escapeHtml(group.groupName)}</div>
+                <div class="group-owner">${isOwner ? '👑 Chủ nhóm' : 'Thành viên'}</div>
               </div>
-            </div>
-            
-            <div class="group-actions">
-              ${isOwner ? `<button class="btn-small btn-warning" onclick="editGroup('${group.id}')">✏️ Chỉnh sửa</button>` : ''}
-              ${isOwner || isAdmin(currentUser) ? `<button class="btn-small" style="background:#ff4444;color:white;" onclick="deleteGroupConfirm('${group.id}')">🗑 Xóa nhóm</button>` : ''}
-              ${isOwner ? `
-                <div class="invite-input">
-                  <input type="email" id="inviteEmail_${group.id}" placeholder="Nhập email để mời">
-                  <button class="btn-small btn-pink-small" onclick="sendInvite('${group.id}', document.getElementById('inviteEmail_${group.id}').value)">📧 Mời</button>
+              <div class="group-stats">
+                <span>👥 ${group.members?.length || 0} thành viên</span>
+                <span>📖 ${groupStories.length} truyện</span>
+              </div>
+              <div class="group-desc">${escapeHtml(group.description) || 'Chưa có mô tả'}</div>
+              
+              <div class="group-members">
+                <h4>👥 Thành viên</h4>
+                <div class="members-list">${membersList || 'Chưa có thành viên'}</div>
+              </div>
+              
+              <div class="group-stories">
+                <h4>📖 Truyện của nhóm</h4>
+                <div class="story-list">
+                  ${groupStories.map(s => `<span class="story-tag" onclick="window.location.href='index.html'">${escapeHtml(s.title)}</span>`).join('') || 'Chưa có truyện nào'}
                 </div>
-              ` : ''}
-            </div>
-          </div>
-        `;
-      }).join('');
-    }
-    
-    // TẤT CẢ NHÓM
-    const allGroupsDiv = document.getElementById('allGroupsList');
-    const userGroupIds = userGroups.map(g => g.id);
-    const otherGroups = allGroups.filter(g => !userGroupIds.includes(g.id));
-    
-    if (otherGroups.length === 0) {
-      allGroupsDiv.innerHTML = '<div style="padding:40px;text-align:center;background:#1c1c1c;border-radius:16px;color:#aaa;">📭 Không có nhóm nào khác</div>';
-    } else {
-      allGroupsDiv.innerHTML = otherGroups.map(group => {
-        const alreadyRequested = pendingRequests.some(r => r.userId === currentUser.uid && r.groupId === group.id && r.status === "pending");
-        const groupStories = allStories.filter(s => s.groupId === group.id);
-        
-        return `
-          <div class="group-card">
-            <div class="group-header">
-              <div class="group-name">${escapeHtml(group.groupName)}</div>
-            </div>
-            <div class="group-stats">
-              <span>👥 ${group.members?.length || 0} thành viên</span>
-              <span>📖 ${groupStories.length} truyện</span>
-            </div>
-            <div class="group-desc">${escapeHtml(group.description) || 'Chưa có mô tả'}</div>
-            
-            <div class="group-members">
-              <h4>👥 Thành viên</h4>
-              <div class="members-list">
-                ${(group.members || []).map(mid => {
-                  const user = allUsers[mid];
-                  return `<span class="member-item ${mid === group.ownerId ? 'owner' : ''}">${escapeHtml(user?.nickname || mid.substring(0, 8))}</span>`;
-                }).join('') || 'Chưa có thành viên'}
+              </div>
+              
+              <div class="group-actions">
+                ${isOwner ? `<button class="btn-small btn-warning" onclick="editGroup('${group.id}')">✏️ Chỉnh sửa</button>` : ''}
+                ${isOwner || isAdmin(currentUser) ? `<button class="btn-small" style="background:#ff4444;color:white;" onclick="deleteGroupConfirm('${group.id}')">🗑 Xóa nhóm</button>` : ''}
+                ${isOwner ? `
+                  <div class="invite-input">
+                    <input type="email" id="inviteEmail_${group.id}" placeholder="Nhập email để mời">
+                    <button class="btn-small btn-pink-small" onclick="sendInvite('${group.id}', document.getElementById('inviteEmail_${group.id}').value)">📧 Mời</button>
+                  </div>
+                ` : ''}
               </div>
             </div>
-            
-            <div class="group-stories">
-              <h4>📖 Truyện của nhóm</h4>
-              <div class="story-list">
-                ${groupStories.map(s => `<span class="story-tag" onclick="window.location.href='index.html'">${escapeHtml(s.title)}</span>`).join('') || 'Chưa có truyện nào'}
+          `;
+        }).join('');
+      }
+    } 
+    else if (tab === 'all') {
+      const userGroupIds = userGroups.map(g => g.id);
+      const otherGroups = allGroups.filter(g => !userGroupIds.includes(g.id));
+      
+      if (otherGroups.length === 0) {
+        tabContent.innerHTML = '<div style="padding:40px;text-align:center;background:#1c1c1c;border-radius:16px;color:#aaa;">📭 Không có nhóm nào khác</div>';
+      } else {
+        tabContent.innerHTML = otherGroups.map(group => {
+          const alreadyRequested = pendingRequests.some(r => r.userId === currentUser.uid && r.groupId === group.id && r.status === "pending");
+          const groupStories = allStories.filter(s => s.groupId === group.id);
+          
+          return `
+            <div class="group-card">
+              <div class="group-header">
+                <div class="group-name">${escapeHtml(group.groupName)}</div>
+              </div>
+              <div class="group-stats">
+                <span>👥 ${group.members?.length || 0} thành viên</span>
+                <span>📖 ${groupStories.length} truyện</span>
+              </div>
+              <div class="group-desc">${escapeHtml(group.description) || 'Chưa có mô tả'}</div>
+              
+              <div class="group-members">
+                <h4>👥 Thành viên</h4>
+                <div class="members-list">
+                  ${(group.members || []).map(mid => {
+                    const user = allUsers[mid];
+                    return `<span class="member-item ${mid === group.ownerId ? 'owner' : ''}">${escapeHtml(user?.nickname || mid.substring(0, 8))}</span>`;
+                  }).join('') || 'Chưa có thành viên'}
+                </div>
+              </div>
+              
+              <div class="group-stories">
+                <h4>📖 Truyện của nhóm</h4>
+                <div class="story-list">
+                  ${groupStories.map(s => `<span class="story-tag" onclick="window.location.href='index.html'">${escapeHtml(s.title)}</span>`).join('') || 'Chưa có truyện nào'}
+                </div>
+              </div>
+              
+              <div class="group-actions">
+                ${!alreadyRequested ? `<button class="btn-small btn-pink" onclick="sendJoinRequest('${group.id}')">➕ Tham gia</button>` : `<button class="btn-small" disabled style="opacity:0.5;">⏳ Đã gửi yêu cầu</button>`}
               </div>
             </div>
-            
-            <div class="group-actions">
-              ${!alreadyRequested ? `<button class="btn-small btn-pink" onclick="sendJoinRequest('${group.id}')">➕ Tham gia</button>` : `<button class="btn-small" disabled style="opacity:0.5;">⏳ Đã gửi yêu cầu</button>`}
-            </div>
-          </div>
-        `;
-      }).join('');
+          `;
+        }).join('');
+      }
     }
-    
-    // YÊU CẦU & LỜI MỜI
-    const requestsDiv = document.getElementById('requestsList');
-    if (myRequests.length === 0 && invitesForMe.length === 0) {
-      requestsDiv.innerHTML = '<div style="padding:40px;text-align:center;background:#1c1c1c;border-radius:16px;color:#aaa;">📭 Không có yêu cầu hoặc lời mời nào</div>';
-    } else {
+    else if (tab === 'requests') {
       let html = '';
-      if (myRequests.length > 0) {
-        html += `<h3>📝 Yêu cầu tham gia nhóm của bạn</h3>`;
-        html += myRequests.map(req => `
+      if (requestsForOwner.length > 0) {
+        html += `<h3 style="margin-bottom:15px;">📝 Yêu cầu tham gia nhóm (cần duyệt)</h3>`;
+        html += requestsForOwner.map(req => `
           <div class="group-card">
             <div class="group-header">
               <div class="group-name">${escapeHtml(req.groupName)}</div>
-              <div class="group-owner">Đang chờ duyệt</div>
             </div>
+            <div class="group-desc">👤 ${escapeHtml(req.userName)} (${escapeHtml(req.userEmail)}) muốn tham gia nhóm</div>
             <div class="group-actions">
-              <button class="btn-small" style="background:#ff4444;color:white;" onclick="cancelRequest('${req.id}')">❌ Hủy yêu cầu</button>
+              <button class="btn-small btn-pink" onclick="respondToRequest('${req.id}', 'accept')">✅ Chấp nhận</button>
+              <button class="btn-small" style="background:#ff4444;color:white;" onclick="respondToRequest('${req.id}', 'reject')">❌ Từ chối</button>
             </div>
           </div>
         `).join('');
       }
       if (invitesForMe.length > 0) {
-        html += `<h3 style="margin-top:20px;">💌 Lời mời vào nhóm</h3>`;
+        html += `<h3 style="margin-top:20px;margin-bottom:15px;">💌 Lời mời vào nhóm</h3>`;
         html += invitesForMe.map(inv => `
           <div class="group-card">
             <div class="group-header">
@@ -660,10 +679,25 @@
           </div>
         `).join('');
       }
-      requestsDiv.innerHTML = html;
+      if (myRequests.length > 0) {
+        html += `<h3 style="margin-top:20px;margin-bottom:15px;">📤 Yêu cầu của bạn (đang chờ duyệt)</h3>`;
+        html += myRequests.map(req => `
+          <div class="group-card">
+            <div class="group-header">
+              <div class="group-name">${escapeHtml(req.groupName)}</div>
+              <div class="group-owner">Đang chờ duyệt</div>
+            </div>
+            <div class="group-actions">
+              <button class="btn-small" style="background:#ff4444;color:white;" onclick="cancelRequest('${req.id}')">❌ Hủy yêu cầu</button>
+            </div>
+          </div>
+        `).join('');
+      }
+      if (html === '') {
+        html = '<div style="padding:40px;text-align:center;background:#1c1c1c;border-radius:16px;color:#aaa;">📭 Không có yêu cầu hoặc lời mời nào</div>';
+      }
+      tabContent.innerHTML = html;
     }
-    
-    showLoading(false);
   }
   
   window.cancelRequest = async (requestId) => {
@@ -706,19 +740,6 @@
     showLoading(false);
   };
   
-  // Tab switching
-  document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      currentTab = btn.dataset.tab;
-      
-      document.getElementById('myGroupsList').style.display = currentTab === 'my' ? 'block' : 'none';
-      document.getElementById('allGroupsList').style.display = currentTab === 'all' ? 'block' : 'none';
-      document.getElementById('requestsList').style.display = currentTab === 'requests' ? 'block' : 'none';
-    });
-  });
-  
   document.getElementById('homeLogo')?.addEventListener('click', () => window.location.href = 'index.html');
   document.getElementById('confirmGroupBtn')?.addEventListener('click', createNewGroup);
   document.getElementById('refreshGroupsBtn')?.addEventListener('click', async () => {
@@ -734,11 +755,7 @@
   });
   
   const restored = await restoreSession();
-  if (!restored) {
-    window.location.href = 'index.html';
-  } else {
-    await loadGroups();
-  }
+  await loadGroups();
   
   window.closeModal = closeModal;
 </script>
