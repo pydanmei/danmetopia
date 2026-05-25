@@ -23,7 +23,7 @@ emailjs.init("fPq8fpw1OqzOtj-lk");
 // ==================== GENRE LIST ====================
 const GENRE_LIST = [
   { name: "3D", icon: "🎮", desc: "Truyện được vẽ bằng đồ họa 3D" },
-  { name: "Action", icon: "⚔️", desc: "Truyện có nhiều cảnh đánh nhau, hành động" },
+  { name: "Action", icon: "⚔️", desc: "Truyện có nhiều cảnh đánh nhau" },
   { name: "Bara/Muscle", icon: "💪", desc: "Truyện về cơ bắp, nam tính" },
   { name: "Biography", icon: "📖", desc: "Truyện tiểu sử" },
   { name: "Cakeverse", icon: "🎂", desc: "Thể loại đặc biệt liên quan đến bánh kem" },
@@ -760,7 +760,7 @@ window.openStoryDetail = async (storyId) => {
   document.getElementById("storyModal").style.display = "flex";
 };
 
-// Các hàm filter mới
+// Các hàm filter
 window.filterByAuthor = (author) => {
   if (author && author !== "Chưa rõ") {
     state.searchKeyword = author;
@@ -1000,162 +1000,53 @@ window.openEditChapter = async (storyId, chapterId) => {
   document.getElementById("editChapterModal").style.display = "flex";
 };
 
-// ==================== READER (FIX: CHO PHÉP TẤT CẢ NGƯỜI DÙNG ĐỌC TRUYỆN) ====================
-let currentChapters = [];
-let currentChapterIndex = 0;
-let currentStoryId = null;
-
-window.openReader = async (storyId, chapterIndex) => {
-  console.log("📖 openReader called - storyId:", storyId, "chapterIndex:", chapterIndex);
-  
-  // KHÔNG CÓ KIỂM TRA QUYỀN - AI CŨNG ĐỌC ĐƯỢC
-  refreshUserSession();
-  currentStoryId = storyId;
-  currentChapterIndex = chapterIndex || 0;
-  
-  const story = state.stories.find(s => s.id === storyId);
-  if (story) { 
-    try {
-      const viewRef = ref(db, `stories/${storyId}/views`);
-      const snapshot = await get(viewRef);
-      await set(viewRef, (snapshot.val() || 0) + 1);
-    } catch (err) {
-      console.error("Update view error:", err);
-    }
-  }
-  
-  const chaptersRef = ref(db, `chapters/${storyId}`);
-  chaptersUnsubscribe = onValue(chaptersRef, (snapshot) => {
-    const data = snapshot.val();
-    if (data) {
-      currentChapters = Object.entries(data).map(([id, value]) => ({ id, ...value }));
-      currentChapters.sort((a, b) => (a.chapterNumber || 0) - (b.chapterNumber || 0));
-      renderReader();
-    } else {
-      currentChapters = [];
-      renderReader();
-    }
-  });
-  
-  const readerModal = document.getElementById("readerModal");
-  if (readerModal) {
-    readerModal.style.display = "flex";
-    document.body.style.overflow = "hidden";
-    setTimeout(() => {
-      const readerContent = document.getElementById("readerContent");
-      if (readerContent) readerContent.scrollTop = 0;
-      window.scrollTo(0, 0);
-    }, 50);
-  } else {
-    console.error("readerModal not found!");
-    showNotification("Lỗi: Không tìm thấy reader", true);
-  }
+// ==================== READER (TRANG RIÊNG - THAY VÌ MODAL) ====================
+// Reader sẽ được mở bằng cách chuyển sang URL mới: reader.html?id=xxx&chapter=0
+window.openReader = (storyId, chapterIndex) => {
+  // Chuyển sang trang reader riêng
+  window.location.href = `reader.html?id=${storyId}&chapter=${chapterIndex || 0}`;
 };
 
-let chaptersUnsubscribe = null;
-
-function renderReader() {
-  if (!currentChapters || currentChapters.length === 0) {
-    document.getElementById("readerContent").innerHTML = '<div class="reader-page"><p>Đang tải chapter...</p></div>';
-    return;
-  }
-  
-  if (!currentChapters[currentChapterIndex]) {
-    document.getElementById("readerContent").innerHTML = '<div class="reader-page"><p>Không tìm thấy chapter</p></div>';
-    return;
-  }
-  
-  const chap = currentChapters[currentChapterIndex];
-  const readerDiv = document.getElementById("readerContent");
-  if (!readerDiv) return;
-  
-  const hasPrev = currentChapterIndex > 0;
-  const hasNext = currentChapterIndex < currentChapters.length - 1;
-  
-  readerDiv.innerHTML = `
-    <div class="reader-page">
-      <div class="chapter-nav">
-        ${hasPrev ? `<button onclick="window.changeChapter(-1)">⬅️ Chapter trước</button>` : '<button disabled>⬅️ Chapter trước</button>'}
-        <h3>${escapeHtml(chap.title)}</h3>
-        ${hasNext ? `<button onclick="window.changeChapter(1)">Chapter sau ➡️</button>` : '<button disabled>Chapter sau ➡️</button>'}
-      </div>
-      <div id="chapterImages">${chap.pages?.map(page => `<img class="reader-image" src="${escapeHtml(page)}" loading="lazy" onerror="this.src='https://placehold.co/800x1200?text=Error'">`).join("") || "<p>Không có ảnh</p>"}</div>
-      <div class="chapter-nav" style="margin-top:30px;margin-bottom:30px;">
-        ${hasPrev ? `<button onclick="window.changeChapter(-1)">⬅️ Chapter trước</button>` : '<button disabled>⬅️ Chapter trước</button>'}
-        <button onclick="window.scrollToTop()" style="background:#FFCCCC;">⬆️ Lên đầu trang</button>
-        ${hasNext ? `<button onclick="window.changeChapter(1)">Chapter sau ➡️</button>` : '<button disabled>Chapter sau ➡️</button>'}
-      </div>
-      <div class="chapter-list-section"><h4>📑 MỤC LỤC CHAPTER</h4><div class="chapter-list">${currentChapters.map((c, i) => `<div class="chapter-item" onclick="window.changeChapterTo(${i})"><span>${escapeHtml(c.title)}</span><span style="font-size:12px;">📅 ${new Date(c.createdAt).toLocaleDateString()}</span></div>`).join("")}</div></div>
-      <div class="comment-section"><h4>💬 BÌNH LUẬN</h4><textarea id="commentText" rows="3" placeholder="Viết bình luận..."></textarea><button id="postCommentBtn">GỬI</button><div id="commentList"></div></div>
-    </div>
-  `;
-  loadCommentsRealtime(currentStoryId);
-  const postBtn = document.getElementById("postCommentBtn");
-  if (postBtn) {
-    const newPostBtn = postBtn.cloneNode(true);
-    postBtn.parentNode.replaceChild(newPostBtn, postBtn);
-    newPostBtn.addEventListener("click", () => postComment(currentStoryId));
+// ==================== LOAD COMPONENTS ====================
+async function loadComponents() {
+  try {
+    const headerRes = await fetch('components/header.html');
+    const headerHtml = await headerRes.text();
+    document.getElementById('header-placeholder').innerHTML = headerHtml;
+    
+    const footerRes = await fetch('components/footer.html');
+    const footerHtml = await footerRes.text();
+    document.getElementById('footer-placeholder').innerHTML = footerHtml;
+    
+    document.getElementById('homeLogo')?.addEventListener('click', () => window.location.reload());
+    document.getElementById('logoutBtn')?.addEventListener('click', logout);
+    document.getElementById('profileBtn')?.addEventListener('click', window.openProfile);
+    document.getElementById('createGroupBtn')?.addEventListener('click', () => document.getElementById('groupModal').style.display = 'flex');
+    document.getElementById('confirmGroupBtn')?.addEventListener('click', window.createNewGroup);
+    document.getElementById('adminLink')?.addEventListener('click', (e) => { e.preventDefault(); window.location.href = 'admin.html'; });
+    document.getElementById('groupsLink')?.addEventListener('click', (e) => { e.preventDefault(); window.location.href = 'groups.html'; });
+  } catch (err) {
+    console.error("Error loading components:", err);
   }
 }
 
-window.changeChapter = (delta) => {
-  const newIdx = currentChapterIndex + delta;
-  if (newIdx >= 0 && newIdx < currentChapters.length) {
-    currentChapterIndex = newIdx;
-    renderReader();
-    const readerContent = document.getElementById("readerContent");
-    if (readerContent) readerContent.scrollTop = 0;
-    window.scrollTo(0, 0);
-  }
-};
-
-window.changeChapterTo = (index) => {
-  currentChapterIndex = index;
-  renderReader();
-  const readerContent = document.getElementById("readerContent");
-  if (readerContent) readerContent.scrollTop = 0;
-  window.scrollTo(0, 0);
-};
-
-window.scrollToTop = () => {
-  window.scrollTo({ top: 0, behavior: "smooth" });
-};
-
-window.closeReaderModal = () => {
-  const readerModal = document.getElementById("readerModal");
-  if (readerModal) readerModal.style.display = "none";
-  document.body.style.overflow = "";
-  if (chaptersUnsubscribe) chaptersUnsubscribe();
-  if (commentUnsubscribe) commentUnsubscribe();
-  currentStoryId = null;
-};
-
-// ==================== COMMENTS ====================
-let commentUnsubscribe = null;
-async function loadCommentsRealtime(storyId) {
-  if (commentUnsubscribe) commentUnsubscribe();
-  const commentsRef = ref(db, `comments/${storyId}`);
-  commentUnsubscribe = onValue(commentsRef, (snapshot) => {
-    const data = snapshot.val();
-    const comments = data ? Object.entries(data).map(([id, value]) => ({ id, ...value })) : [];
-    comments.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-    const commentList = document.getElementById("commentList");
-    if (commentList) {
-      commentList.innerHTML = comments.map(c => `<div class="comment-item"><div class="comment-name">💬 ${escapeHtml(c.userName)}<span class="comment-time">${new Date(c.createdAt).toLocaleString()}</span></div><div class="comment-text">${escapeHtml(c.text)}</div></div>`).join("");
-      if (comments.length === 0) commentList.innerHTML = '<div style="text-align:center;padding:20px;">Chưa có bình luận</div>';
-    }
+// ==================== INIT ====================
+async function initApp() {
+  await loadComponents();
+  updateUserDisplay();
+  initScrollButtons();
+  renderGenreFilter();
+  renderUploadPanel();
+  await loadAllGroups();
+  await loadFollows();
+  loadBookmarks();
+  loadHistory();
+  loadStoriesRealtime();
+  document.querySelectorAll(".tab-btn").forEach(btn => {
+    btn.addEventListener("click", () => { document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active")); btn.classList.add("active"); state.currentTab = btn.dataset.tab; renderCurrentTab(); });
   });
-}
-
-async function postComment(storyId) {
-  if (!state.currentUser) { showNotification("Đăng nhập để bình luận", true); return; }
-  const text = document.getElementById("commentText")?.value.trim();
-  if (!text) return;
-  const commentsRef = ref(db, `comments/${storyId}`);
-  const newCommentRef = push(commentsRef);
-  await set(newCommentRef, { text, userId: state.currentUser.uid || state.currentUser.displayName, userName: state.currentUser.displayName, createdAt: Date.now() });
-  document.getElementById("commentText").value = "";
-  showNotification("✅ Đã gửi bình luận");
+  document.getElementById("searchInput")?.addEventListener("input", (e) => { state.searchKeyword = e.target.value.toLowerCase(); renderCurrentTab(); });
+  document.getElementById("sortFilter")?.addEventListener("change", (e) => { state.sortBy = e.target.value; renderCurrentTab(); });
 }
 
 // ==================== SCROLL BUTTONS ====================
@@ -1242,48 +1133,6 @@ window.createNewGroup = async () => {
   showLoading(false);
 };
 
-// ==================== LOAD COMPONENTS ====================
-async function loadComponents() {
-  try {
-    const headerRes = await fetch('components/header.html');
-    const headerHtml = await headerRes.text();
-    document.getElementById('header-placeholder').innerHTML = headerHtml;
-    
-    const footerRes = await fetch('components/footer.html');
-    const footerHtml = await footerRes.text();
-    document.getElementById('footer-placeholder').innerHTML = footerHtml;
-    
-    document.getElementById('homeLogo')?.addEventListener('click', () => window.location.reload());
-    document.getElementById('logoutBtn')?.addEventListener('click', logout);
-    document.getElementById('profileBtn')?.addEventListener('click', window.openProfile);
-    document.getElementById('createGroupBtn')?.addEventListener('click', () => document.getElementById('groupModal').style.display = 'flex');
-    document.getElementById('confirmGroupBtn')?.addEventListener('click', window.createNewGroup);
-    document.getElementById('adminLink')?.addEventListener('click', (e) => { e.preventDefault(); window.location.href = 'admin.html'; });
-    document.getElementById('groupsLink')?.addEventListener('click', (e) => { e.preventDefault(); window.location.href = 'groups.html'; });
-  } catch (err) {
-    console.error("Error loading components:", err);
-  }
-}
-
-// ==================== INIT ====================
-async function initApp() {
-  await loadComponents();
-  updateUserDisplay();
-  initScrollButtons();
-  renderGenreFilter();
-  renderUploadPanel();
-  await loadAllGroups();
-  await loadFollows();
-  loadBookmarks();
-  loadHistory();
-  loadStoriesRealtime();
-  document.querySelectorAll(".tab-btn").forEach(btn => {
-    btn.addEventListener("click", () => { document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active")); btn.classList.add("active"); state.currentTab = btn.dataset.tab; renderCurrentTab(); });
-  });
-  document.getElementById("searchInput")?.addEventListener("input", (e) => { state.searchKeyword = e.target.value.toLowerCase(); renderCurrentTab(); });
-  document.getElementById("sortFilter")?.addEventListener("change", (e) => { state.sortBy = e.target.value; renderCurrentTab(); });
-}
-
 // ==================== STARTUP ====================
 document.addEventListener("DOMContentLoaded", async () => {
   console.log("DOM ready - Starting app...");
@@ -1326,10 +1175,10 @@ window.openAddChapter = window.openAddChapter;
 window.openEditChapter = window.openEditChapter;
 window.deleteChapter = window.deleteChapter;
 window.openReader = window.openReader;
-window.closeReaderModal = window.closeReaderModal;
-window.changeChapter = window.changeChapter;
-window.changeChapterTo = window.changeChapterTo;
-window.scrollToTop = window.scrollToTop;
+window.closeReaderModal = () => { window.location.href = 'index.html'; };
+window.changeChapter = (delta) => { console.log("Change chapter called from reader page"); };
+window.changeChapterTo = (index) => { console.log("Change chapter to called from reader page"); };
+window.scrollToTop = () => { window.scrollTo({ top: 0, behavior: "smooth" }); };
 window.closeModal = closeModal;
 window.saveEditStory = window.saveEditStory;
 window.saveAddChapter = window.saveAddChapter;
