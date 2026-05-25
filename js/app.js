@@ -700,7 +700,7 @@ function renderUploadPanel() {
   });
 }
 
-// ==================== STORY DETAIL (FIX: bìa truyện không quá to) ====================
+// ==================== STORY DETAIL ====================
 window.openStoryDetail = async (storyId) => {
   refreshUserSession();
   const story = state.stories.find(s => s.id === storyId);
@@ -1000,23 +1000,43 @@ window.openEditChapter = async (storyId, chapterId) => {
   document.getElementById("editChapterModal").style.display = "flex";
 };
 
-// ==================== READER ====================
+// ==================== READER (FIX: CHO PHÉP TẤT CẢ NGƯỜI DÙNG ĐỌC TRUYỆN) ====================
 let currentChapters = [];
 let currentChapterIndex = 0;
 let currentStoryId = null;
 
 window.openReader = async (storyId, chapterIndex) => {
-  console.log("openReader called with storyId:", storyId, "chapterIndex:", chapterIndex);
+  console.log("📖 openReader called - storyId:", storyId, "chapterIndex:", chapterIndex);
+  
+  // KHÔNG CÓ KIỂM TRA QUYỀN - AI CŨNG ĐỌC ĐƯỢC
   refreshUserSession();
   currentStoryId = storyId;
   currentChapterIndex = chapterIndex || 0;
+  
   const story = state.stories.find(s => s.id === storyId);
-  if (story) { const viewRef = ref(db, `stories/${storyId}/views`); const snapshot = await get(viewRef); await set(viewRef, (snapshot.val() || 0) + 1); }
+  if (story) { 
+    try {
+      const viewRef = ref(db, `stories/${storyId}/views`);
+      const snapshot = await get(viewRef);
+      await set(viewRef, (snapshot.val() || 0) + 1);
+    } catch (err) {
+      console.error("Update view error:", err);
+    }
+  }
+  
   const chaptersRef = ref(db, `chapters/${storyId}`);
-  onValue(chaptersRef, (snapshot) => {
+  chaptersUnsubscribe = onValue(chaptersRef, (snapshot) => {
     const data = snapshot.val();
-    if (data) { currentChapters = Object.entries(data).map(([id, value]) => ({ id, ...value })); currentChapters.sort((a, b) => (a.chapterNumber || 0) - (b.chapterNumber || 0)); renderReader(); }
+    if (data) {
+      currentChapters = Object.entries(data).map(([id, value]) => ({ id, ...value }));
+      currentChapters.sort((a, b) => (a.chapterNumber || 0) - (b.chapterNumber || 0));
+      renderReader();
+    } else {
+      currentChapters = [];
+      renderReader();
+    }
   });
+  
   const readerModal = document.getElementById("readerModal");
   if (readerModal) {
     readerModal.style.display = "flex";
@@ -1032,11 +1052,19 @@ window.openReader = async (storyId, chapterIndex) => {
   }
 };
 
+let chaptersUnsubscribe = null;
+
 function renderReader() {
-  if (!currentChapters[currentChapterIndex]) {
-    console.log("No chapter found at index", currentChapterIndex);
+  if (!currentChapters || currentChapters.length === 0) {
+    document.getElementById("readerContent").innerHTML = '<div class="reader-page"><p>Đang tải chapter...</p></div>';
     return;
   }
+  
+  if (!currentChapters[currentChapterIndex]) {
+    document.getElementById("readerContent").innerHTML = '<div class="reader-page"><p>Không tìm thấy chapter</p></div>';
+    return;
+  }
+  
   const chap = currentChapters[currentChapterIndex];
   const readerDiv = document.getElementById("readerContent");
   if (!readerDiv) return;
@@ -1063,31 +1091,43 @@ function renderReader() {
   `;
   loadCommentsRealtime(currentStoryId);
   const postBtn = document.getElementById("postCommentBtn");
-  if (postBtn) { const newPostBtn = postBtn.cloneNode(true); postBtn.parentNode.replaceChild(newPostBtn, postBtn); newPostBtn.addEventListener("click", () => postComment(currentStoryId)); }
+  if (postBtn) {
+    const newPostBtn = postBtn.cloneNode(true);
+    postBtn.parentNode.replaceChild(newPostBtn, postBtn);
+    newPostBtn.addEventListener("click", () => postComment(currentStoryId));
+  }
 }
 
 window.changeChapter = (delta) => {
   const newIdx = currentChapterIndex + delta;
-  if (newIdx >= 0 && newIdx < currentChapters.length) { 
-    currentChapterIndex = newIdx; 
-    renderReader(); 
+  if (newIdx >= 0 && newIdx < currentChapters.length) {
+    currentChapterIndex = newIdx;
+    renderReader();
     const readerContent = document.getElementById("readerContent");
     if (readerContent) readerContent.scrollTop = 0;
     window.scrollTo(0, 0);
   }
 };
-window.changeChapterTo = (index) => { 
-  currentChapterIndex = index; 
-  renderReader(); 
+
+window.changeChapterTo = (index) => {
+  currentChapterIndex = index;
+  renderReader();
   const readerContent = document.getElementById("readerContent");
   if (readerContent) readerContent.scrollTop = 0;
   window.scrollTo(0, 0);
 };
-window.scrollToTop = () => { window.scrollTo({ top: 0, behavior: "smooth" }); };
-window.closeReaderModal = () => { 
+
+window.scrollToTop = () => {
+  window.scrollTo({ top: 0, behavior: "smooth" });
+};
+
+window.closeReaderModal = () => {
   const readerModal = document.getElementById("readerModal");
   if (readerModal) readerModal.style.display = "none";
-  document.body.style.overflow = ""; 
+  document.body.style.overflow = "";
+  if (chaptersUnsubscribe) chaptersUnsubscribe();
+  if (commentUnsubscribe) commentUnsubscribe();
+  currentStoryId = null;
 };
 
 // ==================== COMMENTS ====================
@@ -1106,6 +1146,7 @@ async function loadCommentsRealtime(storyId) {
     }
   });
 }
+
 async function postComment(storyId) {
   if (!state.currentUser) { showNotification("Đăng nhập để bình luận", true); return; }
   const text = document.getElementById("commentText")?.value.trim();
