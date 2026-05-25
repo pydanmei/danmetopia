@@ -25,36 +25,36 @@ const GENRE_LIST = [
   { name: "3D", icon: "🎮", desc: "Truyện được vẽ bằng đồ họa 3D" },
   { name: "Action", icon: "⚔️", desc: "Truyện có nhiều cảnh đánh nhau, hành động" },
   { name: "Bara/Muscle", icon: "💪", desc: "Truyện về cơ bắp, nam tính" },
-  { name: "Biography", icon: "📖", desc: "Truyện tiểu sử" },
+  { name: "Biography", icon: "📖", desc: "Truyện tiểu sử, dựa trên nhân vật có thật" },
   { name: "Cakeverse", icon: "🎂", desc: "Thể loại đặc biệt liên quan đến bánh kem" },
-  { name: "Comedy", icon: "😂", desc: "Truyện hài hước" },
-  { name: "Crime", icon: "🔫", desc: "Truyện về tội phạm" },
+  { name: "Comedy", icon: "😂", desc: "Truyện hài hước, mang lại tiếng cười" },
+  { name: "Crime", icon: "🔫", desc: "Truyện về tội phạm, xã hội đen" },
   { name: "Documentary", icon: "🎥", desc: "Truyện dạng phim tài liệu" },
   { name: "Dom/Sub verse", icon: "⛓️", desc: "Truyện có yếu tố thống trị/phục tùng" },
-  { name: "Drama", icon: "💗", desc: "Truyện tình cảm" },
-  { name: "Family", icon: "👨‍👩‍👧", desc: "Truyện về gia đình" },
-  { name: "Fantasy", icon: "🐉", desc: "Truyện giả tưởng" },
+  { name: "Drama", icon: "💗", desc: "Truyện tình cảm, nhiều cung bậc cảm xúc" },
+  { name: "Family", icon: "👨‍👩‍👧", desc: "Truyện về gia đình, tình thân" },
+  { name: "Fantasy", icon: "🐉", desc: "Truyện giả tưởng, ma thuật, thế giới khác" },
   { name: "Furry", icon: "🐾", desc: "Truyện thú nhân hóa" },
-  { name: "HET/Hentai", icon: "🔞", desc: "Truyện 18+ dị tính" },
-  { name: "Historical", icon: "🏯", desc: "Truyện cổ trang" },
-  { name: "Horror", icon: "👻", desc: "Truyện kinh dị" },
-  { name: "Music", icon: "🎵", desc: "Truyện về âm nhạc" },
-  { name: "Mystery", icon: "🔍", desc: "Truyện trinh thám" },
-  { name: "Omegaverse", icon: "🔥", desc: "Truyện ABO" },
-  { name: "Psychological", icon: "🧠", desc: "Truyện tâm lý" },
-  { name: "Romance", icon: "💕", desc: "Truyện lãng mạn" },
-  { name: "School Life", icon: "📚", desc: "Truyện học đường" },
+  { name: "HET/Hentai", icon: "🔞", desc: "Truyện dị tính có yếu tố 18+" },
+  { name: "Historical", icon: "🏯", desc: "Truyện cổ trang, lịch sử" },
+  { name: "Horror", icon: "👻", desc: "Truyện kinh dị, rùng rợn" },
+  { name: "Music", icon: "🎵", desc: "Truyện về âm nhạc, ca hát" },
+  { name: "Mystery", icon: "🔍", desc: "Truyện trinh thám, bí ẩn, phá án" },
+  { name: "Omegaverse", icon: "🔥", desc: "Truyện ABO (Alpha/Beta/Omega)" },
+  { name: "Psychological", icon: "🧠", desc: "Truyện tâm lý, có chiều sâu nội tâm" },
+  { name: "Romance", icon: "💕", desc: "Truyện tập trung vào tình cảm lãng mạn" },
+  { name: "School Life", icon: "📚", desc: "Truyện bối cảnh trường học, học đường" },
   { name: "Sci-fi", icon: "🚀", desc: "Truyện khoa học viễn tưởng" },
-  { name: "Shounen Ai", icon: "💖", desc: "BL nhẹ nhàng" },
-  { name: "Slice of Life", icon: "🌿", desc: "Truyện đời thường" },
-  { name: "Sports", icon: "⚽", desc: "Truyện thể thao" },
+  { name: "Shounen Ai", icon: "💖", desc: "Truyện BL nhẹ nhàng, thuần khiết" },
+  { name: "Slice of Life", icon: "🌿", desc: "Truyện đời thường, nhẹ nhàng" },
+  { name: "Sports", icon: "⚽", desc: "Truyện về thể thao, thi đấu" },
   { name: "Supernatural", icon: "👻", desc: "Truyện siêu nhiên" },
-  { name: "Thriller", icon: "🔪", desc: "Truyện gây cấn" },
-  { name: "Tragedy", icon: "💔", desc: "Truyện bi kịch" },
-  { name: "War", icon: "🏆", desc: "Truyện chiến tranh" },
-  { name: "Wuxia", icon: "🗡️", desc: "Truyện võ hiệp" },
-  { name: "Yaoi", icon: "🔥", desc: "BL 18+" },
-  { name: "Yuri", icon: "💕", desc: "GL" }
+  { name: "Thriller", icon: "🔪", desc: "Truyện gây cấn, hồi hộp" },
+  { name: "Tragedy", icon: "💔", desc: "Truyện bi kịch, buồn" },
+  { name: "War", icon: "🏆", desc: "Truyện về chiến tranh" },
+  { name: "Wuxia", icon: "🗡️", desc: "Truyện võ hiệp Trung Quốc" },
+  { name: "Yaoi", icon: "🔥", desc: "Truyện BL có yếu tố 18+" },
+  { name: "Yuri", icon: "💕", desc: "Truyện GL (girl love)" }
 ];
 
 // ==================== STATE ====================
@@ -70,11 +70,6 @@ const state = {
   searchKeyword: "",
   sortBy: "likes"
 };
-
-// ==================== FIREBASE SUBSCRIPTIONS ====================
-let chapterUnsubscribe = null;
-let commentUnsubscribe = null;
-let storiesUnsubscribe = null;
 
 // ==================== HELPER FUNCTIONS ====================
 function showNotification(msg, isError = false) {
@@ -180,7 +175,7 @@ async function createNewUser(uid, email, nickname) {
   const ADMIN_EMAILS = ["pydanmeii@gmail.com", "pepyl4298@gmail.com", "maihuong4298@gmail.com"];
   await set(ref(db, `users/${uid}`), {
     email, nickname, role: ADMIN_EMAILS.includes(email) ? "admin" : "user",
-    privileges: { moderator: false, groupId: null }, follows: {}, history: [], createdAt: Date.now()
+    privileges: { moderator: false, groupId: null }, follows: {}, history: {}, createdAt: Date.now()
   });
 }
 
@@ -202,8 +197,8 @@ async function loadUserData(uid, email) {
 async function handleGuestLogin() {
   state.currentUser = { role: "guest", displayName: generateRandomGuestName(), nickname: "", uid: null };
   setUserSession(state.currentUser);
-  document.getElementById("loginPage")?.style.display = "none";
-  document.getElementById("mainContainer")?.style.display = "block";
+  document.getElementById("loginPage").style.display = "none";
+  document.getElementById("mainContainer").style.display = "block";
   showNotification(`👤 Chào mừng ${state.currentUser.displayName} (Khách)`);
   updateUserDisplay();
   initApp();
@@ -368,10 +363,7 @@ async function loadAllGroups() {
 async function getUserGroups(uid) {
   if (!uid) return [];
   if (state.allGroups.length === 0) await loadAllGroups();
-  return state.allGroups.filter(group => {
-    const members = group.members || [];
-    return members.includes(uid);
-  });
+  return state.allGroups.filter(group => group.members?.includes(uid));
 }
 
 async function getUserGroupOptions() {
@@ -422,9 +414,8 @@ function saveHistory() { localStorage.setItem("danmetopia_history", JSON.stringi
 
 // ==================== STORIES CRUD ====================
 async function loadStoriesRealtime() {
-  if (storiesUnsubscribe) storiesUnsubscribe();
   const storiesRef = ref(db, 'stories');
-  storiesUnsubscribe = onValue(storiesRef, (snapshot) => {
+  onValue(storiesRef, (snapshot) => {
     const data = snapshot.val();
     state.stories = data ? Object.entries(data).map(([id, value]) => ({ id, ...value })) : [];
     renderCurrentTab();
@@ -433,10 +424,7 @@ async function loadStoriesRealtime() {
 
 async function uploadImage(file) {
   if (!file) return null;
-  if (file.size > 10 * 1024 * 1024) {
-    showNotification(`Ảnh ${file.name} quá lớn (tối đa 10MB)`, true);
-    return null;
-  }
+  if (file.size > 10 * 1024 * 1024) { showNotification(`Ảnh ${file.name} quá lớn (tối đa 10MB)`, true); return null; }
   const formData = new FormData();
   formData.append("image", file);
   formData.append("key", IMGBB_API_KEY);
@@ -452,8 +440,12 @@ async function uploadImage(file) {
 }
 
 async function uploadMultipleImages(files) {
+  if (!files || files.length === 0) return [];
   const urls = [];
-  for (const file of files) { const url = await uploadImage(file); if (url) urls.push(url); }
+  for (const file of files) {
+    const url = await uploadImage(file);
+    if (url) urls.push(url);
+  }
   return urls;
 }
 
@@ -515,6 +507,19 @@ async function updateChapter(storyId, chapterId, data) {
   await update(ref(db, `chapters/${storyId}/${chapterId}`), data);
   showNotification("✅ Đã cập nhật chapter");
 }
+
+window.deleteChapter = async (storyId, chapterId) => {
+  if (!isAdmin(state.currentUser)) { showNotification("⚠️ Chỉ Admin mới có quyền xóa chapter!", true); return; }
+  if (!confirm("Xóa chapter này?")) return;
+  await remove(ref(db, `chapters/${storyId}/${chapterId}`));
+  const storyRef = ref(db, `stories/${storyId}/chapters`);
+  const snap = await get(storyRef);
+  const chapters = snap.val() || {};
+  delete chapters[chapterId];
+  await set(storyRef, chapters);
+  showNotification("✅ Đã xóa chapter!");
+  window.openStoryDetail(storyId);
+};
 
 // ==================== RENDER GENRE FILTER ====================
 function renderGenreFilter() {
@@ -750,11 +755,10 @@ window.saveEditStory = async (storyId) => {
   window.openStoryDetail(storyId);
 };
 
-// ==================== ADD/EDIT CHAPTER (FIXED SORTABLE) ====================
+// ==================== ADD/EDIT CHAPTER ====================
 window.openAddChapter = (storyId) => {
   selectedChapterImages = [];
   let sortableInstance = null;
-  
   document.getElementById("addChapterContent").innerHTML = `
     <input id="chapterTitle" placeholder="Tên chapter *">
     <input id="chapterNumber" placeholder="Số chapter (để trống tự động)">
@@ -764,67 +768,34 @@ window.openAddChapter = (storyId) => {
     <textarea id="chapterPages" placeholder="Hoặc nhập link ảnh (mỗi dòng 1 link)" rows="10"></textarea>
     <button class="btn-pink" id="saveChapterBtn">📤 ĐĂNG CHAPTER</button>
   `;
-  
   const previewDiv = document.getElementById("chapterImagesPreview");
-  
   const updateSortable = () => {
     if (sortableInstance) sortableInstance.destroy();
     if (previewDiv.children.length > 0) {
-      sortableInstance = new Sortable(previewDiv, {
-        animation: 150,
-        handle: '.img-preview-item',
-        onEnd: () => {
-          const reordered = [];
-          [...previewDiv.children].forEach(child => {
-            const idx = parseInt(child.dataset.index);
-            reordered.push(selectedChapterImages[idx]);
-          });
-          selectedChapterImages = reordered;
-          [...previewDiv.children].forEach((child, idx) => {
-            child.dataset.index = idx;
-          });
-        }
+      sortableInstance = new Sortable(previewDiv, { animation: 150, handle: '.img-preview-item',
+        onEnd: () => { const newOrder = []; for (let i = 0; i < previewDiv.children.length; i++) newOrder.push(selectedChapterImages[i]); if (newOrder.length === selectedChapterImages.length) selectedChapterImages = newOrder; }
       });
     }
   };
-  
   document.getElementById("chapterImages")?.addEventListener("change", (e) => {
     const files = Array.from(e.target.files);
     selectedChapterImages = files;
     previewDiv.innerHTML = "";
-    
-    files.forEach((file, index) => {
+    for (const file of files) {
       const reader = new FileReader();
       reader.onload = (ev) => {
         const imgDiv = document.createElement("div");
         imgDiv.className = "img-preview-item";
-        imgDiv.dataset.index = index;
-        imgDiv.innerHTML = `
-          <img src="${ev.target.result}" style="width:100%;height:100%;object-fit:cover;">
-          <button class="remove-img-btn" style="position:absolute; top:-8px; right:-8px; width:22px; height:22px; border-radius:50%; background:#ff4444; color:white; border:none; cursor:pointer; font-size:12px;">✕</button>
-        `;
-        imgDiv.querySelector(".remove-img-btn").addEventListener("click", () => {
-          const removeIndex = parseInt(imgDiv.dataset.index);
-          selectedChapterImages.splice(removeIndex, 1);
-          imgDiv.remove();
-          [...previewDiv.children].forEach((child, idx) => {
-            child.dataset.index = idx;
-          });
-          updateSortable();
-        });
+        imgDiv.innerHTML = `<img src="${ev.target.result}" style="width:100%;height:100%;object-fit:cover;"><button onclick="this.parentElement.remove()">✕</button>`;
         previewDiv.appendChild(imgDiv);
         updateSortable();
       };
       reader.readAsDataURL(file);
-    });
+    }
+    updateSortable();
   });
-  
   const saveBtn = document.getElementById("saveChapterBtn");
-  if (saveBtn) {
-    const newBtn = saveBtn.cloneNode(true);
-    saveBtn.parentNode.replaceChild(newBtn, saveBtn);
-    newBtn.addEventListener("click", () => window.saveAddChapter(storyId));
-  }
+  if (saveBtn) { const newBtn = saveBtn.cloneNode(true); saveBtn.parentNode.replaceChild(newBtn, saveBtn); newBtn.addEventListener("click", () => window.saveAddChapter(storyId)); }
   document.getElementById("addChapterModal").style.display = "flex";
 };
 
@@ -853,42 +824,35 @@ window.saveAddChapter = async (storyId) => {
 window.openEditChapter = async (storyId, chapterId) => {
   const story = state.stories.find(s => s.id === storyId);
   if (!story) { showNotification("Không tìm thấy truyện", true); return; }
-  
   const canEdit = state.currentUser && (isAdmin(state.currentUser) || story.ownerUid === state.currentUser?.uid || (state.currentUser.privileges?.groupId && story.groupId === state.currentUser.privileges?.groupId));
   if (!canEdit) { showNotification("⚠️ Bạn không có quyền chỉnh sửa chapter này!", true); return; }
-  
   const chapter = await getChapter(storyId, chapterId);
   if (!chapter) { showNotification("Không tìm thấy chapter", true); return; }
-  
   let existingPages = chapter.pages || [];
   let newImageFiles = [];
-  
   document.getElementById("editChapterContent").innerHTML = `
     <input id="editChapterTitle" value="${escapeHtml(chapter.title)}" placeholder="Tên chapter *">
     <input id="editChapterNumber" value="${chapter.chapterNumber || 0}" type="number">
-    <label style="color:#FF69B4;">📷 ẢNH HIỆN TẠI (kéo thả để sắp xếp)</label>
+    <label style="color:#FF69B4;">📷 Ảnh hiện tại (kéo thả để sắp xếp)</label>
     <div id="existingImagesPreview" class="images-preview" style="min-height:120px;"></div>
-    <label style="color:#FF69B4;">➕ THÊM ẢNH MỚI</label>
+    <label style="color:#FF69B4;">➕ Thêm ảnh mới</label>
     <input type="file" id="editNewChapterImages" accept="image/*" multiple>
     <div id="editNewChapterPreview" class="images-preview"></div>
-    <label style="color:#FF69B4;">🔗 HOẶC NHẬP LINK ẢNH MỚI (mỗi dòng 1 link)</label>
-    <textarea id="editChapterPages" rows="8" placeholder="https://example.com/image1.jpg"></textarea>
-    <button class="btn-pink" id="saveChapterEditBtn" style="margin-top:15px;">💾 LƯU THAY ĐỔI</button>
+    <label style="color:#FF69B4;">🔗 Hoặc nhập link ảnh (mỗi dòng 1 link)</label>
+    <textarea id="editChapterPages" rows="8">${existingPages.join('\n')}</textarea>
+    <button class="btn-pink" id="saveChapterEditBtn">💾 LƯU THAY ĐỔI</button>
   `;
-  
   const existingPreviewDiv = document.getElementById("existingImagesPreview");
   existingPreviewDiv.innerHTML = "";
   for (let i = 0; i < existingPages.length; i++) {
     const imgDiv = document.createElement("div");
     imgDiv.className = "img-preview-item";
-    imgDiv.dataset.index = i;
     imgDiv.innerHTML = `
       <img src="${escapeHtml(existingPages[i])}" style="width:100%; height:100%; object-fit:cover; border-radius:8px;">
       <button class="remove-existing-img" data-index="${i}" style="position:absolute; top:-8px; right:-8px; width:22px; height:22px; border-radius:50%; background:#ff4444; color:white; border:none; cursor:pointer; font-size:12px;">✕</button>
     `;
     existingPreviewDiv.appendChild(imgDiv);
   }
-  
   document.querySelectorAll('.remove-existing-img').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -899,20 +863,9 @@ window.openEditChapter = async (storyId, chapterId) => {
       showNotification("Đã xóa ảnh khỏi danh sách");
     });
   });
-  
-  new Sortable(existingPreviewDiv, {
-    animation: 150,
-    handle: '.img-preview-item',
-    onEnd: () => {
-      const newOrder = [];
-      for (let i = 0; i < existingPreviewDiv.children.length; i++) {
-        const img = existingPreviewDiv.children[i].querySelector('img');
-        if (img) newOrder.push(img.src);
-      }
-      existingPages = newOrder;
-    }
+  new Sortable(existingPreviewDiv, { animation: 150, handle: '.img-preview-item',
+    onEnd: () => { const newOrder = []; for (let i = 0; i < existingPreviewDiv.children.length; i++) { const img = existingPreviewDiv.children[i].querySelector('img'); if (img) newOrder.push(img.src); } existingPages = newOrder; }
   });
-  
   document.getElementById("editNewChapterImages")?.addEventListener("change", (e) => {
     newImageFiles = Array.from(e.target.files);
     const previewDiv = document.getElementById("editNewChapterPreview");
@@ -928,7 +881,6 @@ window.openEditChapter = async (storyId, chapterId) => {
       reader.readAsDataURL(file);
     }
   });
-  
   const saveBtn = document.getElementById("saveChapterEditBtn");
   if (saveBtn) {
     const newBtn = saveBtn.cloneNode(true);
@@ -954,30 +906,7 @@ window.openEditChapter = async (storyId, chapterId) => {
   document.getElementById("editChapterModal").style.display = "flex";
 };
 
-window.deleteChapter = async (storyId, chapterId) => {
-  if (!state.currentUser || !isAdmin(state.currentUser)) {
-    showNotification("⚠️ Chỉ Admin mới có quyền xóa chapter!", true);
-    return;
-  }
-  if (!confirm("🗑 Xóa chapter này? Không thể hoàn tác!")) return;
-  try {
-    showLoading(true);
-    await remove(ref(db, `chapters/${storyId}/${chapterId}`));
-    const storyRef = ref(db, `stories/${storyId}/chapters`);
-    const snap = await get(storyRef);
-    const chapters = snap.val() || {};
-    delete chapters[chapterId];
-    await set(storyRef, chapters);
-    showNotification("✅ Đã xóa chapter!");
-    showLoading(false);
-    window.openStoryDetail(storyId);
-  } catch (err) {
-    showNotification("Lỗi: " + err.message, true);
-    showLoading(false);
-  }
-};
-
-// ==================== READER (FIXED MEMORY LEAK) ====================
+// ==================== READER ====================
 let currentChapters = [];
 let currentChapterIndex = 0;
 let currentStoryId = null;
@@ -986,26 +915,13 @@ window.openReader = async (storyId, chapterIndex) => {
   refreshUserSession();
   currentStoryId = storyId;
   currentChapterIndex = chapterIndex || 0;
-  
   const story = state.stories.find(s => s.id === storyId);
-  if (story) { 
-    const viewRef = ref(db, `stories/${storyId}/views`); 
-    const snapshot = await get(viewRef); 
-    await set(viewRef, (snapshot.val() || 0) + 1); 
-  }
-  
+  if (story) { const viewRef = ref(db, `stories/${storyId}/views`); const snapshot = await get(viewRef); await set(viewRef, (snapshot.val() || 0) + 1); }
   const chaptersRef = ref(db, `chapters/${storyId}`);
-  
-  if (chapterUnsubscribe) chapterUnsubscribe();
-  chapterUnsubscribe = onValue(chaptersRef, (snapshot) => {
+  onValue(chaptersRef, (snapshot) => {
     const data = snapshot.val();
-    if (data) { 
-      currentChapters = Object.entries(data).map(([id, value]) => ({ id, ...value })); 
-      currentChapters.sort((a, b) => (a.chapterNumber || 0) - (b.chapterNumber || 0)); 
-      renderReader(); 
-    }
+    if (data) { currentChapters = Object.entries(data).map(([id, value]) => ({ id, ...value })); currentChapters.sort((a, b) => (a.chapterNumber || 0) - (b.chapterNumber || 0)); renderReader(); }
   });
-  
   document.getElementById("readerModal").style.display = "flex";
   document.body.style.overflow = "hidden";
   setTimeout(() => window.scrollTo(0, 0), 50);
@@ -1017,7 +933,6 @@ function renderReader() {
   const readerDiv = document.getElementById("readerContent");
   const hasPrev = currentChapterIndex > 0;
   const hasNext = currentChapterIndex < currentChapters.length - 1;
-  
   readerDiv.innerHTML = `
     <div class="reader-page">
       <div class="chapter-nav">
@@ -1036,46 +951,20 @@ function renderReader() {
     </div>
   `;
   loadCommentsRealtime(currentStoryId);
-  
   const postBtn = document.getElementById("postCommentBtn");
-  if (postBtn) { 
-    const newPostBtn = postBtn.cloneNode(true); 
-    postBtn.parentNode.replaceChild(newPostBtn, postBtn); 
-    newPostBtn.addEventListener("click", () => postComment(currentStoryId)); 
-  }
+  if (postBtn) { const newPostBtn = postBtn.cloneNode(true); postBtn.parentNode.replaceChild(newPostBtn, postBtn); newPostBtn.addEventListener("click", () => postComment(currentStoryId)); }
 }
 
 window.changeChapter = (delta) => {
   const newIdx = currentChapterIndex + delta;
-  if (newIdx >= 0 && newIdx < currentChapters.length) { 
-    currentChapterIndex = newIdx; 
-    renderChapter(); 
-    window.scrollTo(0, 0); 
-  }
+  if (newIdx >= 0 && newIdx < currentChapters.length) { currentChapterIndex = newIdx; renderReader(); window.scrollTo(0, 0); }
 };
-window.changeChapterTo = (index) => { 
-  currentChapterIndex = index; 
-  renderChapter(); 
-  window.scrollTo(0, 0); 
-};
-window.scrollToTop = () => { 
-  window.scrollTo({ top: 0, behavior: "smooth" }); 
-};
-window.closeReaderModal = () => { 
-  document.getElementById("readerModal").style.display = "none"; 
-  document.body.style.overflow = ""; 
-  
-  if (chapterUnsubscribe) { 
-    chapterUnsubscribe(); 
-    chapterUnsubscribe = null; 
-  } 
-  if (commentUnsubscribe) { 
-    commentUnsubscribe(); 
-    commentUnsubscribe = null; 
-  } 
-};
+window.changeChapterTo = (index) => { currentChapterIndex = index; renderReader(); window.scrollTo(0, 0); };
+window.scrollToTop = () => { window.scrollTo({ top: 0, behavior: "smooth" }); };
+window.closeReaderModal = () => { document.getElementById("readerModal").style.display = "none"; document.body.style.overflow = ""; };
 
 // ==================== COMMENTS ====================
+let commentUnsubscribe = null;
 async function loadCommentsRealtime(storyId) {
   if (commentUnsubscribe) commentUnsubscribe();
   const commentsRef = ref(db, `comments/${storyId}`);
@@ -1090,7 +979,6 @@ async function loadCommentsRealtime(storyId) {
     }
   });
 }
-
 async function postComment(storyId) {
   if (!state.currentUser) { showNotification("Đăng nhập để bình luận", true); return; }
   const text = document.getElementById("commentText")?.value.trim();
@@ -1104,48 +992,21 @@ async function postComment(storyId) {
 
 // ==================== SCROLL BUTTONS ====================
 function initScrollButtons() {
-  if (!document.getElementById("scrollTopBtn")) {
-    const btn1 = document.createElement("button");
-    btn1.id = "scrollTopBtn";
-    btn1.className = "scroll-top-btn";
-    btn1.innerHTML = "⬆️";
-    btn1.style.cssText = "position:fixed;bottom:30px;right:30px;width:50px;height:50px;background:#FF69B4;color:black;border:none;border-radius:50%;font-size:24px;cursor:pointer;display:none;align-items:center;justify-content:center;z-index:9999;";
-    document.body.appendChild(btn1);
-  }
-  
-  if (!document.getElementById("floatingTopBtn")) {
-    const btn2 = document.createElement("button");
-    btn2.id = "floatingTopBtn";
-    btn2.className = "floating-top-btn";
-    btn2.innerHTML = "↑";
-    btn2.style.cssText = "position:fixed;bottom:100px;right:30px;width:45px;height:45px;background:rgba(0,0,0,0.5);backdrop-filter:blur(8px);color:white;border:none;border-radius:12px;font-size:20px;cursor:pointer;display:none;align-items:center;justify-content:center;z-index:9999;";
-    document.body.appendChild(btn2);
-  }
-  
   const scrollBtn = document.getElementById("scrollTopBtn");
   const floatingBtn = document.getElementById("floatingTopBtn");
-  
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-    const readerContent = document.getElementById("readerContent");
-    if (readerContent) readerContent.scrollTo({ top: 0, behavior: "smooth" });
-  };
-  
-  window.addEventListener("scroll", () => {
-    const show = window.scrollY > 100;
-    if (scrollBtn) scrollBtn.style.display = show ? "flex" : "none";
-    if (floatingBtn) floatingBtn.style.display = show ? "flex" : "none";
-  });
-  
-  if (scrollBtn) scrollBtn.onclick = scrollToTop;
-  if (floatingBtn) floatingBtn.onclick = scrollToTop;
+  if (scrollBtn && floatingBtn) {
+    window.addEventListener("scroll", () => {
+      const show = window.scrollY > 200;
+      scrollBtn.style.display = show ? "flex" : "none";
+      floatingBtn.style.display = show ? "flex" : "none";
+    });
+    scrollBtn.onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
+    floatingBtn.onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
+  }
 }
 
 // ==================== MODAL ====================
-function closeModal(modalId) { 
-  const modal = document.getElementById(modalId); 
-  if (modal) modal.style.display = "none"; 
-}
+function closeModal(modalId) { const modal = document.getElementById(modalId); if (modal) modal.style.display = "none"; }
 window.closeModal = closeModal;
 
 // ==================== PROFILE & AVATAR ====================
@@ -1209,16 +1070,8 @@ window.createNewGroup = async () => {
   showLoading(false);
 };
 
-// ==================== LOAD COMPONENTS (FIXED) ====================
-async function loadComponents() {
-  // Header, Footer đã có trực tiếp trong HTML
-  console.log("✅ Components ready");
-  return true;
-}
-
 // ==================== INIT ====================
 async function initApp() {
-  console.log("Initializing app...");
   updateUserDisplay();
   initScrollButtons();
   renderGenreFilter();
@@ -1228,84 +1081,40 @@ async function initApp() {
   loadBookmarks();
   loadHistory();
   loadStoriesRealtime();
-  
   document.querySelectorAll(".tab-btn").forEach(btn => {
-    btn.addEventListener("click", () => {
-      document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
-      btn.classList.add("active");
-      state.currentTab = btn.dataset.tab;
-      renderCurrentTab();
-    });
+    btn.addEventListener("click", () => { document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active")); btn.classList.add("active"); state.currentTab = btn.dataset.tab; renderCurrentTab(); });
   });
-  
-  document.getElementById("searchInput")?.addEventListener("input", (e) => {
-    state.searchKeyword = e.target.value.toLowerCase();
-    renderCurrentTab();
-  });
-  
-  document.getElementById("sortFilter")?.addEventListener("change", (e) => {
-    state.sortBy = e.target.value;
-    renderCurrentTab();
-  });
-  
+  document.getElementById("searchInput")?.addEventListener("input", (e) => { state.searchKeyword = e.target.value.toLowerCase(); renderCurrentTab(); });
+  document.getElementById("sortFilter")?.addEventListener("change", (e) => { state.sortBy = e.target.value; renderCurrentTab(); });
   document.getElementById("homeLogo")?.addEventListener("click", () => window.location.reload());
   document.getElementById("logoutBtn")?.addEventListener("click", logout);
   document.getElementById("profileBtn")?.addEventListener("click", window.openProfile);
   document.getElementById("createGroupBtn")?.addEventListener("click", () => document.getElementById("groupModal").style.display = "flex");
   document.getElementById("confirmGroupBtn")?.addEventListener("click", window.createNewGroup);
-  document.getElementById("adminLink")?.addEventListener("click", (e) => {
-    e.preventDefault();
-    window.location.href = "admin.html";
-  });
-  document.getElementById("groupsLink")?.addEventListener("click", (e) => {
-    e.preventDefault();
-    window.location.href = "groups.html";
-  });
+  document.getElementById("adminLink")?.addEventListener("click", (e) => { e.preventDefault(); window.location.href = "admin.html"; });
+  document.getElementById("groupsLink")?.addEventListener("click", (e) => { e.preventDefault(); window.location.href = "groups.html"; });
 }
 
 // ==================== STARTUP ====================
 document.addEventListener("DOMContentLoaded", async () => {
-  console.log("DOM ready - Starting app...");
-  
   document.getElementById("warningContinueBtn")?.addEventListener("click", () => {
-    const mainPass = document.getElementById("mainPassword").value;
-    if (mainPass !== "danmei") {
-      showNotification("Sai mật khẩu!", true);
-      return;
-    }
+    if (document.getElementById("mainPassword").value !== "danmei") { showNotification("Sai mật khẩu!", true); return; }
     localStorage.setItem("mainPasswordExpiry", Date.now() + 86400000);
     document.getElementById("warningOverlay").style.display = "none";
     document.getElementById("loginPage").style.display = "flex";
   });
-  
-  document.getElementById("exitBtn")?.addEventListener("click", () => {
-    document.body.innerHTML = "<div style='height:100vh;display:flex;justify-content:center;align-items:center;background:black;color:white;'>ĐÃ THOÁT</div>";
-  });
-  
+  // Đã bỏ nút THOÁT
   document.getElementById("guestBtn")?.addEventListener("click", handleGuestLogin);
   document.getElementById("checkEmailBtn")?.addEventListener("click", handleCheckEmail);
   document.getElementById("verifyOtpBtn")?.addEventListener("click", handleVerifyOTP);
   document.getElementById("passwordLoginBtn")?.addEventListener("click", handlePasswordLogin);
   document.getElementById("completeRegisterBtn")?.addEventListener("click", handleCompleteRegistration);
-  
-  document.getElementById("backToEmailBtn")?.addEventListener("click", () => {
-    document.getElementById("otpGroup").style.display = "none";
-    document.getElementById("loginMsg").innerHTML = "";
-  });
-  document.getElementById("backToEmailBtn2")?.addEventListener("click", () => {
-    document.getElementById("passwordGroup").style.display = "none";
-    document.getElementById("loginMsg").innerHTML = "";
-  });
-  
-  await loadComponents();
-  
-  const restored = await restoreSession();
-  if (!restored) {
-    document.getElementById("warningOverlay").style.display = "flex";
-  } else {
+  document.getElementById("backToEmailBtn")?.addEventListener("click", () => { document.getElementById("otpGroup").style.display = "none"; document.getElementById("loginMsg").innerHTML = ""; });
+  document.getElementById("backToEmailBtn2")?.addEventListener("click", () => { document.getElementById("passwordGroup").style.display = "none"; document.getElementById("loginMsg").innerHTML = ""; });
+  if (await restoreSession()) {
     document.getElementById("warningOverlay").style.display = "none";
     document.getElementById("loginPage").style.display = "none";
     document.getElementById("mainContainer").style.display = "block";
     await initApp();
-  }
+  } else document.getElementById("warningOverlay").style.display = "flex";
 });
