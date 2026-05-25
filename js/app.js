@@ -25,36 +25,36 @@ const GENRE_LIST = [
   { name: "3D", icon: "🎮", desc: "Truyện được vẽ bằng đồ họa 3D" },
   { name: "Action", icon: "⚔️", desc: "Truyện có nhiều cảnh đánh nhau, hành động" },
   { name: "Bara/Muscle", icon: "💪", desc: "Truyện về cơ bắp, nam tính" },
-  { name: "Biography", icon: "📖", desc: "Truyện tiểu sử, dựa trên nhân vật có thật" },
+  { name: "Biography", icon: "📖", desc: "Truyện tiểu sử" },
   { name: "Cakeverse", icon: "🎂", desc: "Thể loại đặc biệt liên quan đến bánh kem" },
-  { name: "Comedy", icon: "😂", desc: "Truyện hài hước, mang lại tiếng cười" },
-  { name: "Crime", icon: "🔫", desc: "Truyện về tội phạm, xã hội đen" },
+  { name: "Comedy", icon: "😂", desc: "Truyện hài hước" },
+  { name: "Crime", icon: "🔫", desc: "Truyện về tội phạm" },
   { name: "Documentary", icon: "🎥", desc: "Truyện dạng phim tài liệu" },
   { name: "Dom/Sub verse", icon: "⛓️", desc: "Truyện có yếu tố thống trị/phục tùng" },
-  { name: "Drama", icon: "💗", desc: "Truyện tình cảm, nhiều cung bậc cảm xúc" },
-  { name: "Family", icon: "👨‍👩‍👧", desc: "Truyện về gia đình, tình thân" },
-  { name: "Fantasy", icon: "🐉", desc: "Truyện giả tưởng, ma thuật, thế giới khác" },
+  { name: "Drama", icon: "💗", desc: "Truyện tình cảm" },
+  { name: "Family", icon: "👨‍👩‍👧", desc: "Truyện về gia đình" },
+  { name: "Fantasy", icon: "🐉", desc: "Truyện giả tưởng" },
   { name: "Furry", icon: "🐾", desc: "Truyện thú nhân hóa" },
-  { name: "HET/Hentai", icon: "🔞", desc: "Truyện dị tính có yếu tố 18+" },
-  { name: "Historical", icon: "🏯", desc: "Truyện cổ trang, lịch sử" },
-  { name: "Horror", icon: "👻", desc: "Truyện kinh dị, rùng rợn" },
-  { name: "Music", icon: "🎵", desc: "Truyện về âm nhạc, ca hát" },
-  { name: "Mystery", icon: "🔍", desc: "Truyện trinh thám, bí ẩn, phá án" },
-  { name: "Omegaverse", icon: "🔥", desc: "Truyện ABO (Alpha/Beta/Omega)" },
-  { name: "Psychological", icon: "🧠", desc: "Truyện tâm lý, có chiều sâu nội tâm" },
-  { name: "Romance", icon: "💕", desc: "Truyện tập trung vào tình cảm lãng mạn" },
-  { name: "School Life", icon: "📚", desc: "Truyện bối cảnh trường học, học đường" },
+  { name: "HET/Hentai", icon: "🔞", desc: "Truyện 18+ dị tính" },
+  { name: "Historical", icon: "🏯", desc: "Truyện cổ trang" },
+  { name: "Horror", icon: "👻", desc: "Truyện kinh dị" },
+  { name: "Music", icon: "🎵", desc: "Truyện về âm nhạc" },
+  { name: "Mystery", icon: "🔍", desc: "Truyện trinh thám" },
+  { name: "Omegaverse", icon: "🔥", desc: "Truyện ABO" },
+  { name: "Psychological", icon: "🧠", desc: "Truyện tâm lý" },
+  { name: "Romance", icon: "💕", desc: "Truyện lãng mạn" },
+  { name: "School Life", icon: "📚", desc: "Truyện học đường" },
   { name: "Sci-fi", icon: "🚀", desc: "Truyện khoa học viễn tưởng" },
-  { name: "Shounen Ai", icon: "💖", desc: "Truyện BL nhẹ nhàng, thuần khiết" },
-  { name: "Slice of Life", icon: "🌿", desc: "Truyện đời thường, nhẹ nhàng" },
-  { name: "Sports", icon: "⚽", desc: "Truyện về thể thao, thi đấu" },
+  { name: "Shounen Ai", icon: "💖", desc: "BL nhẹ nhàng" },
+  { name: "Slice of Life", icon: "🌿", desc: "Truyện đời thường" },
+  { name: "Sports", icon: "⚽", desc: "Truyện thể thao" },
   { name: "Supernatural", icon: "👻", desc: "Truyện siêu nhiên" },
-  { name: "Thriller", icon: "🔪", desc: "Truyện gây cấn, hồi hộp" },
-  { name: "Tragedy", icon: "💔", desc: "Truyện bi kịch, buồn" },
-  { name: "War", icon: "🏆", desc: "Truyện về chiến tranh" },
-  { name: "Wuxia", icon: "🗡️", desc: "Truyện võ hiệp Trung Quốc" },
-  { name: "Yaoi", icon: "🔥", desc: "Truyện BL có yếu tố 18+" },
-  { name: "Yuri", icon: "💕", desc: "Truyện GL (girl love)" }
+  { name: "Thriller", icon: "🔪", desc: "Truyện gây cấn" },
+  { name: "Tragedy", icon: "💔", desc: "Truyện bi kịch" },
+  { name: "War", icon: "🏆", desc: "Truyện chiến tranh" },
+  { name: "Wuxia", icon: "🗡️", desc: "Truyện võ hiệp" },
+  { name: "Yaoi", icon: "🔥", desc: "BL 18+" },
+  { name: "Yuri", icon: "💕", desc: "GL" }
 ];
 
 // ==================== STATE ====================
@@ -700,7 +700,7 @@ function renderUploadPanel() {
   });
 }
 
-// ==================== STORY DETAIL ====================
+// ==================== STORY DETAIL (FIX: bìa truyện không quá to) ====================
 window.openStoryDetail = async (storyId) => {
   refreshUserSession();
   const story = state.stories.find(s => s.id === storyId);
@@ -710,16 +710,19 @@ window.openStoryDetail = async (storyId) => {
   const isMod = canModerate(state.currentUser);
   const genreList = story.genres ? story.genres.split(',').map(g => g.trim()) : [];
   const tagList = story.tags ? story.tags.split(',').map(t => t.trim()) : [];
+  
   document.getElementById("storyDetailContent").innerHTML = `
     <div class="story-detail-grid">
-      <img class="story-detail-cover" src="${escapeHtml(story.cover) || 'https://placehold.co/300x450?text=No+Cover'}">
+      <div class="story-detail-cover-container" style="max-width:200px; margin:0 auto;">
+        <img class="story-detail-cover" src="${escapeHtml(story.cover) || 'https://placehold.co/200x300?text=No+Cover'}" style="width:100%; border-radius:12px;">
+      </div>
       <div class="story-detail-info">
         <h2>${escapeHtml(story.title)}</h2>
         <p><span class="story-detail-label">📖 Tên khác:</span> ${escapeHtml(story.otherName) || "Chưa có"}</p>
-        <p><span class="story-detail-label">✍️ Tác giả:</span> ${escapeHtml(story.author) || "Chưa rõ"}</p>
-        <p><span class="story-detail-label">🏷️ Thể loại:</span> ${genreList.map(g => `<span class="genre-hashtag" onclick="filterByGenre('${escapeHtml(g)}')">#${escapeHtml(g)}</span>`).join(' ') || "Chưa cập nhật"}</p>
-        <p><span class="story-detail-label">🔖 Tags:</span> ${tagList.map(t => `<span class="tag-hashtag" onclick="filterByTag('${escapeHtml(t)}')">#${escapeHtml(t)}</span>`).join(' ') || "Chưa có"}</p>
-        <p><span class="story-detail-label">📚 Nhóm dịch:</span> ${escapeHtml(story.groupName) || "Cá nhân"}</p>
+        <p><span class="story-detail-label">✍️ Tác giả:</span> <span class="clickable-tag" onclick="filterByAuthor('${escapeHtml(story.author)}')">${escapeHtml(story.author) || "Chưa rõ"}</span></p>
+        <p><span class="story-detail-label">🏷️ Thể loại:</span> ${genreList.map(g => `<span class="clickable-tag" onclick="filterByGenre('${escapeHtml(g)}')">#${escapeHtml(g)}</span>`).join(' ') || "Chưa cập nhật"}</p>
+        <p><span class="story-detail-label">🔖 Tags:</span> ${tagList.map(t => `<span class="clickable-tag" onclick="filterByTag('${escapeHtml(t)}')">#${escapeHtml(t)}</span>`).join(' ') || "Chưa có"}</p>
+        <p><span class="story-detail-label">📚 Nhóm dịch:</span> <span class="clickable-tag" onclick="filterByGroup('${escapeHtml(story.groupName)}')">${escapeHtml(story.groupName) || "Cá nhân"}</span></p>
         <p><span class="story-detail-label">📌 Tình trạng:</span> ${story.status === "Đã hoàn thành" ? "✅ Hoàn thành" : story.status === "Tạm ngưng" ? "⏸ Tạm ngưng" : "📖 Đang ra"}</p>
         <p><span class="story-detail-label">📖 Số chương:</span> ${chapters.length}</p>
         <p><span class="story-detail-label">📝 Mô tả:</span><br>${escapeHtml(story.desc) || "Chưa có mô tả"}</p>
@@ -728,10 +731,11 @@ window.openStoryDetail = async (storyId) => {
       </div>
     </div>
   `;
+  
   let chaptersHtml = `<h3>📖 DANH SÁCH CHAPTER</h3><div class="chapter-list">`;
   chapters.forEach((chap, idx) => {
     chaptersHtml += `
-      <div class="chapter-item" onclick="window.openStoryDetailChapter('${storyId}', ${idx})">
+      <div class="chapter-item" onclick="window.openReader('${storyId}', ${idx})">
         <span>${escapeHtml(chap.title)}</span>
         <span style="font-size:12px;">📅 ${new Date(chap.createdAt).toLocaleDateString()}</span>
         <div class="chapter-actions">
@@ -743,6 +747,7 @@ window.openStoryDetail = async (storyId) => {
   });
   chaptersHtml += `</div>`;
   document.getElementById("storyChapters").innerHTML = chaptersHtml;
+  
   let actionsHtml = `<button onclick="window.likeStoryAction('${storyId}')">❤️ Thích</button>`;
   if (state.currentUser && state.currentUser.role !== "guest") {
     actionsHtml += `<button onclick="window.toggleFollowAction('${storyId}')">${isFollowing(storyId) ? '⭐ Đã theo dõi' : '➕ Theo dõi'}</button>`;
@@ -755,9 +760,43 @@ window.openStoryDetail = async (storyId) => {
   document.getElementById("storyModal").style.display = "flex";
 };
 
-window.filterByGenre = (genre) => { state.selectedGenre = genre; renderCurrentTab(); closeModal("storyModal"); };
-window.filterByTag = (tag) => { state.searchKeyword = tag; document.getElementById("searchInput").value = tag; renderCurrentTab(); closeModal("storyModal"); };
-window.openStoryDetailChapter = (storyId, chapterIndex) => { closeModal("storyModal"); window.openReader(storyId, chapterIndex); };
+// Các hàm filter mới
+window.filterByAuthor = (author) => {
+  if (author && author !== "Chưa rõ") {
+    state.searchKeyword = author;
+    document.getElementById("searchInput").value = author;
+    renderCurrentTab();
+    closeModal("storyModal");
+  }
+};
+
+window.filterByGroup = (groupName) => {
+  if (groupName && groupName !== "Cá nhân") {
+    state.searchKeyword = groupName;
+    document.getElementById("searchInput").value = groupName;
+    renderCurrentTab();
+    closeModal("storyModal");
+  }
+};
+
+window.filterByGenre = (genre) => { 
+  state.selectedGenre = genre; 
+  renderCurrentTab(); 
+  closeModal("storyModal"); 
+};
+
+window.filterByTag = (tag) => { 
+  state.searchKeyword = tag; 
+  document.getElementById("searchInput").value = tag; 
+  renderCurrentTab(); 
+  closeModal("storyModal"); 
+};
+
+window.openStoryDetailChapter = (storyId, chapterIndex) => { 
+  closeModal("storyModal"); 
+  window.openReader(storyId, chapterIndex); 
+};
+
 window.likeStoryAction = async (storyId) => { await likeStory(storyId); window.openStoryDetail(storyId); };
 window.approveStoryAction = async (storyId) => { await approveStory(storyId); closeModal("storyModal"); };
 window.deleteStoryAction = async (storyId) => { if (confirm("Xóa truyện?")) { await deleteStory(storyId); closeModal("storyModal"); } };
@@ -967,6 +1006,7 @@ let currentChapterIndex = 0;
 let currentStoryId = null;
 
 window.openReader = async (storyId, chapterIndex) => {
+  console.log("openReader called with storyId:", storyId, "chapterIndex:", chapterIndex);
   refreshUserSession();
   currentStoryId = storyId;
   currentChapterIndex = chapterIndex || 0;
@@ -977,17 +1017,33 @@ window.openReader = async (storyId, chapterIndex) => {
     const data = snapshot.val();
     if (data) { currentChapters = Object.entries(data).map(([id, value]) => ({ id, ...value })); currentChapters.sort((a, b) => (a.chapterNumber || 0) - (b.chapterNumber || 0)); renderReader(); }
   });
-  document.getElementById("readerModal").style.display = "flex";
-  document.body.style.overflow = "hidden";
-  setTimeout(() => window.scrollTo(0, 0), 50);
+  const readerModal = document.getElementById("readerModal");
+  if (readerModal) {
+    readerModal.style.display = "flex";
+    document.body.style.overflow = "hidden";
+    setTimeout(() => {
+      const readerContent = document.getElementById("readerContent");
+      if (readerContent) readerContent.scrollTop = 0;
+      window.scrollTo(0, 0);
+    }, 50);
+  } else {
+    console.error("readerModal not found!");
+    showNotification("Lỗi: Không tìm thấy reader", true);
+  }
 };
 
 function renderReader() {
-  if (!currentChapters[currentChapterIndex]) return;
+  if (!currentChapters[currentChapterIndex]) {
+    console.log("No chapter found at index", currentChapterIndex);
+    return;
+  }
   const chap = currentChapters[currentChapterIndex];
   const readerDiv = document.getElementById("readerContent");
+  if (!readerDiv) return;
+  
   const hasPrev = currentChapterIndex > 0;
   const hasNext = currentChapterIndex < currentChapters.length - 1;
+  
   readerDiv.innerHTML = `
     <div class="reader-page">
       <div class="chapter-nav">
@@ -1012,11 +1068,27 @@ function renderReader() {
 
 window.changeChapter = (delta) => {
   const newIdx = currentChapterIndex + delta;
-  if (newIdx >= 0 && newIdx < currentChapters.length) { currentChapterIndex = newIdx; renderReader(); window.scrollTo(0, 0); }
+  if (newIdx >= 0 && newIdx < currentChapters.length) { 
+    currentChapterIndex = newIdx; 
+    renderReader(); 
+    const readerContent = document.getElementById("readerContent");
+    if (readerContent) readerContent.scrollTop = 0;
+    window.scrollTo(0, 0);
+  }
 };
-window.changeChapterTo = (index) => { currentChapterIndex = index; renderReader(); window.scrollTo(0, 0); };
+window.changeChapterTo = (index) => { 
+  currentChapterIndex = index; 
+  renderReader(); 
+  const readerContent = document.getElementById("readerContent");
+  if (readerContent) readerContent.scrollTop = 0;
+  window.scrollTo(0, 0);
+};
 window.scrollToTop = () => { window.scrollTo({ top: 0, behavior: "smooth" }); };
-window.closeReaderModal = () => { document.getElementById("readerModal").style.display = "none"; document.body.style.overflow = ""; };
+window.closeReaderModal = () => { 
+  const readerModal = document.getElementById("readerModal");
+  if (readerModal) readerModal.style.display = "none";
+  document.body.style.overflow = ""; 
+};
 
 // ==================== COMMENTS ====================
 let commentUnsubscribe = null;
@@ -1109,6 +1181,10 @@ window.saveProfile = async () => {
 };
 
 window.createNewGroup = async () => {
+  if (state.currentUser?.role === "guest") {
+    showNotification("Vui lòng đăng nhập để tạo nhóm", true);
+    return;
+  }
   const groupName = document.getElementById("groupNameInput").value;
   if (!groupName) { alert("Nhập tên nhóm"); return; }
   showLoading(true);
@@ -1136,7 +1212,6 @@ async function loadComponents() {
     const footerHtml = await footerRes.text();
     document.getElementById('footer-placeholder').innerHTML = footerHtml;
     
-    // Re-attach event listeners
     document.getElementById('homeLogo')?.addEventListener('click', () => window.location.reload());
     document.getElementById('logoutBtn')?.addEventListener('click', logout);
     document.getElementById('profileBtn')?.addEventListener('click', window.openProfile);
@@ -1172,17 +1247,13 @@ async function initApp() {
 document.addEventListener("DOMContentLoaded", async () => {
   console.log("DOM ready - Starting app...");
   
-  // Warning button handler
   document.getElementById("warningContinueBtn")?.addEventListener("click", handleWarningContinue);
-  
-  // Login button handlers
   document.getElementById("guestBtn")?.addEventListener("click", handleGuestLogin);
   document.getElementById("checkEmailBtn")?.addEventListener("click", handleCheckEmail);
   document.getElementById("verifyOtpBtn")?.addEventListener("click", handleVerifyOTP);
   document.getElementById("passwordLoginBtn")?.addEventListener("click", handlePasswordLogin);
   document.getElementById("completeRegisterBtn")?.addEventListener("click", handleCompleteRegistration);
   
-  // Back buttons
   document.getElementById("backToEmailBtn")?.addEventListener("click", () => { 
     document.getElementById("otpGroup").style.display = "none"; 
     document.getElementById("loginMsg").innerHTML = ""; 
@@ -1192,9 +1263,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     document.getElementById("loginMsg").innerHTML = ""; 
   });
   
-  // Check if main password session exists
   if (isMainPasswordValid()) {
-    // Check user session
     if (await restoreSession()) {
       document.getElementById("warningOverlay").style.display = "none";
       document.getElementById("loginPage").style.display = "none";
@@ -1205,12 +1274,11 @@ document.addEventListener("DOMContentLoaded", async () => {
       document.getElementById("loginPage").style.display = "flex";
     }
   } else {
-    // Show warning overlay
     document.getElementById("warningOverlay").style.display = "flex";
   }
 });
 
-// Make functions global for HTML onclick
+// Make functions global
 window.openStoryDetail = window.openStoryDetail;
 window.openEditStory = window.openEditStory;
 window.openAddChapter = window.openAddChapter;
@@ -1232,6 +1300,8 @@ window.toggleBookmarkAction = window.toggleBookmarkAction;
 window.openStoryDetailChapter = window.openStoryDetailChapter;
 window.filterByGenre = window.filterByGenre;
 window.filterByTag = window.filterByTag;
+window.filterByAuthor = window.filterByAuthor;
+window.filterByGroup = window.filterByGroup;
 window.openProfile = window.openProfile;
 window.saveProfile = window.saveProfile;
 window.createNewGroup = window.createNewGroup;
