@@ -140,8 +140,19 @@ function refreshUserSession() {
   } catch { return false; }
 }
 
+// ==================== CHECK NICKNAME EXISTS ====================
+async function isNicknameExists(nickname) {
+  const usersSnap = await get(ref(db, "users"));
+  const users = usersSnap.val() || {};
+  for (const uid in users) {
+    if (users[uid].nickname === nickname) return true;
+  }
+  return false;
+}
+
 // ==================== AUTH ====================
 let pendingRegisterEmail = null;
+let pendingRegisterIsAdmin = false;
 
 function generateOTP() { return Math.floor(100000 + Math.random() * 900000).toString(); }
 
@@ -150,8 +161,8 @@ async function sendOTPEmail(email) {
   await set(ref(db, `otp_requests/${email.replace(/\./g, "_")}`), { code: otp, expires: Date.now() + 5 * 60 * 1000 });
   try {
     await emailjs.send("service_8bxh5mm", "template_8ahbuhu", { otp: otp, to_email: email });
-    showNotification("📩 Mã OTP đã gửi");
-  } catch { showNotification(`⚠️ Mã OTP: ${otp}`, true); }
+    showNotification("📩 Mã OTP đã gửi đến email của bạn");
+  } catch { showNotification(`⚠️ Mã OTP demo: ${otp}`, true); }
 }
 
 async function verifyOTP(email, inputCode) {
@@ -171,10 +182,11 @@ async function checkEmailExists(email) {
   return false;
 }
 
-async function createNewUser(uid, email, nickname) {
+async function createNewUser(uid, email, nickname, password) {
   const ADMIN_EMAILS = ["pydanmeii@gmail.com", "pepyl4298@gmail.com", "maihuong4298@gmail.com"];
+  const isAdminEmail = ADMIN_EMAILS.includes(email);
   await set(ref(db, `users/${uid}`), {
-    email, nickname, role: ADMIN_EMAILS.includes(email) ? "admin" : "user",
+    email, nickname, role: isAdminEmail ? "admin" : "user",
     privileges: { moderator: false, groupId: null }, follows: {}, history: {}, createdAt: Date.now()
   });
 }
@@ -207,26 +219,38 @@ async function handleGuestLogin() {
 async function handleCheckEmail() {
   const email = document.getElementById("loginEmail").value.trim();
   if (!email) { showNotification("Nhập email", true); return; }
+  
   const ADMIN_EMAILS = ["pydanmeii@gmail.com", "pepyl4298@gmail.com", "maihuong4298@gmail.com"];
   const isAdminEmail = ADMIN_EMAILS.includes(email);
   showLoading(true);
   const emailExists = await checkEmailExists(email);
   showLoading(false);
+  
   pendingRegisterEmail = email;
-  if (isAdminEmail) {
-    document.getElementById("passwordGroup").style.display = "block";
-    document.getElementById("otpGroup").style.display = "none";
-    document.getElementById("loginMsg").innerHTML = "👑 Email Admin, vui lòng nhập mật khẩu";
-    return;
-  }
+  pendingRegisterIsAdmin = isAdminEmail;
+  
+  // Email đã tồn tại -> yêu cầu nhập mật khẩu
   if (emailExists) {
     document.getElementById("passwordGroup").style.display = "block";
     document.getElementById("otpGroup").style.display = "none";
-  } else {
-    await sendOTPEmail(email);
-    document.getElementById("otpGroup").style.display = "block";
-    document.getElementById("passwordGroup").style.display = "none";
+    document.getElementById("loginMsg").innerHTML = "🔐 Nhập mật khẩu đã tạo khi đăng ký";
+    return;
   }
+  
+  // Email chưa tồn tại và là admin -> vào thẳng trang đăng ký (không cần OTP)
+  if (isAdminEmail) {
+    document.getElementById("verifiedEmail").innerText = email;
+    document.getElementById("loginPage").style.display = "none";
+    document.getElementById("registerPage").style.display = "flex";
+    document.getElementById("registerMsg").innerHTML = "👑 Email Admin, vui lòng tạo tài khoản";
+    return;
+  }
+  
+  // Email chưa tồn tại và không phải admin -> gửi OTP
+  await sendOTPEmail(email);
+  document.getElementById("otpGroup").style.display = "block";
+  document.getElementById("passwordGroup").style.display = "none";
+  document.getElementById("loginMsg").innerHTML = "📩 Mã OTP đã gửi, vui lòng kiểm tra email";
 }
 
 async function handleVerifyOTP() {
@@ -239,6 +263,7 @@ async function handleVerifyOTP() {
   document.getElementById("verifiedEmail").innerText = pendingRegisterEmail;
   document.getElementById("loginPage").style.display = "none";
   document.getElementById("registerPage").style.display = "flex";
+  document.getElementById("registerMsg").innerHTML = "✅ Email đã xác nhận! Tạo tài khoản mới.";
 }
 
 async function handlePasswordLogin() {
@@ -258,14 +283,10 @@ async function handlePasswordLogin() {
     initApp();
   } catch (err) {
     if (err.code === "auth/invalid-credential") {
-      const ADMIN_EMAILS = ["pydanmeii@gmail.com", "pepyl4298@gmail.com", "maihuong4298@gmail.com"];
-      if (ADMIN_EMAILS.includes(email) && confirm("Tạo tài khoản Admin mới?")) {
-        pendingRegisterEmail = email;
-        document.getElementById("verifiedEmail").innerText = email;
-        document.getElementById("loginPage").style.display = "none";
-        document.getElementById("registerPage").style.display = "flex";
-      } else showNotification("Sai email hoặc mật khẩu", true);
-    } else showNotification("Lỗi: " + err.message, true);
+      showNotification("Sai mật khẩu", true);
+    } else {
+      showNotification("Lỗi: " + err.message, true);
+    }
   } finally { showLoading(false); }
 }
 
@@ -274,13 +295,22 @@ async function handleCompleteRegistration() {
   const password = document.getElementById("newPassword").value;
   const confirm = document.getElementById("confirmPassword").value;
   const msg = document.getElementById("registerMsg");
+  
   if (!nickname) { msg.innerText = "Nhập nickname"; return; }
   if (!password || password.length < 6) { msg.innerText = "Mật khẩu phải có ít nhất 6 ký tự"; return; }
   if (password !== confirm) { msg.innerText = "Mật khẩu không khớp"; return; }
+  
+  // Kiểm tra nickname không trùng
+  const nicknameExists = await isNicknameExists(nickname);
+  if (nicknameExists && !pendingRegisterIsAdmin) {
+    msg.innerText = "❌ Nickname đã tồn tại! Vui lòng chọn nickname khác.";
+    return;
+  }
+  
   showLoading(true);
   try {
     const userCred = await createUserWithEmailAndPassword(auth, pendingRegisterEmail, password);
-    await createNewUser(userCred.user.uid, pendingRegisterEmail, nickname);
+    await createNewUser(userCred.user.uid, pendingRegisterEmail, nickname, password);
     const userData = await loadUserData(userCred.user.uid, pendingRegisterEmail);
     state.currentUser = userData;
     setUserSession(state.currentUser);
@@ -289,8 +319,10 @@ async function handleCompleteRegistration() {
     showNotification(`🎉 Chào mừng ${nickname}!`);
     updateUserDisplay();
     initApp();
-  } catch (err) { msg.innerText = "Lỗi: " + err.message; }
-  finally { showLoading(false); }
+  } catch (err) {
+    console.error("Registration error:", err);
+    msg.innerText = "Lỗi: " + err.message;
+  } finally { showLoading(false); }
 }
 
 async function restoreSession() {
@@ -1103,7 +1135,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     document.getElementById("warningOverlay").style.display = "none";
     document.getElementById("loginPage").style.display = "flex";
   });
-  // Đã bỏ nút THOÁT
+  
   document.getElementById("guestBtn")?.addEventListener("click", handleGuestLogin);
   document.getElementById("checkEmailBtn")?.addEventListener("click", handleCheckEmail);
   document.getElementById("verifyOtpBtn")?.addEventListener("click", handleVerifyOTP);
@@ -1111,10 +1143,13 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("completeRegisterBtn")?.addEventListener("click", handleCompleteRegistration);
   document.getElementById("backToEmailBtn")?.addEventListener("click", () => { document.getElementById("otpGroup").style.display = "none"; document.getElementById("loginMsg").innerHTML = ""; });
   document.getElementById("backToEmailBtn2")?.addEventListener("click", () => { document.getElementById("passwordGroup").style.display = "none"; document.getElementById("loginMsg").innerHTML = ""; });
+  
   if (await restoreSession()) {
     document.getElementById("warningOverlay").style.display = "none";
     document.getElementById("loginPage").style.display = "none";
     document.getElementById("mainContainer").style.display = "block";
     await initApp();
-  } else document.getElementById("warningOverlay").style.display = "flex";
+  } else {
+    document.getElementById("warningOverlay").style.display = "flex";
+  }
 });
