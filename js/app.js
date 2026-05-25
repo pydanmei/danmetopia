@@ -140,6 +140,16 @@ function refreshUserSession() {
   } catch { return false; }
 }
 
+function clearMainPasswordSession() {
+  localStorage.removeItem("mainPasswordExpiry");
+}
+
+function isMainPasswordValid() {
+  const expiry = localStorage.getItem("mainPasswordExpiry");
+  if (!expiry) return false;
+  return Date.now() < parseInt(expiry);
+}
+
 // ==================== CHECK NICKNAME EXISTS ====================
 async function isNicknameExists(nickname) {
   const usersSnap = await get(ref(db, "users"));
@@ -206,8 +216,20 @@ async function loadUserData(uid, email) {
 }
 
 // ==================== AUTH HANDLERS ====================
+async function handleWarningContinue() {
+  const mainPass = document.getElementById("mainPassword").value;
+  if (mainPass !== "danmei") {
+    showNotification("❌ Sai mật khẩu chính!", true);
+    return;
+  }
+  localStorage.setItem("mainPasswordExpiry", (Date.now() + 24 * 60 * 60 * 1000).toString());
+  document.getElementById("warningOverlay").style.display = "none";
+  document.getElementById("loginPage").style.display = "flex";
+}
+
 async function handleGuestLogin() {
-  state.currentUser = { role: "guest", displayName: generateRandomGuestName(), nickname: "", uid: null };
+  const guestName = generateRandomGuestName();
+  state.currentUser = { role: "guest", displayName: guestName, nickname: "", uid: null };
   setUserSession(state.currentUser);
   document.getElementById("loginPage").style.display = "none";
   document.getElementById("mainContainer").style.display = "block";
@@ -229,7 +251,6 @@ async function handleCheckEmail() {
   pendingRegisterEmail = email;
   pendingRegisterIsAdmin = isAdminEmail;
   
-  // Email đã tồn tại -> yêu cầu nhập mật khẩu
   if (emailExists) {
     document.getElementById("passwordGroup").style.display = "block";
     document.getElementById("otpGroup").style.display = "none";
@@ -237,7 +258,6 @@ async function handleCheckEmail() {
     return;
   }
   
-  // Email chưa tồn tại và là admin -> vào thẳng trang đăng ký (không cần OTP)
   if (isAdminEmail) {
     document.getElementById("verifiedEmail").innerText = email;
     document.getElementById("loginPage").style.display = "none";
@@ -246,7 +266,6 @@ async function handleCheckEmail() {
     return;
   }
   
-  // Email chưa tồn tại và không phải admin -> gửi OTP
   await sendOTPEmail(email);
   document.getElementById("otpGroup").style.display = "block";
   document.getElementById("passwordGroup").style.display = "none";
@@ -300,7 +319,6 @@ async function handleCompleteRegistration() {
   if (!password || password.length < 6) { msg.innerText = "Mật khẩu phải có ít nhất 6 ký tự"; return; }
   if (password !== confirm) { msg.innerText = "Mật khẩu không khớp"; return; }
   
-  // Kiểm tra nickname không trùng
   const nicknameExists = await isNicknameExists(nickname);
   if (nicknameExists && !pendingRegisterIsAdmin) {
     msg.innerText = "❌ Nickname đã tồn tại! Vui lòng chọn nickname khác.";
@@ -326,6 +344,11 @@ async function handleCompleteRegistration() {
 }
 
 async function restoreSession() {
+  if (!isMainPasswordValid()) {
+    clearMainPasswordSession();
+    return false;
+  }
+  
   const sessionStr = localStorage.getItem("userSession");
   if (!sessionStr) return false;
   try {
@@ -1102,8 +1125,33 @@ window.createNewGroup = async () => {
   showLoading(false);
 };
 
+// ==================== LOAD COMPONENTS ====================
+async function loadComponents() {
+  try {
+    const headerRes = await fetch('components/header.html');
+    const headerHtml = await headerRes.text();
+    document.getElementById('header-placeholder').innerHTML = headerHtml;
+    
+    const footerRes = await fetch('components/footer.html');
+    const footerHtml = await footerRes.text();
+    document.getElementById('footer-placeholder').innerHTML = footerHtml;
+    
+    // Re-attach event listeners
+    document.getElementById('homeLogo')?.addEventListener('click', () => window.location.reload());
+    document.getElementById('logoutBtn')?.addEventListener('click', logout);
+    document.getElementById('profileBtn')?.addEventListener('click', window.openProfile);
+    document.getElementById('createGroupBtn')?.addEventListener('click', () => document.getElementById('groupModal').style.display = 'flex');
+    document.getElementById('confirmGroupBtn')?.addEventListener('click', window.createNewGroup);
+    document.getElementById('adminLink')?.addEventListener('click', (e) => { e.preventDefault(); window.location.href = 'admin.html'; });
+    document.getElementById('groupsLink')?.addEventListener('click', (e) => { e.preventDefault(); window.location.href = 'groups.html'; });
+  } catch (err) {
+    console.error("Error loading components:", err);
+  }
+}
+
 // ==================== INIT ====================
 async function initApp() {
+  await loadComponents();
   updateUserDisplay();
   initScrollButtons();
   renderGenreFilter();
@@ -1118,38 +1166,73 @@ async function initApp() {
   });
   document.getElementById("searchInput")?.addEventListener("input", (e) => { state.searchKeyword = e.target.value.toLowerCase(); renderCurrentTab(); });
   document.getElementById("sortFilter")?.addEventListener("change", (e) => { state.sortBy = e.target.value; renderCurrentTab(); });
-  document.getElementById("homeLogo")?.addEventListener("click", () => window.location.reload());
-  document.getElementById("logoutBtn")?.addEventListener("click", logout);
-  document.getElementById("profileBtn")?.addEventListener("click", window.openProfile);
-  document.getElementById("createGroupBtn")?.addEventListener("click", () => document.getElementById("groupModal").style.display = "flex");
-  document.getElementById("confirmGroupBtn")?.addEventListener("click", window.createNewGroup);
-  document.getElementById("adminLink")?.addEventListener("click", (e) => { e.preventDefault(); window.location.href = "admin.html"; });
-  document.getElementById("groupsLink")?.addEventListener("click", (e) => { e.preventDefault(); window.location.href = "groups.html"; });
 }
 
 // ==================== STARTUP ====================
 document.addEventListener("DOMContentLoaded", async () => {
-  document.getElementById("warningContinueBtn")?.addEventListener("click", () => {
-    if (document.getElementById("mainPassword").value !== "danmei") { showNotification("Sai mật khẩu!", true); return; }
-    localStorage.setItem("mainPasswordExpiry", Date.now() + 86400000);
-    document.getElementById("warningOverlay").style.display = "none";
-    document.getElementById("loginPage").style.display = "flex";
-  });
+  console.log("DOM ready - Starting app...");
   
+  // Warning button handler
+  document.getElementById("warningContinueBtn")?.addEventListener("click", handleWarningContinue);
+  
+  // Login button handlers
   document.getElementById("guestBtn")?.addEventListener("click", handleGuestLogin);
   document.getElementById("checkEmailBtn")?.addEventListener("click", handleCheckEmail);
   document.getElementById("verifyOtpBtn")?.addEventListener("click", handleVerifyOTP);
   document.getElementById("passwordLoginBtn")?.addEventListener("click", handlePasswordLogin);
   document.getElementById("completeRegisterBtn")?.addEventListener("click", handleCompleteRegistration);
-  document.getElementById("backToEmailBtn")?.addEventListener("click", () => { document.getElementById("otpGroup").style.display = "none"; document.getElementById("loginMsg").innerHTML = ""; });
-  document.getElementById("backToEmailBtn2")?.addEventListener("click", () => { document.getElementById("passwordGroup").style.display = "none"; document.getElementById("loginMsg").innerHTML = ""; });
   
-  if (await restoreSession()) {
-    document.getElementById("warningOverlay").style.display = "none";
-    document.getElementById("loginPage").style.display = "none";
-    document.getElementById("mainContainer").style.display = "block";
-    await initApp();
+  // Back buttons
+  document.getElementById("backToEmailBtn")?.addEventListener("click", () => { 
+    document.getElementById("otpGroup").style.display = "none"; 
+    document.getElementById("loginMsg").innerHTML = ""; 
+  });
+  document.getElementById("backToEmailBtn2")?.addEventListener("click", () => { 
+    document.getElementById("passwordGroup").style.display = "none"; 
+    document.getElementById("loginMsg").innerHTML = ""; 
+  });
+  
+  // Check if main password session exists
+  if (isMainPasswordValid()) {
+    // Check user session
+    if (await restoreSession()) {
+      document.getElementById("warningOverlay").style.display = "none";
+      document.getElementById("loginPage").style.display = "none";
+      document.getElementById("mainContainer").style.display = "block";
+      await initApp();
+    } else {
+      document.getElementById("warningOverlay").style.display = "none";
+      document.getElementById("loginPage").style.display = "flex";
+    }
   } else {
+    // Show warning overlay
     document.getElementById("warningOverlay").style.display = "flex";
   }
 });
+
+// Make functions global for HTML onclick
+window.openStoryDetail = window.openStoryDetail;
+window.openEditStory = window.openEditStory;
+window.openAddChapter = window.openAddChapter;
+window.openEditChapter = window.openEditChapter;
+window.deleteChapter = window.deleteChapter;
+window.openReader = window.openReader;
+window.closeReaderModal = window.closeReaderModal;
+window.changeChapter = window.changeChapter;
+window.changeChapterTo = window.changeChapterTo;
+window.scrollToTop = window.scrollToTop;
+window.closeModal = closeModal;
+window.saveEditStory = window.saveEditStory;
+window.saveAddChapter = window.saveAddChapter;
+window.likeStoryAction = window.likeStoryAction;
+window.approveStoryAction = window.approveStoryAction;
+window.deleteStoryAction = window.deleteStoryAction;
+window.toggleFollowAction = window.toggleFollowAction;
+window.toggleBookmarkAction = window.toggleBookmarkAction;
+window.openStoryDetailChapter = window.openStoryDetailChapter;
+window.filterByGenre = window.filterByGenre;
+window.filterByTag = window.filterByTag;
+window.openProfile = window.openProfile;
+window.saveProfile = window.saveProfile;
+window.createNewGroup = window.createNewGroup;
+window.showNotification = showNotification;
