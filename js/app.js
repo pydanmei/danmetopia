@@ -23,7 +23,7 @@ emailjs.init("fPq8fpw1OqzOtj-lk");
 // ==================== GENRE LIST ====================
 const GENRE_LIST = [
   { name: "3D", icon: "🎮", desc: "Truyện được vẽ bằng đồ họa 3D" },
-  { name: "Action", icon: "⚔️", desc: "Truyện có nhiều cảnh đánh nhau" },
+  { name: "Action", icon: "⚔️", desc: "Truyện có nhiều cảnh đánh nhau, hành động" },
   { name: "Bara/Muscle", icon: "💪", desc: "Truyện về cơ bắp, nam tính" },
   { name: "Biography", icon: "📖", desc: "Truyện tiểu sử" },
   { name: "Cakeverse", icon: "🎂", desc: "Thể loại đặc biệt liên quan đến bánh kem" },
@@ -797,7 +797,24 @@ window.openStoryDetailChapter = (storyId, chapterIndex) => {
   window.openReader(storyId, chapterIndex); 
 };
 
-window.likeStoryAction = async (storyId) => { await likeStory(storyId); window.openStoryDetail(storyId); };
+// ==================== LIKE ACTION (GUEST ALLOWED) ====================
+window.likeStoryAction = async (storyId) => {
+  // Nếu chưa có user, tạo guest tạm
+  if (!state.currentUser) {
+    const guestId = "guest_" + Date.now() + "_" + Math.random().toString(36).substr(2, 6);
+    state.currentUser = {
+      uid: guestId,
+      displayName: "Hủ qua đường " + Math.floor(Math.random() * 9999),
+      nickname: "Hủ qua đường " + Math.floor(Math.random() * 9999),
+      guest: true,
+      role: "guest"
+    };
+    localStorage.setItem("tempGuestUser", JSON.stringify(state.currentUser));
+  }
+  await likeStory(storyId);
+  window.openStoryDetail(storyId);
+};
+
 window.approveStoryAction = async (storyId) => { await approveStory(storyId); closeModal("storyModal"); };
 window.deleteStoryAction = async (storyId) => { if (confirm("Xóa truyện?")) { await deleteStory(storyId); closeModal("storyModal"); } };
 window.toggleFollowAction = async (storyId) => { if (isFollowing(storyId)) await unfollowStory(storyId); else await followStory(storyId); window.openStoryDetail(storyId); };
@@ -1000,75 +1017,68 @@ window.openEditChapter = async (storyId, chapterId) => {
   document.getElementById("editChapterModal").style.display = "flex";
 };
 
-// ==================== READER (TRANG RIÊNG - THAY VÌ MODAL) ====================
-// Reader sẽ được mở bằng cách chuyển sang URL mới: reader.html?id=xxx&chapter=0
+// ==================== READER (TRANG RIÊNG) ====================
 window.openReader = (storyId, chapterIndex) => {
-  // Chuyển sang trang reader riêng
   window.location.href = `reader.html?id=${storyId}&chapter=${chapterIndex || 0}`;
 };
 
-// ==================== LOAD COMPONENTS ====================
-async function loadComponents() {
-  try {
-    const headerRes = await fetch('components/header.html');
-    const headerHtml = await headerRes.text();
-    document.getElementById('header-placeholder').innerHTML = headerHtml;
-    
-    const footerRes = await fetch('components/footer.html');
-    const footerHtml = await footerRes.text();
-    document.getElementById('footer-placeholder').innerHTML = footerHtml;
-    
-    document.getElementById('homeLogo')?.addEventListener('click', () => window.location.reload());
-    document.getElementById('logoutBtn')?.addEventListener('click', logout);
-    document.getElementById('profileBtn')?.addEventListener('click', window.openProfile);
-    document.getElementById('createGroupBtn')?.addEventListener('click', () => document.getElementById('groupModal').style.display = 'flex');
-    document.getElementById('confirmGroupBtn')?.addEventListener('click', window.createNewGroup);
-    document.getElementById('adminLink')?.addEventListener('click', (e) => { e.preventDefault(); window.location.href = 'admin.html'; });
-    document.getElementById('groupsLink')?.addEventListener('click', (e) => { e.preventDefault(); window.location.href = 'groups.html'; });
-  } catch (err) {
-    console.error("Error loading components:", err);
-  }
-}
-
-// ==================== INIT ====================
-async function initApp() {
-  await loadComponents();
-  updateUserDisplay();
-  initScrollButtons();
-  renderGenreFilter();
-  renderUploadPanel();
-  await loadAllGroups();
-  await loadFollows();
-  loadBookmarks();
-  loadHistory();
-  loadStoriesRealtime();
-  document.querySelectorAll(".tab-btn").forEach(btn => {
-    btn.addEventListener("click", () => { document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active")); btn.classList.add("active"); state.currentTab = btn.dataset.tab; renderCurrentTab(); });
-  });
-  document.getElementById("searchInput")?.addEventListener("input", (e) => { state.searchKeyword = e.target.value.toLowerCase(); renderCurrentTab(); });
-  document.getElementById("sortFilter")?.addEventListener("change", (e) => { state.sortBy = e.target.value; renderCurrentTab(); });
-}
-
-// ==================== SCROLL BUTTONS ====================
+// ==================== SCROLL BUTTONS (CẢI TIẾN) ====================
 function initScrollButtons() {
-  const scrollBtn = document.getElementById("scrollTopBtn");
-  const floatingBtn = document.getElementById("floatingTopBtn");
-  if (scrollBtn && floatingBtn) {
-    window.addEventListener("scroll", () => {
-      const show = window.scrollY > 200;
-      scrollBtn.style.display = show ? "flex" : "none";
-      floatingBtn.style.display = show ? "flex" : "none";
-    });
-    scrollBtn.onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
-    floatingBtn.onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
+  let floatingBtn = document.getElementById("floatingTopBtn");
+  if (!floatingBtn) {
+    floatingBtn = document.createElement("button");
+    floatingBtn.id = "floatingTopBtn";
+    floatingBtn.innerHTML = "↑";
+    floatingBtn.style.cssText = `
+      position:fixed;
+      right:18px;
+      bottom:20px;
+      width:48px;
+      height:48px;
+      border:none;
+      border-radius:16px;
+      background:rgba(0,0,0,0.65);
+      backdrop-filter:blur(10px);
+      color:white;
+      font-size:22px;
+      font-weight:bold;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      z-index:99999;
+      cursor:pointer;
+      box-shadow:0 4px 12px rgba(0,0,0,0.25);
+      transition:all 0.2s;
+    `;
+    document.body.appendChild(floatingBtn);
+    floatingBtn.onclick = () => {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      const readerContent = document.getElementById("readerContent");
+      if (readerContent) readerContent.scrollTo({ top: 0, behavior: "smooth" });
+    };
+    floatingBtn.onmouseenter = () => {
+      floatingBtn.style.background = "#FF69B4";
+      floatingBtn.style.color = "black";
+      floatingBtn.style.transform = "scale(1.05)";
+    };
+    floatingBtn.onmouseleave = () => {
+      floatingBtn.style.background = "rgba(0,0,0,0.65)";
+      floatingBtn.style.color = "white";
+      floatingBtn.style.transform = "scale(1)";
+    };
   }
+  const floatingBtnElem = document.getElementById("floatingTopBtn");
+  window.addEventListener("scroll", () => {
+    const show = window.scrollY > 250;
+    floatingBtnElem.style.display = show ? "flex" : "none";
+  });
 }
 
 // ==================== MODAL ====================
 function closeModal(modalId) { const modal = document.getElementById(modalId); if (modal) modal.style.display = "none"; }
 window.closeModal = closeModal;
 
-// ==================== PROFILE & AVATAR ====================
+// ==================== PROFILE & AVATAR (CHẶN GUEST ĐỔI NICKNAME) ====================
 async function uploadAvatar(file) {
   if (!file) return null;
   if (file.size > 2 * 1024 * 1024) { showNotification("Ảnh đại diện tối đa 2MB", true); return null; }
@@ -1083,6 +1093,16 @@ async function uploadAvatar(file) {
 }
 
 window.openProfile = () => {
+  // Guest không được đổi nickname
+  if (state.currentUser?.guest) {
+    document.getElementById("profileContent").innerHTML = `
+      <div style="text-align:center; padding:30px; color:white;">
+        🔒 Guest không thể đổi nickname
+      </div>
+    `;
+    document.getElementById("profileModal").style.display = "flex";
+    return;
+  }
   document.getElementById("profileContent").innerHTML = `
     <div class="profile-field">
       <label>🖼️ Avatar</label>
@@ -1133,6 +1153,48 @@ window.createNewGroup = async () => {
   showLoading(false);
 };
 
+// ==================== LOAD COMPONENTS ====================
+async function loadComponents() {
+  try {
+    const headerRes = await fetch('components/header.html');
+    const headerHtml = await headerRes.text();
+    document.getElementById('header-placeholder').innerHTML = headerHtml;
+    
+    const footerRes = await fetch('components/footer.html');
+    const footerHtml = await footerRes.text();
+    document.getElementById('footer-placeholder').innerHTML = footerHtml;
+    
+    document.getElementById('homeLogo')?.addEventListener('click', () => window.location.reload());
+    document.getElementById('logoutBtn')?.addEventListener('click', logout);
+    document.getElementById('profileBtn')?.addEventListener('click', window.openProfile);
+    document.getElementById('createGroupBtn')?.addEventListener('click', () => document.getElementById('groupModal').style.display = 'flex');
+    document.getElementById('confirmGroupBtn')?.addEventListener('click', window.createNewGroup);
+    document.getElementById('adminLink')?.addEventListener('click', (e) => { e.preventDefault(); window.location.href = 'admin.html'; });
+    document.getElementById('groupsLink')?.addEventListener('click', (e) => { e.preventDefault(); window.location.href = 'groups.html'; });
+  } catch (err) {
+    console.error("Error loading components:", err);
+  }
+}
+
+// ==================== INIT ====================
+async function initApp() {
+  await loadComponents();
+  updateUserDisplay();
+  initScrollButtons();
+  renderGenreFilter();
+  renderUploadPanel();
+  await loadAllGroups();
+  await loadFollows();
+  loadBookmarks();
+  loadHistory();
+  loadStoriesRealtime();
+  document.querySelectorAll(".tab-btn").forEach(btn => {
+    btn.addEventListener("click", () => { document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active")); btn.classList.add("active"); state.currentTab = btn.dataset.tab; renderCurrentTab(); });
+  });
+  document.getElementById("searchInput")?.addEventListener("input", (e) => { state.searchKeyword = e.target.value.toLowerCase(); renderCurrentTab(); });
+  document.getElementById("sortFilter")?.addEventListener("change", (e) => { state.sortBy = e.target.value; renderCurrentTab(); });
+}
+
 // ==================== STARTUP ====================
 document.addEventListener("DOMContentLoaded", async () => {
   console.log("DOM ready - Starting app...");
@@ -1176,8 +1238,8 @@ window.openEditChapter = window.openEditChapter;
 window.deleteChapter = window.deleteChapter;
 window.openReader = window.openReader;
 window.closeReaderModal = () => { window.location.href = 'index.html'; };
-window.changeChapter = (delta) => { console.log("Change chapter called from reader page"); };
-window.changeChapterTo = (index) => { console.log("Change chapter to called from reader page"); };
+window.changeChapter = () => {};
+window.changeChapterTo = () => {};
 window.scrollToTop = () => { window.scrollTo({ top: 0, behavior: "smooth" }); };
 window.closeModal = closeModal;
 window.saveEditStory = window.saveEditStory;
