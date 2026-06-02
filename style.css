@@ -1,170 +1,64 @@
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  -webkit-tap-highlight-color: transparent;
-}
-
-:root {
-  --pink: #FF69B4;
-  --pink-dark: #FF1493;
-  --bg-dark: #0a0a0a;
-  --bg-card: #1a1a1a;
-  --text: #e0e0e0;
-  --text-muted: #888;
-}
-
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  background: var(--bg-dark);
-  color: var(--text);
-  overflow-x: hidden;
-}
-
-.loading-spinner {
-  display: inline-block;
-  width: 40px;
-  height: 40px;
-  border: 3px solid #333;
-  border-top-color: var(--pink);
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-}
-@keyframes spin { to { transform: rotate(360deg); } }
-
-.spinner-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.8);
+/* ================= READER NAV FLOAT ================= */
+.reader-top-nav {
+  position: sticky;
+  top: 10px;
+  z-index: 999;
   display: flex;
-  justify-content: center;
   align-items: center;
-  z-index: 20000;
+  justify-content: space-between;
+  gap: 10px;
+  background: rgba(0,0,0,0.75);
+  backdrop-filter: blur(10px);
+  padding: 10px 12px;
+  border-radius: 18px;
+  margin-bottom: 10px;
 }
-
-/* Warning & Login */
-#warningOverlay, #loginPage, #registerPage { position: fixed; inset: 0; display: flex; justify-content: center; align-items: center; z-index: 10000; background: rgba(0,0,0,0.98); }
-.warning-box, .login-box { background: #1c1c1c; max-width: 450px; width: 90%; padding: 35px 25px; border-radius: 24px; text-align: center; border: 2px solid var(--pink); box-shadow: 0 0 40px rgba(255,105,180,0.3); }
-.warning-box h2, .login-box h2 { color: var(--pink); font-size: 28px; margin-bottom: 20px; white-space: nowrap; }
-.warning-box p, .login-box p { color: #ccc; line-height: 1.6; margin-bottom: 25px; }
-.warning-box input, .login-box input { width: 100%; padding: 12px; margin: 15px 0; border: none; border-radius: 12px; background: #2a2a2a; color: white; font-size: 14px; }
-.warning-box button, .login-box button { padding: 12px 28px; margin: 0 8px; border: none; border-radius: 40px; font-weight: bold; font-size: 16px; cursor: pointer; transition: transform 0.2s; }
-.btn-pink { background: var(--pink); color: black; }
-.btn-red { background: #ff4444; color: white; }
-
-.otp-group, .password-group { display: none; margin-top: 15px; animation: fadeIn 0.3s ease; }
-.toggle-link { color: var(--pink); cursor: pointer; text-decoration: underline; margin-top: 10px; display: inline-block; font-size: 13px; }
-
-#mainContainer { display: none; min-height: 100vh; padding-bottom: 60px; }
-.topbar { background: var(--pink); color: black; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; flex-wrap: wrap; gap: 10px; }
-.logo { font-size: 22px; font-weight: bold; cursor: pointer; white-space: nowrap; }
-.user-area { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
-.user-area button, .nav-btn, .nav-link { background: rgba(0,0,0,0.2); border: none; padding: 6px 14px; border-radius: 30px; cursor: pointer; font-weight: bold; color: black; text-decoration: none; transition: background 0.2s; }
-.nav-link.admin-link { background: var(--pink-dark); color: white; }
-
-.search-bar, .filter-row, .tabs { padding: 15px 20px; }
-.search-bar input { width: 100%; padding: 12px 20px; background: #1c1c1c; border: 1px solid #333; border-radius: 40px; color: white; font-size: 16px; }
-.filter-row select { width: 200px; padding: 8px 15px; background: #1c1c1c; border: 1px solid #333; border-radius: 30px; color: white; }
-.filter-genres { margin-top: 10px; }
-.filter-genre-item, .genre-select { background: #2a2a2a; padding: 6px 14px; border-radius: 30px; cursor: pointer; display: inline-block; margin-right: 8px; }
-.tab-btn { background: #2a2a2a; border: none; padding: 8px 20px; border-radius: 30px; cursor: pointer; color: white; font-weight: bold; }
-.tab-btn.active { background: var(--pink); color: black; }
-
-.manga-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 20px; padding: 20px; }
-.manga-card { background: var(--bg-card); border-radius: 16px; overflow: hidden; cursor: pointer; transition: transform 0.2s; border: 1px solid #333; }
-.manga-card:hover { transform: translateY(-5px); border-color: var(--pink); }
-.manga-cover { width: 100%; aspect-ratio: 2/3; object-fit: cover; }
-.manga-info { padding: 12px; }
-.manga-title { font-weight: bold; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-.manga-meta { font-size: 12px; color: #aaa; margin-top: 5px; }
-
-.upload-panel { background: #1c1c1c; margin: 15px 20px; padding: 20px; border-radius: 20px; border: 1px solid var(--pink); }
-.upload-panel input, .upload-panel textarea, .upload-panel select { width: 100%; padding: 12px; margin-bottom: 12px; background: #2a2a2a; border: none; border-radius: 12px; color: white; }
-.cover-preview { width: 120px; height: 180px; object-fit: cover; border-radius: 8px; margin-top: 10px; border: 2px solid var(--pink); }
-.images-preview { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
-.img-preview-item { width: 80px; height: 120px; object-fit: cover; border-radius: 8px; border: 1px solid var(--pink); position: relative; cursor: grab; }
-
-.modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); justify-content: center; align-items: center; z-index: 10002; }
-.modal-content { background: #1c1c1c; width: 90%; max-width: 800px; max-height: 90vh; overflow-y: auto; padding: 25px; border-radius: 24px; position: relative; border: 1px solid var(--pink); }
-.close-modal { position: absolute; top: 15px; right: 20px; font-size: 28px; cursor: pointer; color: #aaa; }
-.story-detail-grid { display: grid; grid-template-columns: 200px 1fr; gap: 20px; margin-bottom: 20px; }
-.chapter-list { margin-top: 20px; max-height: 400px; overflow-y: auto; }
-.chapter-item { background: #2a2a2a; padding: 10px 15px; margin-bottom: 8px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; cursor: pointer; }
-.chapter-edit-btn, .chapter-delete-btn { padding: 4px 12px; border-radius: 20px; font-size: 12px; border: none; cursor: pointer; }
-.chapter-edit-btn { background: #FFCC00; color: black; }
-.chapter-delete-btn { background: #ff4444; color: white; }
-
-.notification { position: fixed; bottom: 20px; right: 20px; background: var(--pink); color: black; padding: 12px 20px; border-radius: 40px; font-weight: bold; z-index: 1000; animation: slideIn 0.3s ease; }
-
-/* Reader */
-#readerModal .modal-content { width: 100%; height: 100%; max-height: 100%; border-radius: 0; padding: 0; background: #0f0f0f; }
-.reader-page { max-width: 900px; margin: 0 auto; padding: 20px; }
-.chapter-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; position: sticky; top: 0; background: rgba(0,0,0,0.9); backdrop-filter: blur(10px); padding: 12px; border-radius: 30px; z-index: 10; }
-.chapter-nav button { padding: 10px 20px; background: var(--pink); border: none; border-radius: 30px; font-weight: bold; cursor: pointer; color: black; }
-.reader-image { width: 100%; margin: 8px 0; display: block; }
-
-/* Scroll buttons */
-.scroll-top-btn, .floating-top-btn {
-  position: fixed;
-  bottom: 30px;
-  right: 30px;
-  width: 50px;
-  height: 50px;
-  background: var(--pink);
-  color: black;
+.reader-top-nav .nav-buttons {
+  display: flex;
+  gap: 8px;
+  flex: 1;
+}
+.reader-top-nav button {
+  flex: 1;
+  min-width: 0;
   border: none;
-  border-radius: 50%;
-  font-size: 24px;
-  cursor: pointer;
-  display: none;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-  z-index: 1000;
-  transition: all 0.3s;
-}
-.floating-top-btn {
-  background: rgba(0,0,0,0.5);
-  backdrop-filter: blur(5px);
+  border-radius: 14px;
+  padding: 10px 12px;
+  background: linear-gradient(135deg,#ff69b4,#ff4fa3);
   color: white;
-  width: 45px;
-  height: 45px;
-  font-size: 20px;
-  bottom: 100px;
-  right: 20px;
-}
-.scroll-top-btn:hover, .floating-top-btn:hover { background: var(--pink-dark); color: white; transform: scale(1.1); }
-
-.footer-disclaimer { background: #1a1a1a; padding: 25px 20px; text-align: center; border-top: 1px solid #333; margin-top: 50px; }
-.footer-disclaimer .disclaimer-content { max-width: 800px; margin: 0 auto; font-size: 12px; color: #888; line-height: 1.6; }
-
-@media (max-width: 600px) {
-  .manga-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; }
-  .topbar { flex-direction: column; text-align: center; }
-  .story-detail-grid { grid-template-columns: 1fr; }
-  .logo { font-size: 18px; white-space: nowrap; }
-  .scroll-top-btn, .floating-top-btn { bottom: 20px; right: 20px; width: 40px; height: 40px; font-size: 18px; }
-  .floating-top-btn { bottom: 80px; }
-}
-/* Reader page styles */
-.reader-container {
-  max-width: 900px;
-  margin: 0 auto;
-  padding: 20px;
-}
-
-.back-home {
-  display: inline-block;
-  margin-bottom: 20px;
-  padding: 8px 16px;
-  background: #333;
-  color: white;
-  text-decoration: none;
-  border-radius: 30px;
   font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.reader-top-nav .chapter-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: white;
+  white-space: nowrap;
+  margin-left: 10px;
+}
+/* MOBILE */
+@media (max-width:768px){
+  .reader-top-nav{
+    gap:8px;
+    padding:8px;
+  }
+  .reader-top-nav button{
+    font-size:12px;
+    padding:8px 10px;
+  }
+  .reader-top-nav .chapter-title{
+    font-size:14px;
+  }
 }
 
-.back-home:hover {
+/* Floating top button (đã có thể có, nhưng đảm bảo style đồng nhất) */
+#floatingTopBtn {
+  transition: all 0.2s ease;
+}
+#floatingTopBtn:hover {
   background: #FF69B4;
   color: black;
+  transform: scale(1.05);
 }
