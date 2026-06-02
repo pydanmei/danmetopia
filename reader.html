@@ -1,6 +1,4 @@
 <!DOCTYPE html>
-<html>
-<!DOCTYPE html>
 <html lang="vi">
 <head>
   <meta charset="utf-8">
@@ -8,451 +6,289 @@
   <title>🌸 DANMETOPIA - Đọc truyện 🌸</title>
   <link rel="stylesheet" href="style.css">
   <style>
-    .reader-container {
-      max-width: 900px;
-      margin: 0 auto;
-      padding: 20px;
-    }
-    .chapter-nav {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 20px;
-      flex-wrap: wrap;
-      gap: 10px;
-      position: sticky;
-      top: 0;
-      background: rgba(0,0,0,0.9);
-      backdrop-filter: blur(10px);
-      padding: 12px;
-      border-radius: 30px;
-      z-index: 100;
-    }
-    .chapter-nav button {
-      padding: 10px 20px;
-      background: #FF69B4;
-      border: none;
-      border-radius: 30px;
-      font-weight: bold;
-      cursor: pointer;
-      color: black;
-      transition: all 0.2s;
-    }
-    .chapter-nav button:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-    .reader-image {
-      width: 100%;
-      margin: 8px 0;
-      display: block;
-    }
-    .chapter-list-section {
-      background: #1c1c1c;
-      border-radius: 16px;
-      padding: 20px;
-      margin-top: 40px;
-    }
-    .chapter-list-section h4 {
-      color: #FF69B4;
-      margin-bottom: 15px;
-    }
-    .chapter-list {
-      max-height: 400px;
-      overflow-y: auto;
-    }
-    .chapter-item {
-      background: #2a2a2a;
-      padding: 10px 15px;
-      margin-bottom: 8px;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-    .chapter-item:hover {
-      background: #FF69B4;
-      color: black;
-    }
-    .back-home {
-      display: inline-block;
-      margin-bottom: 20px;
-      padding: 8px 16px;
-      background: #333;
-      color: white;
-      text-decoration: none;
-      border-radius: 30px;
-      font-size: 14px;
-    }
-    .back-home:hover {
-      background: #FF69B4;
-      color: black;
-    }
-    .comment-section {
-      margin-top: 40px;
-      background: #1c1c1c;
-      border-radius: 16px;
-      padding: 20px;
-    }
-    .comment-section h4 {
-      color: #FF69B4;
-      margin-bottom: 15px;
-    }
-    .comment-input-area {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 20px;
-      flex-wrap: wrap;
-    }
-    .comment-input-area textarea {
-      flex: 1;
-      padding: 10px;
-      background: #2a2a2a;
-      border: none;
-      border-radius: 12px;
-      color: white;
-      resize: vertical;
-    }
-    .comment-input-area button {
-      padding: 10px 20px;
-      background: #FF69B4;
-      border: none;
-      border-radius: 30px;
-      font-weight: bold;
-      cursor: pointer;
-      color: black;
-    }
-    .comment-item {
-      background: #2a2a2a;
-      padding: 12px;
-      border-radius: 12px;
-      margin-bottom: 10px;
-    }
-    .comment-name {
-      font-weight: bold;
-      color: #FF69B4;
-      margin-bottom: 5px;
-      display: flex;
-      justify-content: space-between;
-      flex-wrap: wrap;
-    }
-    .comment-time {
-      font-size: 11px;
-      color: #888;
-    }
-    .loading-container {
-      text-align: center;
-      padding: 50px;
-    }
+    /* Đảm bảo các style cơ bản (có thể đã có trong style.css) */
+    .reader-container { max-width: 900px; margin: 0 auto; padding: 20px; }
+    .back-home { display: inline-block; margin-bottom: 20px; padding: 8px 16px; background: #333; color: white; text-decoration: none; border-radius: 30px; font-size: 14px; }
+    .back-home:hover { background: #FF69B4; color: black; }
+    .reader-image { width: 100%; margin: 8px 0; display: block; }
+    .chapter-list-section { background: #1c1c1c; border-radius: 16px; padding: 20px; margin-top: 40px; }
+    .chapter-list-section h4 { color: #FF69B4; margin-bottom: 15px; }
+    .chapter-list { max-height: 400px; overflow-y: auto; }
+    .chapter-item { background: #2a2a2a; padding: 10px 15px; margin-bottom: 8px; border-radius: 8px; cursor: pointer; transition: background 0.2s; }
+    .chapter-item:hover { background: #FF69B4; color: black; }
+    .comment-section { margin-top: 40px; background: #1c1c1c; border-radius: 16px; padding: 20px; }
+    .comment-section h4 { color: #FF69B4; margin-bottom: 15px; }
+    .comment-input-area { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+    .comment-input-area textarea { flex: 1; padding: 10px; background: #2a2a2a; border: none; border-radius: 12px; color: white; resize: vertical; }
+    .comment-input-area button { padding: 10px 20px; background: #FF69B4; border: none; border-radius: 30px; font-weight: bold; cursor: pointer; color: black; }
+    .comment-item { background: #2a2a2a; padding: 12px; border-radius: 12px; margin-bottom: 10px; }
+    .comment-name { font-weight: bold; color: #FF69B4; margin-bottom: 5px; display: flex; justify-content: space-between; flex-wrap: wrap; }
+    .comment-time { font-size: 11px; color: #888; }
+    .loading-container { text-align: center; padding: 50px; }
   </style>
 </head>
 <body>
-  <div class="reader-container">
-    <a href="index.html" class="back-home">← Về trang chủ</a>
-    
-    <div id="readerContent">
-      <div class="loading-container">
-        <div class="loading-spinner"></div>
-        <p>Đang tải truyện...</p>
-      </div>
-    </div>
+<div class="reader-container">
+  <a href="index.html" class="back-home">← Về trang chủ</a>
+  <div id="readerContent">
+    <div class="loading-container"><div class="loading-spinner"></div><p>Đang tải truyện...</p></div>
   </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+  import { getAuth } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+  import { getDatabase, ref, get, set, push, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getAuth } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-    import { getDatabase, ref, get, set, push, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
-    
-    const firebaseConfig = {
-      apiKey: "AIzaSyCDQk9DlMNKwn_508fDMI_3IB_dgpgHujA",
-      authDomain: "danmetopia.firebaseapp.com",
-      projectId: "danmetopia",
-      databaseURL: "https://danmetopia-default-rtdb.asia-southeast1.firebasedatabase.app/",
-      storageBucket: "danmetopia.appspot.com",
-      messagingSenderId: "178240377870",
-      appId: "1:178240377870:web:d094b222ebabadccc5585f"
-    };
-    
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getDatabase(app);
-    
-    emailjs.init("fPq8fpw1OqzOtj-lk");
-    
-    // Lấy params từ URL
-    const urlParams = new URLSearchParams(window.location.search);
-    const storyId = urlParams.get('id');
-    let currentChapterIndex = parseInt(urlParams.get('chapter') || '0');
-    let currentUser = null;
-    let allStories = [];
-    let currentChapters = [];
-    let currentStoryId = storyId;
-    let commentUnsubscribe = null;
-    
-    function showNotification(msg, isError = false) {
-      const notif = document.createElement("div");
-      notif.className = "notification";
-      notif.style.background = isError ? "#ff4444" : "#FF69B4";
-      notif.style.color = "black";
-      notif.innerText = msg;
-      document.body.appendChild(notif);
-      setTimeout(() => notif.remove(), 3000);
+  const firebaseConfig = {
+    apiKey: "AIzaSyCDQk9DlMNKwn_508fDMI_3IB_dgpgHujA",
+    authDomain: "danmetopia.firebaseapp.com",
+    projectId: "danmetopia",
+    databaseURL: "https://danmetopia-default-rtdb.asia-southeast1.firebasedatabase.app/",
+    storageBucket: "danmetopia.appspot.com",
+    messagingSenderId: "178240377870",
+    appId: "1:178240377870:web:d094b222ebabadccc5585f"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getDatabase(app);
+  emailjs.init("fPq8fpw1OqzOtj-lk");
+
+  const urlParams = new URLSearchParams(window.location.search);
+  const storyId = urlParams.get('id');
+  let currentChapterIndex = parseInt(urlParams.get('chapter') || '0');
+  let currentUser = null;
+  let allStories = [];
+  let currentChapters = [];
+  let commentUnsubscribe = null;
+
+  function showNotification(msg, isError = false) {
+    const notif = document.createElement("div");
+    notif.className = "notification";
+    notif.style.background = isError ? "#ff4444" : "#FF69B4";
+    notif.style.color = "black";
+    notif.innerText = msg;
+    document.body.appendChild(notif);
+    setTimeout(() => notif.remove(), 3000);
+  }
+
+  function escapeHtml(str) {
+    if (!str) return "";
+    return str.replace(/[&<>]/g, m => m === "&" ? "&amp;" : m === "<" ? "&lt;" : "&gt;");
+  }
+
+  // Tạo guest tạm thời nếu chưa có user
+  function ensureGuestUser() {
+    if (!currentUser) {
+      const guestId = "guest_" + Date.now() + "_" + Math.random().toString(36).substr(2, 6);
+      currentUser = {
+        uid: guestId,
+        displayName: "Hủ qua đường " + Math.floor(Math.random() * 9999),
+        nickname: "Hủ qua đường " + Math.floor(Math.random() * 9999),
+        guest: true,
+        role: "guest"
+      };
+      sessionStorage.setItem("tempGuest", JSON.stringify(currentUser));
     }
-    
-    function escapeHtml(str) {
-      if (!str) return "";
-      return str.replace(/[&<>]/g, m => m === "&" ? "&amp;" : m === "<" ? "&lt;" : "&gt;");
-    }
-    
-    async function restoreSession() {
-      const sessionStr = localStorage.getItem("userSession");
-      if (!sessionStr) return false;
+    return currentUser;
+  }
+
+  async function restoreSession() {
+    const sessionStr = localStorage.getItem("userSession");
+    if (sessionStr) {
       try {
         const session = JSON.parse(sessionStr);
-        if (!session.expireAt || Date.now() > session.expireAt) {
-          localStorage.removeItem("userSession");
-          return false;
-        }
-        if (session.role === "guest") {
-          currentUser = session;
-          return true;
-        } else if (session.uid) {
-          const userSnap = await get(ref(db, `users/${session.uid}`));
-          if (userSnap.exists()) {
-            currentUser = { ...session, ...userSnap.val() };
+        if (session.expireAt && Date.now() < session.expireAt) {
+          if (session.role === "guest") {
+            currentUser = session;
             return true;
+          } else if (session.uid) {
+            const userSnap = await get(ref(db, `users/${session.uid}`));
+            if (userSnap.exists()) {
+              currentUser = { ...session, ...userSnap.val() };
+              return true;
+            }
           }
         }
-        return false;
-      } catch { return false; }
+      } catch(e) {}
     }
-    
-    async function loadStories() {
-      const storiesSnap = await get(ref(db, "stories"));
-      if (storiesSnap.exists()) {
-        allStories = Object.entries(storiesSnap.val()).map(([id, s]) => ({ id, ...s }));
-      }
+    ensureGuestUser();
+    return true;
+  }
+
+  async function loadStories() {
+    const storiesSnap = await get(ref(db, "stories"));
+    if (storiesSnap.exists()) {
+      allStories = Object.entries(storiesSnap.val()).map(([id, s]) => ({ id, ...s }));
     }
-    
-    async function loadChapters() {
-      const chaptersRef = ref(db, `chapters/${storyId}`);
-      onValue(chaptersRef, (snapshot) => {
-        const data = snapshot.val();
-        if (data) {
-          currentChapters = Object.entries(data).map(([id, value]) => ({ id, ...value }));
-          currentChapters.sort((a, b) => (a.chapterNumber || 0) - (b.chapterNumber || 0));
-          renderReader();
-        }
-      });
-    }
-    
-    async function updateViewCount() {
-      const story = allStories.find(s => s.id === storyId);
-      if (story) {
-        const viewRef = ref(db, `stories/${storyId}/views`);
-        const snapshot = await get(viewRef);
-        await set(viewRef, (snapshot.val() || 0) + 1);
-      }
-    }
-    
-    function renderReader() {
-      if (!currentChapters || currentChapters.length === 0) {
-        document.getElementById("readerContent").innerHTML = '<div class="loading-container"><p>Không có chapter nào</p></div>';
-        return;
-      }
-      
-      if (!currentChapters[currentChapterIndex]) {
-        document.getElementById("readerContent").innerHTML = '<div class="loading-container"><p>Không tìm thấy chapter</p></div>';
-        return;
-      }
-      
-      const chap = currentChapters[currentChapterIndex];
-      const hasPrev = currentChapterIndex > 0;
-      const hasNext = currentChapterIndex < currentChapters.length - 1;
-      
-      document.getElementById("readerContent").innerHTML = `
-        <div class="chapter-nav">
-          ${hasPrev ? `<button onclick="changeChapter(-1)">⬅️ Chapter trước</button>` : '<button disabled>⬅️ Chapter trước</button>'}
-          <h3>${escapeHtml(chap.title)}</h3>
-          ${hasNext ? `<button onclick="changeChapter(1)">Chapter sau ➡️</button>` : '<button disabled>Chapter sau ➡️</button>'}
-        </div>
-        <div id="chapterImages">
-          ${chap.pages?.map(page => `<img class="reader-image" src="${escapeHtml(page)}" loading="lazy" onerror="this.src='https://placehold.co/800x1200?text=Error'">`).join("") || "<p>Không có ảnh</p>"}
-        </div>
-        <div class="chapter-nav" style="margin-top:30px; margin-bottom:30px;">
-          ${hasPrev ? `<button onclick="changeChapter(-1)">⬅️ Chapter trước</button>` : '<button disabled>⬅️ Chapter trước</button>'}
-          <button onclick="window.scrollTo({ top: 0, behavior: 'smooth' })">⬆️ Lên đầu trang</button>
-          ${hasNext ? `<button onclick="changeChapter(1)">Chapter sau ➡️</button>` : '<button disabled>Chapter sau ➡️</button>'}
-        </div>
-        <div class="chapter-list-section">
-          <h4>📑 MỤC LỤC CHAPTER</h4>
-          <div class="chapter-list">
-            ${currentChapters.map((c, i) => `<div class="chapter-item" onclick="changeChapterTo(${i})"><span>${escapeHtml(c.title)}</span><span style="font-size:12px;">📅 ${new Date(c.createdAt).toLocaleDateString()}</span></div>`).join("")}
-          </div>
-        </div>
-        <div class="comment-section">
-          <h4>💬 BÌNH LUẬN</h4>
-          <div class="comment-input-area">
-            <textarea id="commentText" rows="3" placeholder="Viết bình luận..."></textarea>
-            <button id="postCommentBtn">GỬI</button>
-          </div>
-          <div id="commentList"></div>
-        </div>
-      `;
-      
-      loadCommentsRealtime(storyId);
-      
-      const postBtn = document.getElementById("postCommentBtn");
-      if (postBtn) {
-        const newPostBtn = postBtn.cloneNode(true);
-        postBtn.parentNode.replaceChild(newPostBtn, postBtn);
-        newPostBtn.addEventListener("click", () => postComment(storyId));
-      }
-      
-      // Tự động scroll lên đầu trang khi chuyển chapter
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-    
-    window.changeChapter = (delta) => {
-      const newIdx = currentChapterIndex + delta;
-      if (newIdx >= 0 && newIdx < currentChapters.length) {
-        currentChapterIndex = newIdx;
-        // Cập nhật URL không reload
-        const newUrl = `${window.location.pathname}?id=${storyId}&chapter=${currentChapterIndex}`;
-        window.history.pushState({}, '', newUrl);
+  }
+
+  async function loadChapters() {
+    const chaptersRef = ref(db, `chapters/${storyId}`);
+    onValue(chaptersRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        currentChapters = Object.entries(data).map(([id, value]) => ({ id, ...value }));
+        currentChapters.sort((a, b) => (a.chapterNumber || 0) - (b.chapterNumber || 0));
+        renderReader();
+      } else {
         renderReader();
       }
-    };
-    
-    window.changeChapterTo = (index) => {
-      currentChapterIndex = index;
+    });
+  }
+
+  async function updateViewCount() {
+    const story = allStories.find(s => s.id === storyId);
+    if (story) {
+      const viewRef = ref(db, `stories/${storyId}/views`);
+      const snapshot = await get(viewRef);
+      await set(viewRef, (snapshot.val() || 0) + 1);
+    }
+  }
+
+  function renderReader() {
+    if (!currentChapters || currentChapters.length === 0) {
+      document.getElementById("readerContent").innerHTML = '<div class="loading-container"><p>Không có chapter nào</p></div>';
+      return;
+    }
+    if (!currentChapters[currentChapterIndex]) {
+      document.getElementById("readerContent").innerHTML = '<div class="loading-container"><p>Không tìm thấy chapter</p></div>';
+      return;
+    }
+    const chap = currentChapters[currentChapterIndex];
+    const hasPrev = currentChapterIndex > 0;
+    const hasNext = currentChapterIndex < currentChapters.length - 1;
+
+    const html = `
+      <div class="reader-top-nav">
+        <div class="nav-buttons">
+          <button id="prevChapterBtn" ${hasPrev ? '' : 'disabled'} onclick="window.changeChapter(-1)">⬅ Chapter trước</button>
+          <button id="nextChapterBtn" ${hasNext ? '' : 'disabled'} onclick="window.changeChapter(1)">Chapter sau ➡</button>
+        </div>
+        <div class="chapter-title">${escapeHtml(chap.title)}</div>
+      </div>
+      <div id="chapterImages">
+        ${chap.pages?.map(page => `<img class="reader-image" src="${escapeHtml(page)}" loading="lazy" onerror="this.src='https://placehold.co/800x1200?text=Error'">`).join("") || "<p>Không có ảnh</p>"}
+      </div>
+      <div style="margin:30px 0; display:flex; justify-content:center;">
+        <button onclick="window.scrollTo({top:0,behavior:'smooth'})" style="background:#FF69B4; border:none; border-radius:30px; padding:10px 20px; cursor:pointer;">⬆ Lên đầu trang</button>
+      </div>
+      <div class="chapter-list-section">
+        <h4>📑 MỤC LỤC CHAPTER</h4>
+        <div class="chapter-list">
+          ${currentChapters.map((c, i) => `<div class="chapter-item" onclick="window.changeChapterTo(${i})"><span>${escapeHtml(c.title)}</span><span style="font-size:12px;">📅 ${new Date(c.createdAt).toLocaleDateString()}</span></div>`).join("")}
+        </div>
+      </div>
+      <div class="comment-section">
+        <h4>💬 BÌNH LUẬN</h4>
+        <div class="comment-input-area">
+          <textarea id="commentText" rows="3" placeholder="Viết bình luận..."></textarea>
+          <button id="postCommentBtn">GỬI</button>
+        </div>
+        <div id="commentList"></div>
+      </div>
+    `;
+    document.getElementById("readerContent").innerHTML = html;
+    loadCommentsRealtime(storyId);
+    const postBtn = document.getElementById("postCommentBtn");
+    if (postBtn) {
+      const newPostBtn = postBtn.cloneNode(true);
+      postBtn.parentNode.replaceChild(newPostBtn, postBtn);
+      newPostBtn.addEventListener("click", () => postComment(storyId));
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  window.changeChapter = async (delta) => {
+    const newIdx = currentChapterIndex + delta;
+    if (newIdx >= 0 && newIdx < currentChapters.length) {
+      currentChapterIndex = newIdx;
       const newUrl = `${window.location.pathname}?id=${storyId}&chapter=${currentChapterIndex}`;
       window.history.pushState({}, '', newUrl);
       renderReader();
-    };
-    
-    async function loadCommentsRealtime(storyId) {
-      if (commentUnsubscribe) commentUnsubscribe();
-      const commentsRef = ref(db, `comments/${storyId}`);
-      commentUnsubscribe = onValue(commentsRef, (snapshot) => {
-        const data = snapshot.val();
-        const comments = data ? Object.entries(data).map(([id, value]) => ({ id, ...value })) : [];
-        comments.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-        const commentList = document.getElementById("commentList");
-        if (commentList) {
-          commentList.innerHTML = comments.map(c => `
-            <div class="comment-item">
-              <div class="comment-name">
-                <span>💬 ${escapeHtml(c.userName)}</span>
-                <span class="comment-time">${new Date(c.createdAt).toLocaleString()}</span>
-              </div>
-              <div class="comment-text">${escapeHtml(c.text)}</div>
+    }
+  };
+  window.changeChapterTo = async (index) => {
+    currentChapterIndex = index;
+    const newUrl = `${window.location.pathname}?id=${storyId}&chapter=${currentChapterIndex}`;
+    window.history.pushState({}, '', newUrl);
+    renderReader();
+  };
+
+  async function loadCommentsRealtime(storyId) {
+    if (commentUnsubscribe) commentUnsubscribe();
+    const commentsRef = ref(db, `comments/${storyId}`);
+    commentUnsubscribe = onValue(commentsRef, (snapshot) => {
+      const data = snapshot.val();
+      const comments = data ? Object.entries(data).map(([id, value]) => ({ id, ...value })) : [];
+      comments.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+      const commentList = document.getElementById("commentList");
+      if (commentList) {
+        commentList.innerHTML = comments.map(c => `
+          <div class="comment-item">
+            <div class="comment-name">
+              <span>💬 ${escapeHtml(c.userName)}</span>
+              <span class="comment-time">${new Date(c.createdAt).toLocaleString()}</span>
             </div>
-          `).join("");
-          if (comments.length === 0) commentList.innerHTML = '<div style="text-align:center;padding:20px;">Chưa có bình luận</div>';
-        }
-      });
-    }
-    
-    async function postComment(storyId) {
-      if (!currentUser) { showNotification("Đăng nhập để bình luận", true); return; }
-      const text = document.getElementById("commentText")?.value.trim();
-      if (!text) return;
-      const commentsRef = ref(db, `comments/${storyId}`);
-      const newCommentRef = push(commentsRef);
-      await set(newCommentRef, {
-        text: text,
-        userId: currentUser.uid || currentUser.displayName,
-        userName: currentUser.displayName,
-        createdAt: Date.now()
-      });
-      document.getElementById("commentText").value = "";
-      showNotification("✅ Đã gửi bình luận");
-    }
-    
-    // Khởi tạo
-    await restoreSession();
-    await loadStories();
-    await loadChapters();
-    await updateViewCount();
-  </script>
-</body>
-</html>
-<head>
-<meta charset="utf-8">
-<title>READ</title>
-</head>
-
-<body style="background:#0f0f0f;color:white;font-family:Arial">
-
-<h2 id="title"></h2>
-
-<div id="chapters"></div>
-
-<h3>💬 Comment</h3>
-
-<input id="c" placeholder="Comment">
-
-<button onclick="comment()">Send</button>
-
-<div id="list"></div>
-
-<script type="module">
-
-import {
-  getFirestore,
-  doc,
-  getDoc,
-  collection,
-  addDoc,
-  getDocs
-} from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
-
-const db = window.db;
-
-const user = JSON.parse(localStorage.getItem("user") || "{}");
-
-const id = new URLSearchParams(location.search).get("id");
-
-/* ================= LOAD STORY ================= */
-async function load(){
-
-  const snap = await getDoc(doc(db,"stories",id));
-
-  const data = snap.data();
-
-  document.getElementById("title").innerText = data.title;
-
-  document.getElementById("chapters").innerHTML =
-    (data.chapters || []).map(c=>`
-      <p>📖 ${c.title}</p>
-    `).join("");
-}
-
-load();
-
-/* ================= COMMENT ================= */
-window.comment = async ()=>{
-
-  const text = document.getElementById("c").value;
-
-  let name = "Ẩn danh";
-
-  if(user.email){
-    name = user.email + " (" + user.role + ")";
+            <div class="comment-text">${escapeHtml(c.text)}</div>
+          </div>
+        `).join("");
+        if (comments.length === 0) commentList.innerHTML = '<div style="text-align:center;padding:20px;">Chưa có bình luận</div>';
+      }
+    });
   }
 
-  await addDoc(collection(db,"comments"),{
-    storyId:id,
-    text,
-    name,
-    time: Date.now()
-  });
+  async function postComment(storyId) {
+    let user = currentUser;
+    if (!user || (user.role === "guest" && !user.uid)) {
+      user = ensureGuestUser();
+      sessionStorage.setItem("tempGuestUser", JSON.stringify(user));
+    }
+    const text = document.getElementById("commentText")?.value.trim();
+    if (!text) return;
+    const commentsRef = ref(db, `comments/${storyId}`);
+    const newCommentRef = push(commentsRef);
+    await set(newCommentRef, {
+      text: text,
+      userId: user.uid,
+      userName: user.displayName,
+      createdAt: Date.now()
+    });
+    document.getElementById("commentText").value = "";
+    showNotification("✅ Đã gửi bình luận");
+  }
 
-  alert("Đã gửi");
-};
+  // Khởi tạo
+  await restoreSession();
+  const tempGuest = sessionStorage.getItem("tempGuestUser");
+  if (tempGuest && !currentUser) {
+    currentUser = JSON.parse(tempGuest);
+  }
+  await loadStories();
+  await loadChapters();
+  await updateViewCount();
 
+  // Tạo nút floating lên đầu trang nếu chưa có
+  setTimeout(() => {
+    if (!document.getElementById("floatingTopBtn")) {
+      const btn = document.createElement("button");
+      btn.id = "floatingTopBtn";
+      btn.innerHTML = "↑";
+      Object.assign(btn.style, {
+        position:"fixed", right:"18px", bottom:"20px", width:"48px", height:"48px",
+        border:"none", borderRadius:"16px", background:"rgba(0,0,0,0.65)",
+        backdropFilter:"blur(10px)", color:"white", fontSize:"22px", fontWeight:"bold",
+        display:"none", alignItems:"center", justifyContent:"center", zIndex:"99999",
+        cursor:"pointer", boxShadow:"0 4px 12px rgba(0,0,0,0.25)"
+      });
+      document.body.appendChild(btn);
+      btn.onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
+      window.addEventListener("scroll", () => {
+        btn.style.display = window.scrollY > 250 ? "flex" : "none";
+      });
+    }
+  }, 100);
 </script>
-
 </body>
 </html>
