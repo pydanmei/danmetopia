@@ -20,42 +20,48 @@ const IMGBB_API_KEY = "d16b5595d7f6044476d254c8f428cc28";
 
 emailjs.init("fPq8fpw1OqzOtj-lk");
 
-// ==================== GENRE LIST ====================
+// ==================== GENRE LIST (33 THỂ LOẠI) ====================
 const GENRE_LIST = [
-  { name: "3D", icon: "🎮", desc: "Truyện được vẽ bằng đồ họa 3D" },
-  { name: "Action", icon: "⚔️", desc: "Truyện có nhiều cảnh đánh nhau, hành động" },
-  { name: "Bara/Muscle", icon: "💪", desc: "Truyện về cơ bắp, nam tính" },
-  { name: "Biography", icon: "📖", desc: "Truyện tiểu sử" },
-  { name: "Cakeverse", icon: "🎂", desc: "Thể loại đặc biệt liên quan đến bánh kem" },
-  { name: "Comedy", icon: "😂", desc: "Truyện hài hước" },
-  { name: "Crime", icon: "🔫", desc: "Truyện về tội phạm" },
-  { name: "Documentary", icon: "🎥", desc: "Truyện dạng phim tài liệu" },
-  { name: "Dom/Sub verse", icon: "⛓️", desc: "Truyện có yếu tố thống trị/phục tùng" },
-  { name: "Drama", icon: "💗", desc: "Truyện tình cảm" },
-  { name: "Family", icon: "👨‍👩‍👧", desc: "Truyện về gia đình" },
-  { name: "Fantasy", icon: "🐉", desc: "Truyện giả tưởng" },
-  { name: "Furry", icon: "🐾", desc: "Truyện thú nhân hóa" },
-  { name: "HET/Hentai", icon: "🔞", desc: "Truyện 18+ dị tính" },
-  { name: "Historical", icon: "🏯", desc: "Truyện cổ trang" },
-  { name: "Horror", icon: "👻", desc: "Truyện kinh dị" },
-  { name: "Music", icon: "🎵", desc: "Truyện về âm nhạc" },
-  { name: "Mystery", icon: "🔍", desc: "Truyện trinh thám" },
-  { name: "Omegaverse", icon: "🔥", desc: "Truyện ABO" },
-  { name: "Psychological", icon: "🧠", desc: "Truyện tâm lý" },
-  { name: "Romance", icon: "💕", desc: "Truyện lãng mạn" },
-  { name: "School Life", icon: "📚", desc: "Truyện học đường" },
-  { name: "Sci-fi", icon: "🚀", desc: "Truyện khoa học viễn tưởng" },
-  { name: "Shounen Ai", icon: "💖", desc: "BL nhẹ nhàng" },
-  { name: "Slice of Life", icon: "🌿", desc: "Truyện đời thường" },
-  { name: "Sports", icon: "⚽", desc: "Truyện thể thao" },
-  { name: "Supernatural", icon: "👻", desc: "Truyện siêu nhiên" },
-  { name: "Thriller", icon: "🔪", desc: "Truyện gây cấn" },
-  { name: "Tragedy", icon: "💔", desc: "Truyện bi kịch" },
-  { name: "War", icon: "🏆", desc: "Truyện chiến tranh" },
-  { name: "Wuxia", icon: "🗡️", desc: "Truyện võ hiệp" },
-  { name: "Yaoi", icon: "🔥", desc: "BL 18+" },
-  { name: "Yuri", icon: "💕", desc: "GL" }
+  "3D", "Action", "Bara/Muscle", "Biography", "Cakeverse", "Comedy",
+  "Crime", "Documentary", "Dom/Sub verse", "Drama", "Family", "Fantasy",
+  "Furry", "HET/Hentai", "Historical", "Horror", "Music", "Mystery",
+  "Omegaverse", "Psychological", "Romance", "School Life", "Sci-fi",
+  "Shounen Ai", "Slice of Life", "Sports", "Supernatural", "Thriller",
+  "Tragedy", "War", "Wuxia", "Yaoi", "Yuri"
 ];
+
+// Tạo map để kiểm tra nhanh
+const GENRE_SET = new Set(GENRE_LIST);
+
+// Hàm tách thể loại và tags từ input (gộp chung)
+function parseGenresAndTags(input) {
+  if (!input || input.trim() === "") return { genres: "", tags: "" };
+  
+  // Tách các từ khóa bằng dấu phẩy hoặc khoảng trắng (nhưng ưu tiên dấu phẩy)
+  let keywords = [];
+  if (input.includes(",")) {
+    keywords = input.split(",").map(k => k.trim()).filter(k => k);
+  } else {
+    keywords = input.split(" ").map(k => k.trim()).filter(k => k);
+  }
+  
+  const genres = [];
+  const tags = [];
+  
+  for (const kw of keywords) {
+    // Kiểm tra nếu keyword nằm trong danh sách thể loại
+    if (GENRE_SET.has(kw)) {
+      genres.push(kw);
+    } else {
+      tags.push(kw);
+    }
+  }
+  
+  return {
+    genres: genres.join(", "),
+    tags: tags.join(", ")
+  };
+}
 
 // ==================== STATE ====================
 const state = {
@@ -582,7 +588,7 @@ function renderGenreFilter() {
   if (!container) return;
   let html = '<select id="genreSelect" class="genre-select"><option value="">-- Tất cả thể loại --</option>';
   for (const genre of GENRE_LIST) {
-    html += `<option value="${genre.name}" ${state.selectedGenre === genre.name ? 'selected' : ''}>${genre.icon} ${genre.name}</option>`;
+    html += `<option value="${genre}" ${state.selectedGenre === genre ? 'selected' : ''}>${genre}</option>`;
   }
   html += '</select>';
   container.innerHTML = html;
@@ -598,7 +604,7 @@ function renderCurrentTab() {
   if (!grid) return;
   let filtered = state.stories.filter(s => s.approved === true);
   if (state.selectedGenre) filtered = filtered.filter(s => s.genres && s.genres.includes(state.selectedGenre));
-  if (state.searchKeyword) filtered = filtered.filter(s => s.title?.toLowerCase().includes(state.searchKeyword) || s.otherName?.toLowerCase().includes(state.searchKeyword));
+  if (state.searchKeyword) filtered = filtered.filter(s => s.title?.toLowerCase().includes(state.searchKeyword) || s.otherName?.toLowerCase().includes(state.searchKeyword) || s.tags?.toLowerCase().includes(state.searchKeyword));
   if (state.sortBy === "likes") filtered.sort((a,b) => (b.likes||0) - (a.likes||0));
   else if (state.sortBy === "views") filtered.sort((a,b) => (b.views||0) - (a.views||0));
   else filtered.sort((a,b) => (b.createdAt||0) - (a.createdAt||0));
@@ -610,6 +616,7 @@ function renderCurrentTab() {
         <div class="manga-title">${escapeHtml(story.title)}</div>
         <div class="manga-meta">📚 ${escapeHtml(story.groupName) || "Cá nhân"}</div>
         <div class="manga-meta">❤️ ${story.likes || 0} | 👁 ${story.views || 0}</div>
+        <div class="manga-meta">🏷️ ${escapeHtml(story.genres) || "Chưa có thể loại"}</div>
         ${story.approved === false ? '<div class="manga-meta" style="color:#FFCC00;">⏳ Chờ duyệt</div>' : ''}
       </div>
     </div>
@@ -627,8 +634,10 @@ function renderUploadPanel() {
       <input id="uploadTitle" placeholder="Tên truyện *">
       <input id="uploadOtherName" placeholder="Tên khác">
       <input id="uploadAuthor" placeholder="Tác giả">
-      <input id="uploadGenre" list="genreDropdown" placeholder="Thể loại (cách nhau bằng dấu phẩy)">
-      <input id="uploadTags" placeholder="Tags (cách nhau bằng dấu phẩy)">
+      <input id="uploadGenreTags" placeholder="Thể loại và Tags (cách nhau bằng dấu phẩy, ví dụ: Romance, School Life, Học đường, Đam mỹ)">
+      <div style="font-size:12px; color:#888; margin-bottom:12px;">
+        💡 Gợi ý: Hệ thống sẽ tự động phân biệt thể loại (33 thể loại có sẵn) và tags.
+      </div>
       <select id="uploadStatus">
         <option value="Đang tiến hành">📖 Đang tiến hành</option>
         <option value="Đã hoàn thành">✅ Đã hoàn thành</option>
@@ -675,19 +684,22 @@ function renderUploadPanel() {
       const groupId = document.getElementById("uploadGroupId").value;
       let groupName = "";
       if (groupId) { const groupSnap = await get(ref(db, `groups/${groupId}`)); if (groupSnap.exists()) groupName = groupSnap.val().groupName; }
+      
+      // Phân tích thể loại và tags từ input gộp
+      const genreTagsInput = document.getElementById("uploadGenreTags").value;
+      const { genres, tags } = parseGenresAndTags(genreTagsInput);
+      
       let chapterImageUrls = [];
       if (selectedChapterFiles.length > 0) chapterImageUrls = await uploadMultipleImages(selectedChapterFiles);
       await createStory({
         title, otherName: document.getElementById("uploadOtherName").value, author: document.getElementById("uploadAuthor").value,
-        genres: document.getElementById("uploadGenre").value, tags: document.getElementById("uploadTags").value,
-        status: document.getElementById("uploadStatus").value, desc: document.getElementById("uploadDesc").value,
-        cover: "", groupId: groupId || null, groupName: groupName
+        genres: genres, tags: tags, status: document.getElementById("uploadStatus").value,
+        desc: document.getElementById("uploadDesc").value, cover: "", groupId: groupId || null, groupName: groupName
       }, selectedCoverFile, chapterImageUrls);
       document.getElementById("uploadTitle").value = "";
       document.getElementById("uploadOtherName").value = "";
       document.getElementById("uploadAuthor").value = "";
-      document.getElementById("uploadGenre").value = "";
-      document.getElementById("uploadTags").value = "";
+      document.getElementById("uploadGenreTags").value = "";
       document.getElementById("uploadDesc").value = "";
       document.getElementById("uploadCoverFile").value = "";
       document.getElementById("uploadChapterImages").value = "";
@@ -799,7 +811,6 @@ window.openStoryDetailChapter = (storyId, chapterIndex) => {
 
 // ==================== LIKE ACTION (GUEST ALLOWED) ====================
 window.likeStoryAction = async (storyId) => {
-  // Nếu chưa có user, tạo guest tạm
   if (!state.currentUser) {
     const guestId = "guest_" + Date.now() + "_" + Math.random().toString(36).substr(2, 6);
     state.currentUser = {
@@ -830,9 +841,13 @@ window.openEditStory = async (storyId) => {
     <input id="editTitle" value="${escapeHtml(story.title)}" placeholder="Tên truyện *">
     <input id="editOtherName" value="${escapeHtml(story.otherName || '')}" placeholder="Tên khác">
     <input id="editAuthor" value="${escapeHtml(story.author || '')}" placeholder="Tác giả">
-    <input id="editGenre" list="genreDropdown" value="${escapeHtml(story.genres || '')}" placeholder="Thể loại">
-    <input id="editTags" value="${escapeHtml(story.tags || '')}" placeholder="Tags">
-    <select id="editStatus"><option value="Đang tiến hành" ${story.status === "Đang tiến hành" ? "selected" : ""}>📖 Đang tiến hành</option><option value="Đã hoàn thành" ${story.status === "Đã hoàn thành" ? "selected" : ""}>✅ Đã hoàn thành</option></select>
+    <input id="editGenreTags" value="${escapeHtml((story.genres ? story.genres + ", " : "") + (story.tags || ""))}" placeholder="Thể loại và Tags (cách nhau bằng dấu phẩy)">
+    <div style="font-size:12px; color:#888; margin-bottom:12px;">💡 Hệ thống sẽ tự động phân biệt thể loại và tags</div>
+    <select id="editStatus">
+      <option value="Đang tiến hành" ${story.status === "Đang tiến hành" ? "selected" : ""}>📖 Đang tiến hành</option>
+      <option value="Đã hoàn thành" ${story.status === "Đã hoàn thành" ? "selected" : ""}>✅ Đã hoàn thành</option>
+      <option value="Tạm ngưng" ${story.status === "Tạm ngưng" ? "selected" : ""}>⏸ Tạm ngưng</option>
+    </select>
     <select id="editGroupId">${groupOptions}</select>
     <input type="file" id="editCoverFile" accept="image/*">
     <input id="editCover" value="${escapeHtml(story.cover || '')}" placeholder="Link ảnh bìa">
@@ -855,11 +870,16 @@ window.saveEditStory = async (storyId) => {
   let groupName = "";
   const newGroupId = document.getElementById("editGroupId").value;
   if (newGroupId) { const groupSnap = await get(ref(db, `groups/${newGroupId}`)); if (groupSnap.exists()) groupName = groupSnap.val().groupName; }
+  
+  // Phân tích thể loại và tags từ input gộp
+  const genreTagsInput = document.getElementById("editGenreTags").value;
+  const { genres, tags } = parseGenresAndTags(genreTagsInput);
+  
   await updateStoryData(storyId, {
     title: document.getElementById("editTitle").value, otherName: document.getElementById("editOtherName").value,
-    author: document.getElementById("editAuthor").value, genres: document.getElementById("editGenre").value,
-    tags: document.getElementById("editTags").value, status: document.getElementById("editStatus").value,
-    groupId: newGroupId || null, groupName: groupName, cover: coverUrl, desc: document.getElementById("editDesc").value
+    author: document.getElementById("editAuthor").value, genres: genres, tags: tags,
+    status: document.getElementById("editStatus").value, groupId: newGroupId || null, groupName: groupName,
+    cover: coverUrl, desc: document.getElementById("editDesc").value
   });
   closeModal("editStoryModal");
   showNotification("Đã cập nhật truyện");
@@ -1022,7 +1042,7 @@ window.openReader = (storyId, chapterIndex) => {
   window.location.href = `reader.html?id=${storyId}&chapter=${chapterIndex || 0}`;
 };
 
-// ==================== SCROLL BUTTONS (CẢI TIẾN) ====================
+// ==================== SCROLL BUTTONS ====================
 function initScrollButtons() {
   let floatingBtn = document.getElementById("floatingTopBtn");
   if (!floatingBtn) {
@@ -1078,7 +1098,7 @@ function initScrollButtons() {
 function closeModal(modalId) { const modal = document.getElementById(modalId); if (modal) modal.style.display = "none"; }
 window.closeModal = closeModal;
 
-// ==================== PROFILE & AVATAR (CHẶN GUEST ĐỔI NICKNAME) ====================
+// ==================== PROFILE & AVATAR ====================
 async function uploadAvatar(file) {
   if (!file) return null;
   if (file.size > 2 * 1024 * 1024) { showNotification("Ảnh đại diện tối đa 2MB", true); return null; }
@@ -1093,7 +1113,6 @@ async function uploadAvatar(file) {
 }
 
 window.openProfile = () => {
-  // Guest không được đổi nickname
   if (state.currentUser?.guest) {
     document.getElementById("profileContent").innerHTML = `
       <div style="text-align:center; padding:30px; color:white;">
