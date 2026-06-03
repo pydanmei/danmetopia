@@ -6,14 +6,11 @@
   <title>🌸 DANMETOPIA - Đọc truyện 🌸</title>
   <link rel="stylesheet" href="style.css">
   <style>
-    /* Reset & base */
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; background: #0a0a0a; color: #e0e0e0; }
-    
-    /* Reader container */
     .reader-container { max-width: 900px; margin: 0 auto; padding: 80px 20px 100px 20px; }
     
-    /* Top navigation bar */
+    /* Top navigation */
     .reader-top-nav {
       position: fixed;
       top: 0;
@@ -29,11 +26,7 @@
       gap: 12px;
       border-bottom: 1px solid rgba(255,105,180,0.3);
     }
-    .reader-top-nav .nav-buttons {
-      display: flex;
-      gap: 8px;
-      flex: 1;
-    }
+    .reader-top-nav .nav-buttons { display: flex; gap: 8px; flex: 1; }
     .reader-top-nav button {
       flex: 1;
       padding: 8px 12px;
@@ -44,13 +37,9 @@
       font-weight: bold;
       font-size: 13px;
       cursor: pointer;
-      transition: all 0.2s;
       white-space: nowrap;
     }
-    .reader-top-nav button:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
+    .reader-top-nav button:disabled { opacity: 0.5; cursor: not-allowed; }
     .reader-top-nav .story-info-btn {
       background: rgba(255,255,255,0.2);
       padding: 8px 12px;
@@ -60,13 +49,10 @@
       align-items: center;
       gap: 5px;
       cursor: pointer;
-      transition: all 0.2s;
     }
-    .reader-top-nav .story-info-btn:hover {
-      background: rgba(255,255,255,0.3);
-    }
+    .reader-top-nav .story-info-btn:hover { background: rgba(255,255,255,0.3); }
     
-    /* Bottom navigation bar (mobile friendly) */
+    /* Bottom navigation */
     .bottom-nav {
       position: fixed;
       bottom: 0;
@@ -90,38 +76,17 @@
       font-size: 13px;
       font-weight: bold;
       cursor: pointer;
-      transition: all 0.2s;
       border-radius: 40px;
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 6px;
     }
-    .bottom-nav button:active {
-      transform: scale(0.95);
-    }
-    .bottom-nav button:disabled {
-      opacity: 0.4;
-      cursor: not-allowed;
-    }
-    .bottom-nav .active-nav {
-      color: #FF69B4;
-    }
+    .bottom-nav button:active { transform: scale(0.95); }
+    .bottom-nav button:disabled { opacity: 0.4; cursor: not-allowed; }
     
-    /* Chapter images */
-    .reader-image {
-      width: 100%;
-      margin: 8px 0;
-      display: block;
-    }
-    
-    /* Chapter list section */
-    .chapter-list-section {
-      background: #1c1c1c;
-      border-radius: 16px;
-      padding: 20px;
-      margin-top: 40px;
-    }
+    .reader-image { width: 100%; margin: 8px 0; display: block; }
+    .chapter-list-section { background: #1c1c1c; border-radius: 16px; padding: 20px; margin-top: 40px; }
     .chapter-list-section h4 { color: #FF69B4; margin-bottom: 15px; }
     .chapter-list { max-height: 400px; overflow-y: auto; }
     .chapter-item {
@@ -130,21 +95,13 @@
       margin-bottom: 8px;
       border-radius: 8px;
       cursor: pointer;
-      transition: background 0.2s;
       display: flex;
       justify-content: space-between;
       align-items: center;
       flex-wrap: wrap;
     }
     .chapter-item:hover { background: #FF69B4; color: black; }
-    
-    /* Comments */
-    .comment-section {
-      margin-top: 40px;
-      background: #1c1c1c;
-      border-radius: 16px;
-      padding: 20px;
-    }
+    .comment-section { margin-top: 40px; background: #1c1c1c; border-radius: 16px; padding: 20px; }
     .comment-section h4 { color: #FF69B4; margin-bottom: 15px; }
     .comment-input-area { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
     .comment-input-area textarea { flex: 1; padding: 10px; background: #2a2a2a; border: none; border-radius: 12px; color: white; resize: vertical; }
@@ -152,8 +109,6 @@
     .comment-item { background: #2a2a2a; padding: 12px; border-radius: 12px; margin-bottom: 10px; }
     .comment-name { font-weight: bold; color: #FF69B4; margin-bottom: 5px; display: flex; justify-content: space-between; flex-wrap: wrap; }
     .comment-time { font-size: 11px; color: #888; }
-    
-    /* Loading */
     .loading-container { text-align: center; padding: 50px; }
     .loading-spinner {
       display: inline-block;
@@ -166,14 +121,13 @@
     }
     @keyframes spin { to { transform: rotate(360deg); } }
     
-    /* Responsive */
     @media (max-width: 768px) {
       .reader-container { padding: 70px 16px 80px 16px; }
       .reader-top-nav .nav-buttons button { font-size: 11px; padding: 6px 8px; }
       .reader-top-nav .story-info-btn { font-size: 11px; padding: 6px 10px; }
       .bottom-nav button { font-size: 11px; }
       .bottom-nav button span { display: none; }
-      .bottom-nav button:after { content: attr(data-icon); font-size: 18px; }
+      .bottom-nav button:after { content: attr(data-icon); font-size: 20px; }
     }
   </style>
 </head>
@@ -205,7 +159,6 @@
   const db = getDatabase(app);
   emailjs.init("fPq8fpw1OqzOtj-lk");
 
-  // Lấy params từ URL
   const urlParams = new URLSearchParams(window.location.search);
   const storyId = urlParams.get('id');
   let currentChapterIndex = parseInt(urlParams.get('chapter') || '0');
@@ -266,7 +219,6 @@
     const storySnap = await get(ref(db, `stories/${storyId}`));
     if (storySnap.exists()) {
       currentStory = { id: storyId, ...storySnap.val() };
-      // Cập nhật title
       document.title = `🌸 ${currentStory.title} - Đọc truyện 🌸`;
     }
   }
@@ -313,7 +265,7 @@
           <button ${hasPrev ? `onclick="window.changeChapter(-1)"` : 'disabled'}>⬅ Chương trước</button>
           <button ${hasNext ? `onclick="window.changeChapter(1)"` : 'disabled'}>Chương sau ➡</button>
         </div>
-        <div class="story-info-btn" onclick="window.goToStoryInfo()">
+        <div class="story-info-btn" onclick="window.goToStoryInfo('${storySlug}')">
           📖 ${escapeHtml(currentStory?.title || 'Thông tin')}
         </div>
       </div>
@@ -321,11 +273,11 @@
         ${chap.pages?.map(page => `<img class="reader-image" src="${escapeHtml(page)}" loading="lazy" onerror="this.src='https://placehold.co/800x1200?text=Error'">`).join("") || "<p>Không có ảnh</p>"}
       </div>
       
-      <!-- Bottom navigation bar -->
       <div class="bottom-nav">
         <button ${hasPrev ? `onclick="window.changeChapter(-1)" data-icon="◀"` : 'disabled'} data-icon="◀"><span>Chương trước</span></button>
         <button onclick="window.scrollToTop()" data-icon="▲"><span>Lên đầu</span></button>
-        <button onclick="window.goToStoryInfo()" data-icon="📖"><span>Thông tin</span></button>
+        <button onclick="window.goToHome()" data-icon="🏠"><span>Trang chủ</span></button>
+        <button onclick="window.goToStoryInfo('${storySlug}')" data-icon="📖"><span>Thông tin</span></button>
         <button ${hasNext ? `onclick="window.changeChapter(1)" data-icon="▶"` : 'disabled'} data-icon="▶"><span>Chương sau</span></button>
       </div>
       
@@ -371,11 +323,12 @@
     renderReader();
   };
   window.scrollToTop = () => { window.scrollTo({ top: 0, behavior: 'smooth' }); };
-  window.goToStoryInfo = () => {
-    if (currentStory?.slug) {
-      window.location.href = `/#/truyen/${currentStory.slug}`;
+  window.goToHome = () => { window.location.href = "index.html"; };
+  window.goToStoryInfo = (slug) => {
+    if (slug) {
+      window.location.hash = `#/truyen/${slug}`;
     } else {
-      window.location.href = 'index.html';
+      window.location.href = "index.html";
     }
   };
 
@@ -429,7 +382,6 @@
   await loadChapters();
   await updateViewCount();
 
-  // Tạo nút floating lên đầu trang (backup)
   setTimeout(() => {
     if (!document.getElementById("floatingTopBtn")) {
       const btn = document.createElement("button");
