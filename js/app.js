@@ -32,7 +32,6 @@ const GENRE_LIST = [
 
 const GENRE_SET = new Set(GENRE_LIST);
 
-// Hàm tách thể loại và tags từ input gộp
 function parseGenresAndTags(input) {
   if (!input || input.trim() === "") return { genres: "", tags: "" };
   let keywords = [];
@@ -50,13 +49,9 @@ function parseGenresAndTags(input) {
       tags.push(kw);
     }
   }
-  return {
-    genres: genres.join(", "),
-    tags: tags.join(", ")
-  };
+  return { genres: genres.join(", "), tags: tags.join(", ") };
 }
 
-// Hàm tạo slug từ tiêu đề
 function generateSlug(title) {
   if (!title) return "";
   return title
@@ -82,7 +77,18 @@ const state = {
   sortBy: "likes"
 };
 
-// ==================== ROUTER (URL thân thiện) ====================
+// ==================== ROUTER & SLUG FIX ====================
+// Đảm bảo mọi story đều có slug (tự động tạo nếu thiếu)
+async function ensureSlugs() {
+  for (const story of state.stories) {
+    if (!story.slug && story.title) {
+      const newSlug = generateSlug(story.title);
+      await update(ref(db, `stories/${story.id}`), { slug: newSlug });
+      story.slug = newSlug;
+    }
+  }
+}
+
 function initRouter() {
   const hash = window.location.hash.slice(1);
   if (!hash) return;
@@ -97,6 +103,9 @@ function initRouter() {
       } else {
         window.openStoryDetail(story.id);
       }
+    } else {
+      // Không tìm thấy story, có thể chưa load xong? thử lại sau
+      setTimeout(() => initRouter(), 500);
     }
   }
 }
@@ -465,9 +474,10 @@ function saveHistory() { localStorage.setItem("danmetopia_history", JSON.stringi
 // ==================== STORIES CRUD ====================
 async function loadStoriesRealtime() {
   const storiesRef = ref(db, 'stories');
-  onValue(storiesRef, (snapshot) => {
+  onValue(storiesRef, async (snapshot) => {
     const data = snapshot.val();
     state.stories = data ? Object.entries(data).map(([id, value]) => ({ id, ...value })) : [];
+    await ensureSlugs(); // Đảm bảo story cũ có slug
     renderCurrentTab();
     initRouter();
   });
@@ -610,7 +620,12 @@ function renderCurrentTab() {
   `).join("");
 }
 
+// Hàm goToStory (public)
 window.goToStory = (slug) => {
+  if (!slug) {
+    console.error("goToStory: slug is empty");
+    return;
+  }
   window.location.hash = `#/truyen/${slug}`;
 };
 
@@ -1246,7 +1261,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 });
 
-// Make functions global
+// Make functions global (đảm bảo tất cả hàm cần thiết đều có)
 window.openStoryDetail = window.openStoryDetail;
 window.openEditStory = window.openEditStory;
 window.openAddChapter = window.openAddChapter;
