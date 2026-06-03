@@ -5,387 +5,210 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>🌸 DANMETOPIA - Thông tin truyện 🌸</title>
   <link rel="stylesheet" href="style.css">
+
   <style>
     .story-container { max-width: 1000px; margin: 0 auto; padding: 20px; }
     .back-home { display: inline-block; margin-bottom: 20px; padding: 8px 16px; background: #333; color: white; text-decoration: none; border-radius: 30px; font-size: 14px; }
     .back-home:hover { background: #FF69B4; color: black; }
+
     .story-detail-grid { display: grid; grid-template-columns: 250px 1fr; gap: 30px; margin-bottom: 30px; }
+
     .story-detail-cover { width: 100%; border-radius: 12px; }
+
     .story-detail-info h2 { color: #FF69B4; margin-bottom: 15px; }
+
     .story-detail-label { font-weight: bold; color: #FF69B4; min-width: 100px; display: inline-block; }
-    .clickable-tag { display: inline-block; background: #2a2a2a; padding: 4px 10px; border-radius: 20px; font-size: 12px; margin: 2px 4px; cursor: pointer; transition: all 0.2s; }
-    .clickable-tag:hover { background: #FF69B4; color: black; }
-    .chapter-list { margin-top: 20px; max-height: 500px; overflow-y: auto; }
-    .chapter-item { background: #2a2a2a; padding: 12px 15px; margin-bottom: 8px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; cursor: pointer; transition: background 0.2s; }
-    .chapter-item:hover { background: #FF69B4; color: black; }
-    .chapter-actions { display: flex; gap: 8px; }
-    .chapter-edit-btn, .chapter-delete-btn { padding: 4px 12px; border-radius: 20px; font-size: 12px; border: none; cursor: pointer; }
-    .chapter-edit-btn { background: #FFCC00; color: black; }
-    .chapter-delete-btn { background: #ff4444; color: white; }
-    .loading-container { text-align: center; padding: 50px; }
+
+    .clickable-tag { display: inline-block; background: #2a2a2a; padding: 4px 10px; border-radius: 20px; font-size: 12px; margin: 2px 4px; cursor: pointer; }
+
+    .chapter-item { background: #2a2a2a; padding: 12px 15px; margin-bottom: 8px; border-radius: 8px; display: flex; justify-content: space-between; cursor: pointer; }
+
     .comment-section { margin-top: 40px; background: #1c1c1c; border-radius: 16px; padding: 20px; }
-    .comment-section h4 { color: #FF69B4; margin-bottom: 15px; }
-    .comment-input-area { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
-    .comment-input-area textarea { flex: 1; padding: 10px; background: #2a2a2a; border: none; border-radius: 12px; color: white; resize: vertical; }
-    .comment-input-area button { padding: 10px 20px; background: #FF69B4; border: none; border-radius: 30px; font-weight: bold; cursor: pointer; color: black; }
+
     .comment-item { background: #2a2a2a; padding: 12px; border-radius: 12px; margin-bottom: 10px; }
-    .comment-name { font-weight: bold; color: #FF69B4; margin-bottom: 5px; display: flex; justify-content: space-between; flex-wrap: wrap; }
-    .comment-time { font-size: 11px; color: #888; }
-    .story-actions { margin-top: 20px; display: flex; gap: 10px; flex-wrap: wrap; }
-    @media (max-width: 768px) {
-      .story-detail-grid { grid-template-columns: 1fr; }
-      .story-detail-cover { max-width: 250px; margin: 0 auto; }
-    }
   </style>
 </head>
+
 <body>
 <div class="story-container">
   <a href="index.html" class="back-home">← Về trang chủ</a>
+
   <div id="storyContent">
-    <div class="loading-container"><div class="loading-spinner"></div><p>Đang tải thông tin truyện...</p></div>
+    <p>Đang tải...</p>
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-  import { getAuth } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-  import { getDatabase, ref, get, set, push, onValue, update, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { getAuth } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import {
+  getDatabase, ref, get, set, push, onValue, update, remove
+} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyCDQk9DlMNKwn_508fDMI_3IB_dgpgHujA",
-    authDomain: "danmetopia.firebaseapp.com",
-    projectId: "danmetopia",
-    databaseURL: "https://danmetopia-default-rtdb.asia-southeast1.firebasedatabase.app/",
-    storageBucket: "danmetopia.appspot.com",
-    messagingSenderId: "178240377870",
-    appId: "1:178240377870:web:d094b222ebabadccc5585f"
+/* ================= FIREBASE ================= */
+const firebaseConfig = {
+  apiKey: "AIzaSyCDQk9DlMNKwn_508fDMI_3IB_dgpgHujA",
+  authDomain: "danmetopia.firebaseapp.com",
+  projectId: "danmetopia",
+  databaseURL: "https://danmetopia-default-rtdb.asia-southeast1.firebasedatabase.app/",
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+/* ================= PARAM ================= */
+const urlParams = new URLSearchParams(window.location.search);
+const storyId = urlParams.get("id");
+
+console.log("storyId =", storyId);
+
+/* ================= CHECK ID ================= */
+if (!storyId) {
+  document.getElementById("storyContent").innerHTML =
+    "<h3>❌ Thiếu ID truyện</h3><a href='index.html'>← Về trang chủ</a>";
+  throw new Error("Missing storyId");
+}
+
+/* ================= STATE ================= */
+let story = null;
+let chapters = [];
+let currentUser = null;
+
+/* ================= GUEST ================= */
+function ensureGuestUser() {
+  if (currentUser) return currentUser;
+
+  const guestId = "guest_" + Date.now();
+  currentUser = {
+    uid: guestId,
+    displayName: "Khách",
+    role: "guest"
   };
 
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const db = getDatabase(app);
-  emailjs.init("fPq8fpw1OqzOtj-lk");
+  sessionStorage.setItem("tempGuestUser", JSON.stringify(currentUser));
+  return currentUser;
+}
 
-  const urlParams = new URLSearchParams(window.location.search);
-  const storyId = urlParams.get('id');
-  let currentUser = null;
-  let story = null;
-  let chapters = [];
-  let commentUnsubscribe = null;
+/* ================= LOAD STORY ================= */
+async function loadStory() {
+  try {
+    const snap = await get(ref(db, `stories/${storyId}`));
 
-  function showNotification(msg, isError = false) {
-    const notif = document.createElement("div");
-    notif.className = "notification";
-    notif.style.background = isError ? "#ff4444" : "#FF69B4";
-    notif.style.color = "black";
-    notif.innerText = msg;
-    document.body.appendChild(notif);
-    setTimeout(() => notif.remove(), 3000);
-  }
-
-  function escapeHtml(str) {
-    if (!str) return "";
-    return str.replace(/[&<>]/g, m => m === "&" ? "&amp;" : m === "<" ? "&lt;" : "&gt;");
-  }
-
-  function isAdmin(userData) { return userData?.role === "admin"; }
-  function canModerate(userData) { return isAdmin(userData) || userData?.privileges?.moderator === true; }
-
-  function ensureGuestUser() {
-    if (!currentUser) {
-      const guestId = "guest_" + Date.now() + "_" + Math.random().toString(36).substr(2, 6);
-      currentUser = {
-        uid: guestId,
-        displayName: "Hủ qua đường " + Math.floor(Math.random() * 9999),
-        nickname: "Hủ qua đường " + Math.floor(Math.random() * 9999),
-        guest: true,
-        role: "guest"
-      };
-      sessionStorage.setItem("tempGuest", JSON.stringify(currentUser));
-    }
-    return currentUser;
-  }
-
-  async function restoreSession() {
-    const sessionStr = localStorage.getItem("userSession");
-    if (sessionStr) {
-      try {
-        const session = JSON.parse(sessionStr);
-        if (session.expireAt && Date.now() < session.expireAt) {
-          if (session.role === "guest") { currentUser = session; return true; }
-          else if (session.uid) {
-            const userSnap = await get(ref(db, `users/${session.uid}`));
-            if (userSnap.exists()) { currentUser = { ...session, ...userSnap.val() }; return true; }
-          }
-        }
-      } catch(e) {}
-    }
-    ensureGuestUser();
-    return true;
-  }
-
-  async function loadStory() {
-    const storySnap = await get(ref(db, `stories/${storyId}`));
-    if (storySnap.exists()) {
-      story = { id: storyId, ...storySnap.val() };
-      document.title = `🌸 ${story.title} - DANMETOPIA 🌸`;
-      await loadChapters();
-      renderStory();
-    } else {
-      document.getElementById("storyContent").innerHTML = '<div class="loading-container"><p>Không tìm thấy truyện</p><a href="index.html" class="back-home">← Về trang chủ</a></div>';
-    }
-  }
-
-  async function loadChapters() {
-    const chaptersSnap = await get(ref(db, `chapters/${storyId}`));
-    if (chaptersSnap.exists()) {
-      chapters = Object.entries(chaptersSnap.val()).map(([id, value]) => ({ id, ...value }));
-      chapters.sort((a, b) => (a.chapterNumber || 0) - (b.chapterNumber || 0));
-    }
-  }
-
-  async function likeStory() {
-    if (!currentUser) ensureGuestUser();
-    const storyRef = ref(db, `stories/${storyId}/likes`);
-    const snapshot = await get(storyRef);
-    await set(storyRef, (snapshot.val() || 0) + 1);
-    showNotification("❤️ Đã thích truyện này!");
-    story.likes = (story.likes || 0) + 1;
-    renderStory();
-  }
-
-  async function followStory() {
-    if (!currentUser || currentUser.role === "guest") {
-      showNotification("Đăng nhập để theo dõi", true);
+    if (!snap.exists()) {
+      document.getElementById("storyContent").innerHTML =
+        "<h3>❌ Không tìm thấy truyện</h3>";
       return;
     }
-    const followsRef = ref(db, `users/${currentUser.uid}/follows/${storyId}`);
-    const snapshot = await get(followsRef);
-    if (snapshot.exists()) {
-      await remove(followsRef);
-      showNotification("Đã bỏ theo dõi");
-    } else {
-      await set(followsRef, true);
-      showNotification("✅ Đã theo dõi truyện");
+
+    story = snap.val();
+
+    const chapterSnap = await get(ref(db, `chapters/${storyId}`));
+    chapters = [];
+
+    if (chapterSnap.exists()) {
+      chapters = Object.entries(chapterSnap.val()).map(([id, v]) => ({
+        id,
+        ...v
+      }));
     }
-    renderStory();
+
+    render();
+  } catch (err) {
+    console.error(err);
+    document.getElementById("storyContent").innerHTML =
+      "<h3>❌ Lỗi load dữ liệu</h3>";
   }
+}
 
-  async function isFollowing() {
-    if (!currentUser || currentUser.role === "guest") return false;
-    const followsRef = ref(db, `users/${currentUser.uid}/follows/${storyId}`);
-    const snapshot = await get(followsRef);
-    return snapshot.exists();
-  }
+/* ================= ESCAPE ================= */
+function escapeHtml(str = "") {
+  return str.replace(/[&<>]/g, s =>
+    s === "&" ? "&amp;" : s === "<" ? "&lt;" : "&gt;"
+  );
+}
 
-  async function bookmarkStory() {
-    if (!currentUser) ensureGuestUser();
-    const bookmarks = JSON.parse(localStorage.getItem("danmetopia_bookmarks") || "[]");
-    const index = bookmarks.indexOf(storyId);
-    if (index !== -1) {
-      bookmarks.splice(index, 1);
-      showNotification("Đã xóa khỏi bookmark");
-    } else {
-      bookmarks.push(storyId);
-      showNotification("📑 Đã thêm vào bookmark");
-    }
-    localStorage.setItem("danmetopia_bookmarks", JSON.stringify(bookmarks));
-    renderStory();
-  }
+/* ================= RENDER ================= */
+function render() {
+  const html = `
+    <div class="story-detail-grid">
 
-  function isBookmarked() {
-    const bookmarks = JSON.parse(localStorage.getItem("danmetopia_bookmarks") || "[]");
-    return bookmarks.includes(storyId);
-  }
-
-  async function deleteChapter(chapterId) {
-    if (!confirm("Xóa chapter này?")) return;
-    await remove(ref(db, `chapters/${storyId}/${chapterId}`));
-    const storyRef = ref(db, `stories/${storyId}/chapters`);
-    const snap = await get(storyRef);
-    const currentChapters = snap.val() || {};
-    delete currentChapters[chapterId];
-    await set(storyRef, currentChapters);
-    showNotification("✅ Đã xóa chapter!");
-    await loadChapters();
-    renderStory();
-  }
-
-  function goToEditChapter(chapterId) {
-    window.location.href = `edit-chapter.html?id=${storyId}&chapterId=${chapterId}`;
-  }
-
-  function goToAddChapter() {
-    window.location.href = `add-chapter.html?id=${storyId}`;
-  }
-
-  function goToEditStory() {
-    window.location.href = `edit-story.html?id=${storyId}`;
-  }
-
-  async function renderStory() {
-    if (!story) return;
-    const canEdit = currentUser && (isAdmin(currentUser) || story.ownerUid === currentUser?.uid || (currentUser.privileges?.groupId && story.groupId === currentUser.privileges?.groupId));
-    const isMod = canModerate(currentUser);
-    const genreList = story.genres ? story.genres.split(',').map(g => g.trim()) : [];
-    const tagList = story.tags ? story.tags.split(',').map(t => t.trim()) : [];
-    const isFollow = await isFollowing();
-    const isBookmark = isBookmarked();
-
-    let chaptersHtml = `<h3>📖 DANH SÁCH CHAPTER</h3><div class="chapter-list">`;
-    chapters.forEach((chap, idx) => {
-      chaptersHtml += `
-        <div class="chapter-item" onclick="window.location.href='reader.html?id=${storyId}&chapter=${idx}'">
-          <span>${escapeHtml(chap.title)}</span>
-          <span style="font-size:12px;">📅 ${new Date(chap.createdAt).toLocaleDateString()}</span>
-          <div class="chapter-actions">
-            ${canEdit ? `<button class="chapter-edit-btn" onclick="event.stopPropagation(); goToEditChapter('${chap.id}')">✏️ Sửa</button>` : ''}
-            ${isAdmin(currentUser) ? `<button class="chapter-delete-btn" onclick="event.stopPropagation(); deleteChapter('${chap.id}')">🗑 Xóa</button>` : ''}
-          </div>
-        </div>
-      `;
-    });
-    chaptersHtml += `</div>`;
-
-    let actionsHtml = `
-      <button onclick="likeStory()">❤️ Thích (${story.likes || 0})</button>
-      <button onclick="followStory()">${isFollow ? '⭐ Đã theo dõi' : '➕ Theo dõi'}</button>
-      <button onclick="bookmarkStory()">${isBookmark ? '📑 Đã bookmark' : '🔖 Bookmark'}</button>
-    `;
-    if (canEdit) actionsHtml += `<button onclick="goToEditStory()">✏️ Chỉnh sửa truyện</button><button onclick="goToAddChapter()">📖 Thêm chapter mới</button>`;
-    if (isMod && story.approved === false) actionsHtml += `<button onclick="approveStory()">✅ Duyệt truyện</button>`;
-    if (isAdmin(currentUser)) actionsHtml += `<button onclick="deleteStory()" style="background:#ff4444;">🗑 Xóa truyện</button>`;
-
-    const html = `
-      <div class="story-detail-grid">
-        <div>
-          <img class="story-detail-cover" src="${escapeHtml(story.cover) || 'https://placehold.co/300x450?text=No+Cover'}" onerror="this.src='https://placehold.co/300x450?text=ERROR'">
-        </div>
-        <div class="story-detail-info">
-          <h2>${escapeHtml(story.title)}</h2>
-          <p><span class="story-detail-label">📖 Tên khác:</span> ${escapeHtml(story.otherName) || "Chưa có"}</p>
-          <p><span class="story-detail-label">✍️ Tác giả:</span> <span class="clickable-tag" onclick="filterByAuthor('${escapeHtml(story.author)}')">${escapeHtml(story.author) || "Chưa rõ"}</span></p>
-          <p><span class="story-detail-label">🏷️ Thể loại:</span> ${genreList.map(g => `<span class="clickable-tag" onclick="filterByGenre('${escapeHtml(g)}')">#${escapeHtml(g)}</span>`).join(' ') || "Chưa cập nhật"}</p>
-          <p><span class="story-detail-label">🔖 Tags:</span> ${tagList.map(t => `<span class="clickable-tag" onclick="filterByTag('${escapeHtml(t)}')">#${escapeHtml(t)}</span>`).join(' ') || "Chưa có"}</p>
-          <p><span class="story-detail-label">📚 Nhóm dịch:</span> <span class="clickable-tag" onclick="filterByGroup('${escapeHtml(story.groupName)}')">${escapeHtml(story.groupName) || "Cá nhân"}</span></p>
-          <p><span class="story-detail-label">📌 Tình trạng:</span> ${story.status === "Đã hoàn thành" ? "✅ Hoàn thành" : story.status === "Tạm ngưng" ? "⏸ Tạm ngưng" : "📖 Đang ra"}</p>
-          <p><span class="story-detail-label">📖 Số chương:</span> ${chapters.length}</p>
-          <p><span class="story-detail-label">📝 Mô tả:</span><br>${escapeHtml(story.desc) || "Chưa có mô tả"}</p>
-          <p><span class="story-detail-label">❤️ Lượt thích:</span> ${story.likes || 0}</p>
-          <p><span class="story-detail-label">👁 Lượt xem:</span> ${story.views || 0}</p>
-        </div>
+      <div>
+        <img class="story-detail-cover"
+          src="${story.cover || "https://placehold.co/300x450"}"
+          onerror="this.src='https://placehold.co/300x450'">
       </div>
-      ${chaptersHtml}
-      <div class="comment-section">
-        <h4>💬 BÌNH LUẬN</h4>
-        <div class="comment-input-area">
-          <textarea id="commentText" rows="3" placeholder="Viết bình luận..."></textarea>
-          <button id="postCommentBtn">GỬI</button>
+
+      <div class="story-detail-info">
+        <h2>${escapeHtml(story.title)}</h2>
+
+        <p><b>Tác giả:</b> ${escapeHtml(story.author || "Chưa rõ")}</p>
+        <p><b>Mô tả:</b> ${escapeHtml(story.desc || "")}</p>
+        <p><b>Số chapter:</b> ${chapters.length}</p>
+        <p><b>Lượt thích:</b> ${story.likes || 0}</p>
+      </div>
+    </div>
+
+    <h3>📖 Chapters</h3>
+    <div>
+      ${chapters.map((c, i) => `
+        <div class="chapter-item"
+          onclick="location.href='reader.html?id=${storyId}&chapter=${i}'">
+          <span>${escapeHtml(c.title)}</span>
         </div>
-        <div id="commentList"></div>
-      </div>
-      <div class="story-actions" style="margin-top: 20px; display: flex; gap: 10px; flex-wrap: wrap;">
-        ${actionsHtml}
-      </div>
-    `;
-    document.getElementById("storyContent").innerHTML = html;
-    loadCommentsRealtime(storyId);
-    const postBtn = document.getElementById("postCommentBtn");
-    if (postBtn) {
-      const newPostBtn = postBtn.cloneNode(true);
-      postBtn.parentNode.replaceChild(newPostBtn, postBtn);
-      newPostBtn.addEventListener("click", () => postComment(storyId));
-    }
-  }
+      `).join("")}
+    </div>
 
-  async function approveStory() {
-    await update(ref(db, `stories/${storyId}`), { approved: true });
-    showNotification("Đã duyệt truyện");
-    story.approved = true;
-    renderStory();
-  }
+    <h3>💬 Comment</h3>
+    <textarea id="cmt"></textarea>
+    <button onclick="postComment()">Gửi</button>
 
-  async function deleteStory() {
-    if (confirm("Xóa truyện này?")) {
-      await remove(ref(db, `stories/${storyId}`));
-      showNotification("Đã xóa truyện");
-      window.location.href = "index.html";
-    }
-  }
+    <div id="comments"></div>
+  `;
 
-  async function loadCommentsRealtime(storyId) {
-    if (commentUnsubscribe) commentUnsubscribe();
-    const commentsRef = ref(db, `comments/${storyId}`);
-    commentUnsubscribe = onValue(commentsRef, (snapshot) => {
-      const data = snapshot.val();
-      const comments = data ? Object.entries(data).map(([id, value]) => ({ id, ...value })) : [];
-      comments.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-      const commentList = document.getElementById("commentList");
-      if (commentList) {
-        commentList.innerHTML = comments.map(c => `
-          <div class="comment-item">
-            <div class="comment-name">
-              <span>💬 ${escapeHtml(c.userName)}</span>
-              <span class="comment-time">${new Date(c.createdAt).toLocaleString()}</span>
-            </div>
-            <div class="comment-text">${escapeHtml(c.text)}</div>
-          </div>
-        `).join("");
-        if (comments.length === 0) commentList.innerHTML = '<div style="text-align:center;padding:20px;">Chưa có bình luận</div>';
-      }
-    });
-  }
+  document.getElementById("storyContent").innerHTML = html;
 
-  async function postComment(storyId) {
-    let user = currentUser;
-    if (!user || (user.role === "guest" && !user.uid)) {
-      user = ensureGuestUser();
-      sessionStorage.setItem("tempGuestUser", JSON.stringify(user));
-    }
-    const text = document.getElementById("commentText")?.value.trim();
-    if (!text) return;
-    const commentsRef = ref(db, `comments/${storyId}`);
-    const newCommentRef = push(commentsRef);
-    await set(newCommentRef, {
-      text: text,
-      userId: user.uid,
-      userName: user.displayName,
-      createdAt: Date.now()
-    });
-    document.getElementById("commentText").value = "";
-    showNotification("✅ Đã gửi bình luận");
-  }
+  loadComments();
+}
 
-  window.filterByAuthor = (author) => {
-    if (author && author !== "Chưa rõ") {
-      window.location.href = `index.html?search=${encodeURIComponent(author)}`;
-    }
-  };
-  window.filterByGroup = (groupName) => {
-    if (groupName && groupName !== "Cá nhân") {
-      window.location.href = `index.html?search=${encodeURIComponent(groupName)}`;
-    }
-  };
-  window.filterByGenre = (genre) => {
-    window.location.href = `index.html?genre=${encodeURIComponent(genre)}`;
-  };
-  window.filterByTag = (tag) => {
-    window.location.href = `index.html?search=${encodeURIComponent(tag)}`;
-  };
+/* ================= COMMENT ================= */
+function loadComments() {
+  const cRef = ref(db, `comments/${storyId}`);
 
-  window.likeStory = likeStory;
-  window.followStory = followStory;
-  window.bookmarkStory = bookmarkStory;
-  window.goToEditChapter = goToEditChapter;
-  window.goToAddChapter = goToAddChapter;
-  window.goToEditStory = goToEditStory;
-  window.deleteChapter = deleteChapter;
+  onValue(cRef, snap => {
+    const data = snap.val() || {};
 
-  await restoreSession();
-  const tempGuest = sessionStorage.getItem("tempGuestUser");
-  if (tempGuest && !currentUser) { currentUser = JSON.parse(tempGuest); }
-  await loadStory();
+    const list = Object.values(data)
+      .sort((a, b) => b.createdAt - a.createdAt);
+
+    document.getElementById("comments").innerHTML =
+      list.map(c => `
+        <div class="comment-item">
+          <b>${escapeHtml(c.userName)}</b><br>
+          ${escapeHtml(c.text)}
+        </div>
+      `).join("");
+  });
+}
+
+window.postComment = async function () {
+  const user = ensureGuestUser();
+  const text = document.getElementById("cmt").value.trim();
+
+  if (!text) return;
+
+  const newRef = push(ref(db, `comments/${storyId}`));
+
+  await set(newRef, {
+    text,
+    userName: user.displayName,
+    createdAt: Date.now()
+  });
+
+  document.getElementById("cmt").value = "";
+};
+
+/* ================= INIT ================= */
+loadStory();
 </script>
 </body>
 </html>
