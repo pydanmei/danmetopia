@@ -30,37 +30,42 @@ const GENRE_LIST = [
   "Tragedy", "War", "Wuxia", "Yaoi", "Yuri"
 ];
 
-// Tạo map để kiểm tra nhanh
 const GENRE_SET = new Set(GENRE_LIST);
 
-// Hàm tách thể loại và tags từ input (gộp chung)
+// Hàm tách thể loại và tags từ input gộp
 function parseGenresAndTags(input) {
   if (!input || input.trim() === "") return { genres: "", tags: "" };
-  
-  // Tách các từ khóa bằng dấu phẩy hoặc khoảng trắng (nhưng ưu tiên dấu phẩy)
   let keywords = [];
   if (input.includes(",")) {
     keywords = input.split(",").map(k => k.trim()).filter(k => k);
   } else {
     keywords = input.split(" ").map(k => k.trim()).filter(k => k);
   }
-  
   const genres = [];
   const tags = [];
-  
   for (const kw of keywords) {
-    // Kiểm tra nếu keyword nằm trong danh sách thể loại
     if (GENRE_SET.has(kw)) {
       genres.push(kw);
     } else {
       tags.push(kw);
     }
   }
-  
   return {
     genres: genres.join(", "),
     tags: tags.join(", ")
   };
+}
+
+// Hàm tạo slug từ tiêu đề
+function generateSlug(title) {
+  if (!title) return "";
+  return title
+    .toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9\s-]/g, "")
+    .trim()
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-");
 }
 
 // ==================== STATE ====================
@@ -76,6 +81,27 @@ const state = {
   searchKeyword: "",
   sortBy: "likes"
 };
+
+// ==================== ROUTER (URL thân thiện) ====================
+function initRouter() {
+  const hash = window.location.hash.slice(1);
+  if (!hash) return;
+  const parts = hash.split("/");
+  if (parts[0] === "truyen" && parts[1]) {
+    const storySlug = parts[1];
+    const story = state.stories.find(s => s.slug === storySlug);
+    if (story) {
+      if (parts[2] && parts[2].startsWith("chuong-")) {
+        const chapterNum = parseInt(parts[2].replace("chuong-", "")) || 1;
+        window.openReader(story.id, chapterNum - 1);
+      } else {
+        window.openStoryDetail(story.id);
+      }
+    }
+  }
+}
+
+window.addEventListener("hashchange", initRouter);
 
 // ==================== HELPER FUNCTIONS ====================
 function showNotification(msg, isError = false) {
@@ -146,29 +172,22 @@ function refreshUserSession() {
   } catch { return false; }
 }
 
-function clearMainPasswordSession() {
-  localStorage.removeItem("mainPasswordExpiry");
-}
-
+function clearMainPasswordSession() { localStorage.removeItem("mainPasswordExpiry"); }
 function isMainPasswordValid() {
   const expiry = localStorage.getItem("mainPasswordExpiry");
-  if (!expiry) return false;
-  return Date.now() < parseInt(expiry);
+  return expiry && Date.now() < parseInt(expiry);
 }
 
 // ==================== CHECK NICKNAME EXISTS ====================
 async function isNicknameExists(nickname) {
   const usersSnap = await get(ref(db, "users"));
   const users = usersSnap.val() || {};
-  for (const uid in users) {
-    if (users[uid].nickname === nickname) return true;
-  }
+  for (const uid in users) if (users[uid].nickname === nickname) return true;
   return false;
 }
 
 // ==================== AUTH ====================
-let pendingRegisterEmail = null;
-let pendingRegisterIsAdmin = false;
+let pendingRegisterEmail = null, pendingRegisterIsAdmin = false;
 
 function generateOTP() { return Math.floor(100000 + Math.random() * 900000).toString(); }
 
@@ -224,10 +243,7 @@ async function loadUserData(uid, email) {
 // ==================== AUTH HANDLERS ====================
 async function handleWarningContinue() {
   const mainPass = document.getElementById("mainPassword").value;
-  if (mainPass !== "danmei") {
-    showNotification("❌ Sai mật khẩu chính!", true);
-    return;
-  }
+  if (mainPass !== "danmei") { showNotification("❌ Sai mật khẩu chính!", true); return; }
   localStorage.setItem("mainPasswordExpiry", (Date.now() + 24 * 60 * 60 * 1000).toString());
   document.getElementById("warningOverlay").style.display = "none";
   document.getElementById("loginPage").style.display = "flex";
@@ -247,23 +263,19 @@ async function handleGuestLogin() {
 async function handleCheckEmail() {
   const email = document.getElementById("loginEmail").value.trim();
   if (!email) { showNotification("Nhập email", true); return; }
-  
   const ADMIN_EMAILS = ["pydanmeii@gmail.com", "pepyl4298@gmail.com", "maihuong4298@gmail.com"];
   const isAdminEmail = ADMIN_EMAILS.includes(email);
   showLoading(true);
   const emailExists = await checkEmailExists(email);
   showLoading(false);
-  
   pendingRegisterEmail = email;
   pendingRegisterIsAdmin = isAdminEmail;
-  
   if (emailExists) {
     document.getElementById("passwordGroup").style.display = "block";
     document.getElementById("otpGroup").style.display = "none";
     document.getElementById("loginMsg").innerHTML = "🔐 Nhập mật khẩu đã tạo khi đăng ký";
     return;
   }
-  
   if (isAdminEmail) {
     document.getElementById("verifiedEmail").innerText = email;
     document.getElementById("loginPage").style.display = "none";
@@ -271,7 +283,6 @@ async function handleCheckEmail() {
     document.getElementById("registerMsg").innerHTML = "👑 Email Admin, vui lòng tạo tài khoản";
     return;
   }
-  
   await sendOTPEmail(email);
   document.getElementById("otpGroup").style.display = "block";
   document.getElementById("passwordGroup").style.display = "none";
@@ -307,11 +318,8 @@ async function handlePasswordLogin() {
     updateUserDisplay();
     initApp();
   } catch (err) {
-    if (err.code === "auth/invalid-credential") {
-      showNotification("Sai mật khẩu", true);
-    } else {
-      showNotification("Lỗi: " + err.message, true);
-    }
+    if (err.code === "auth/invalid-credential") showNotification("Sai mật khẩu", true);
+    else showNotification("Lỗi: " + err.message, true);
   } finally { showLoading(false); }
 }
 
@@ -320,17 +328,11 @@ async function handleCompleteRegistration() {
   const password = document.getElementById("newPassword").value;
   const confirm = document.getElementById("confirmPassword").value;
   const msg = document.getElementById("registerMsg");
-  
   if (!nickname) { msg.innerText = "Nhập nickname"; return; }
   if (!password || password.length < 6) { msg.innerText = "Mật khẩu phải có ít nhất 6 ký tự"; return; }
   if (password !== confirm) { msg.innerText = "Mật khẩu không khớp"; return; }
-  
   const nicknameExists = await isNicknameExists(nickname);
-  if (nicknameExists && !pendingRegisterIsAdmin) {
-    msg.innerText = "❌ Nickname đã tồn tại! Vui lòng chọn nickname khác.";
-    return;
-  }
-  
+  if (nicknameExists && !pendingRegisterIsAdmin) { msg.innerText = "❌ Nickname đã tồn tại! Vui lòng chọn nickname khác."; return; }
   showLoading(true);
   try {
     const userCred = await createUserWithEmailAndPassword(auth, pendingRegisterEmail, password);
@@ -343,18 +345,12 @@ async function handleCompleteRegistration() {
     showNotification(`🎉 Chào mừng ${nickname}!`);
     updateUserDisplay();
     initApp();
-  } catch (err) {
-    console.error("Registration error:", err);
-    msg.innerText = "Lỗi: " + err.message;
-  } finally { showLoading(false); }
+  } catch (err) { msg.innerText = "Lỗi: " + err.message; }
+  finally { showLoading(false); }
 }
 
 async function restoreSession() {
-  if (!isMainPasswordValid()) {
-    clearMainPasswordSession();
-    return false;
-  }
-  
+  if (!isMainPasswordValid()) { clearMainPasswordSession(); return false; }
   const sessionStr = localStorage.getItem("userSession");
   if (!sessionStr) return false;
   try {
@@ -409,16 +405,9 @@ function updateUserDisplay() {
 async function loadAllGroups() {
   try {
     const groupsSnap = await get(ref(db, "groups"));
-    if (groupsSnap.exists()) {
-      state.allGroups = Object.entries(groupsSnap.val()).map(([id, g]) => ({ id, ...g }));
-    } else {
-      state.allGroups = [];
-    }
+    state.allGroups = groupsSnap.exists() ? Object.entries(groupsSnap.val()).map(([id, g]) => ({ id, ...g })) : [];
     return state.allGroups;
-  } catch (err) {
-    state.allGroups = [];
-    return [];
-  }
+  } catch (err) { state.allGroups = []; return []; }
 }
 
 async function getUserGroups(uid) {
@@ -460,7 +449,7 @@ function isFollowing(storyId) { return !!state.userFollows[storyId]; }
 // ==================== BOOKMARK & HISTORY ====================
 function loadBookmarks() {
   const saved = localStorage.getItem("danmetopia_bookmarks");
-  if (saved) state.bookmarks = JSON.parse(saved);
+  state.bookmarks = saved ? JSON.parse(saved) : [];
 }
 function saveBookmarks() { localStorage.setItem("danmetopia_bookmarks", JSON.stringify(state.bookmarks)); }
 function addBookmark(storyId) { if (!state.bookmarks.includes(storyId)) { state.bookmarks.push(storyId); saveBookmarks(); showNotification("📑 Đã thêm vào bookmark"); } }
@@ -469,7 +458,7 @@ function isBookmarked(storyId) { return state.bookmarks.includes(storyId); }
 
 function loadHistory() {
   const saved = localStorage.getItem("danmetopia_history");
-  if (saved) state.readingHistory = JSON.parse(saved);
+  state.readingHistory = saved ? JSON.parse(saved) : [];
 }
 function saveHistory() { localStorage.setItem("danmetopia_history", JSON.stringify(state.readingHistory)); }
 
@@ -480,6 +469,7 @@ async function loadStoriesRealtime() {
     const data = snapshot.val();
     state.stories = data ? Object.entries(data).map(([id, value]) => ({ id, ...value })) : [];
     renderCurrentTab();
+    initRouter();
   });
 }
 
@@ -492,12 +482,8 @@ async function uploadImage(file) {
   try {
     const response = await fetch("https://api.imgbb.com/1/upload", { method: "POST", body: formData });
     const result = await response.json();
-    if (result.success) return result.data.url;
-    else throw new Error(result.error?.message || "Upload thất bại");
-  } catch (err) {
-    showNotification("Lỗi upload: " + err.message, true);
-    return null;
-  }
+    return result.success ? result.data.url : null;
+  } catch (err) { showNotification("Lỗi upload: " + err.message, true); return null; }
 }
 
 async function uploadMultipleImages(files) {
@@ -516,8 +502,9 @@ async function createStory(data, coverFile, chapterImages) {
   if (!data.title) throw new Error("Thiếu title");
   const newStoryRef = push(ref(db, 'stories'));
   const isAdminUser = isAdmin(state.currentUser);
+  const slug = generateSlug(data.title);
   await set(newStoryRef, {
-    title: data.title, otherName: data.otherName || "", author: data.author || "",
+    title: data.title, slug: slug, otherName: data.otherName || "", author: data.author || "",
     genres: data.genres || "", tags: data.tags || "", status: data.status || "Đang tiến hành",
     desc: data.desc || "", cover: coverUrl || "", ownerUid: state.currentUser?.uid || "",
     ownerNickname: state.currentUser?.nickname || "Người dùng", groupId: data.groupId || null,
@@ -610,7 +597,7 @@ function renderCurrentTab() {
   else filtered.sort((a,b) => (b.createdAt||0) - (a.createdAt||0));
   if (filtered.length === 0) { grid.innerHTML = "<div style='text-align:center; padding:50px;'>📭 Không có truyện nào</div>"; return; }
   grid.innerHTML = filtered.map(story => `
-    <div class="manga-card" onclick="window.openStoryDetail('${story.id}')">
+    <div class="manga-card" onclick="window.goToStory('${story.slug}')">
       <img class="manga-cover" src="${escapeHtml(story.cover) || 'https://placehold.co/300x450?text=No+Cover'}" onerror="this.src='https://placehold.co/300x450?text=ERROR'">
       <div class="manga-info">
         <div class="manga-title">${escapeHtml(story.title)}</div>
@@ -623,6 +610,10 @@ function renderCurrentTab() {
   `).join("");
 }
 
+window.goToStory = (slug) => {
+  window.location.hash = `#/truyen/${slug}`;
+};
+
 // ==================== RENDER UPLOAD PANEL ====================
 function renderUploadPanel() {
   const panel = document.getElementById("uploadPanel");
@@ -634,10 +625,8 @@ function renderUploadPanel() {
       <input id="uploadTitle" placeholder="Tên truyện *">
       <input id="uploadOtherName" placeholder="Tên khác">
       <input id="uploadAuthor" placeholder="Tác giả">
-      <input id="uploadGenreTags" placeholder="Thể loại và Tags (cách nhau bằng dấu phẩy, ví dụ: Romance, School Life, Học đường, Đam mỹ)">
-      <div style="font-size:12px; color:#888; margin-bottom:12px;">
-        💡 Gợi ý: Hệ thống sẽ tự động phân biệt thể loại (33 thể loại có sẵn) và tags.
-      </div>
+      <input id="uploadGenreTags" placeholder="Thể loại và Tags (cách nhau bằng dấu phẩy)">
+      <div style="font-size:12px; color:#888; margin-bottom:12px;">💡 Hệ thống sẽ tự động phân biệt thể loại và tags</div>
       <select id="uploadStatus">
         <option value="Đang tiến hành">📖 Đang tiến hành</option>
         <option value="Đã hoàn thành">✅ Đã hoàn thành</option>
@@ -684,11 +673,8 @@ function renderUploadPanel() {
       const groupId = document.getElementById("uploadGroupId").value;
       let groupName = "";
       if (groupId) { const groupSnap = await get(ref(db, `groups/${groupId}`)); if (groupSnap.exists()) groupName = groupSnap.val().groupName; }
-      
-      // Phân tích thể loại và tags từ input gộp
       const genreTagsInput = document.getElementById("uploadGenreTags").value;
       const { genres, tags } = parseGenresAndTags(genreTagsInput);
-      
       let chapterImageUrls = [];
       if (selectedChapterFiles.length > 0) chapterImageUrls = await uploadMultipleImages(selectedChapterFiles);
       await createStory({
@@ -747,12 +733,12 @@ window.openStoryDetail = async (storyId) => {
   let chaptersHtml = `<h3>📖 DANH SÁCH CHAPTER</h3><div class="chapter-list">`;
   chapters.forEach((chap, idx) => {
     chaptersHtml += `
-      <div class="chapter-item" onclick="window.openReader('${storyId}', ${idx})">
+      <div class="chapter-item" onclick="window.goToChapter('${story.slug}', ${idx + 1})">
         <span>${escapeHtml(chap.title)}</span>
         <span style="font-size:12px;">📅 ${new Date(chap.createdAt).toLocaleDateString()}</span>
         <div class="chapter-actions">
-          ${canEdit ? `<button class="chapter-edit-btn" onclick="event.stopPropagation(); window.openEditChapter('${storyId}', '${chap.id}')">✏️ Sửa</button>` : ''}
-          ${isAdmin(state.currentUser) ? `<button class="chapter-delete-btn" onclick="event.stopPropagation(); window.deleteChapter('${storyId}', '${chap.id}')">🗑 Xóa</button>` : ''}
+          ${canEdit ? `<button class="chapter-edit-btn" onclick="event.stopPropagation(); window.openEditChapter('${story.id}', '${chap.id}')">✏️ Sửa</button>` : ''}
+          ${isAdmin(state.currentUser) ? `<button class="chapter-delete-btn" onclick="event.stopPropagation(); window.deleteChapter('${story.id}', '${chap.id}')">🗑 Xóa</button>` : ''}
         </div>
       </div>
     `;
@@ -760,25 +746,34 @@ window.openStoryDetail = async (storyId) => {
   chaptersHtml += `</div>`;
   document.getElementById("storyChapters").innerHTML = chaptersHtml;
   
-  let actionsHtml = `<button onclick="window.likeStoryAction('${storyId}')">❤️ Thích</button>`;
+  let actionsHtml = `<button onclick="window.likeStoryAction('${story.id}')">❤️ Thích</button>`;
   if (state.currentUser && state.currentUser.role !== "guest") {
-    actionsHtml += `<button onclick="window.toggleFollowAction('${storyId}')">${isFollowing(storyId) ? '⭐ Đã theo dõi' : '➕ Theo dõi'}</button>`;
-    actionsHtml += `<button onclick="window.toggleBookmarkAction('${storyId}')">${isBookmarked(storyId) ? '📑 Đã bookmark' : '🔖 Bookmark'}</button>`;
+    actionsHtml += `<button onclick="window.toggleFollowAction('${story.id}')">${isFollowing(story.id) ? '⭐ Đã theo dõi' : '➕ Theo dõi'}</button>`;
+    actionsHtml += `<button onclick="window.toggleBookmarkAction('${story.id}')">${isBookmarked(story.id) ? '📑 Đã bookmark' : '🔖 Bookmark'}</button>`;
   }
-  if (canEdit) actionsHtml += `<button onclick="window.openEditStory('${storyId}')">✏️ Chỉnh sửa truyện</button><button onclick="window.openAddChapter('${storyId}')">📖 Thêm chapter mới</button>`;
-  if (isMod && story.approved === false) actionsHtml += `<button onclick="window.approveStoryAction('${storyId}')">✅ Duyệt truyện</button>`;
-  if (isAdmin(state.currentUser)) actionsHtml += `<button onclick="window.deleteStoryAction('${storyId}')" style="background:#ff4444;">🗑 Xóa truyện</button>`;
+  if (canEdit) actionsHtml += `<button onclick="window.openEditStory('${story.id}')">✏️ Chỉnh sửa truyện</button><button onclick="window.openAddChapter('${story.id}')">📖 Thêm chapter mới</button>`;
+  if (isMod && story.approved === false) actionsHtml += `<button onclick="window.approveStoryAction('${story.id}')">✅ Duyệt truyện</button>`;
+  if (isAdmin(state.currentUser)) actionsHtml += `<button onclick="window.deleteStoryAction('${story.id}')" style="background:#ff4444;">🗑 Xóa truyện</button>`;
   document.getElementById("storyActions").innerHTML = actionsHtml;
   document.getElementById("storyModal").style.display = "flex";
 };
 
-// Các hàm filter
+window.goToChapter = (slug, chapterNum) => {
+  window.location.hash = `#/truyen/${slug}/chuong-${chapterNum}`;
+};
+
+// ==================== CÁC HÀM FILTER ====================
 window.filterByAuthor = (author) => {
   if (author && author !== "Chưa rõ") {
     state.searchKeyword = author;
     document.getElementById("searchInput").value = author;
+    document.querySelectorAll(".tab-btn").forEach(btn => btn.classList.remove("active"));
+    const allTab = document.querySelector(".tab-btn[data-tab='all']");
+    if (allTab) allTab.classList.add("active");
+    state.currentTab = "all";
     renderCurrentTab();
     closeModal("storyModal");
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }
 };
 
@@ -786,27 +781,41 @@ window.filterByGroup = (groupName) => {
   if (groupName && groupName !== "Cá nhân") {
     state.searchKeyword = groupName;
     document.getElementById("searchInput").value = groupName;
+    document.querySelectorAll(".tab-btn").forEach(btn => btn.classList.remove("active"));
+    const allTab = document.querySelector(".tab-btn[data-tab='all']");
+    if (allTab) allTab.classList.add("active");
+    state.currentTab = "all";
     renderCurrentTab();
     closeModal("storyModal");
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }
 };
 
 window.filterByGenre = (genre) => { 
   state.selectedGenre = genre; 
+  const genreSelect = document.getElementById("genreSelect");
+  if (genreSelect) genreSelect.value = genre;
   renderCurrentTab(); 
   closeModal("storyModal"); 
+  window.scrollTo({ top: 0, behavior: "smooth" });
 };
 
 window.filterByTag = (tag) => { 
   state.searchKeyword = tag; 
   document.getElementById("searchInput").value = tag; 
+  document.querySelectorAll(".tab-btn").forEach(btn => btn.classList.remove("active"));
+  const allTab = document.querySelector(".tab-btn[data-tab='all']");
+  if (allTab) allTab.classList.add("active");
+  state.currentTab = "all";
   renderCurrentTab(); 
   closeModal("storyModal"); 
+  window.scrollTo({ top: 0, behavior: "smooth" });
 };
 
 window.openStoryDetailChapter = (storyId, chapterIndex) => { 
-  closeModal("storyModal"); 
-  window.openReader(storyId, chapterIndex); 
+  const story = state.stories.find(s => s.id === storyId);
+  if (story) window.goToChapter(story.slug, chapterIndex + 1);
+  closeModal("storyModal");
 };
 
 // ==================== LIKE ACTION (GUEST ALLOWED) ====================
@@ -823,7 +832,8 @@ window.likeStoryAction = async (storyId) => {
     localStorage.setItem("tempGuestUser", JSON.stringify(state.currentUser));
   }
   await likeStory(storyId);
-  window.openStoryDetail(storyId);
+  const story = state.stories.find(s => s.id === storyId);
+  if (story) window.openStoryDetail(storyId);
 };
 
 window.approveStoryAction = async (storyId) => { await approveStory(storyId); closeModal("storyModal"); };
@@ -871,7 +881,6 @@ window.saveEditStory = async (storyId) => {
   const newGroupId = document.getElementById("editGroupId").value;
   if (newGroupId) { const groupSnap = await get(ref(db, `groups/${newGroupId}`)); if (groupSnap.exists()) groupName = groupSnap.val().groupName; }
   
-  // Phân tích thể loại và tags từ input gộp
   const genreTagsInput = document.getElementById("editGenreTags").value;
   const { genres, tags } = parseGenresAndTags(genreTagsInput);
   
@@ -883,7 +892,8 @@ window.saveEditStory = async (storyId) => {
   });
   closeModal("editStoryModal");
   showNotification("Đã cập nhật truyện");
-  window.openStoryDetail(storyId);
+  const story = state.stories.find(s => s.id === storyId);
+  if (story) window.openStoryDetail(storyId);
 };
 
 // ==================== ADD/EDIT CHAPTER ====================
@@ -948,7 +958,8 @@ window.saveAddChapter = async (storyId) => {
     await addChapter(storyId, title, pages, chapterNumber);
     showNotification("✅ Đã thêm chapter!");
     closeModal("addChapterModal");
-    window.openStoryDetail(storyId);
+    const story = state.stories.find(s => s.id === storyId);
+    if (story) window.openStoryDetail(storyId);
   } catch (err) { showNotification("Lỗi: " + err.message, true); }
 };
 
@@ -1031,7 +1042,8 @@ window.openEditChapter = async (storyId, chapterId) => {
       await updateChapter(storyId, chapterId, { title: newTitle, chapterNumber: newNumber, pages: newPages });
       closeModal("editChapterModal");
       showNotification("✅ Đã cập nhật chapter!");
-      window.openStoryDetail(storyId);
+      const story = state.stories.find(s => s.id === storyId);
+      if (story) window.openStoryDetail(storyId);
     });
   }
   document.getElementById("editChapterModal").style.display = "flex";
@@ -1039,7 +1051,12 @@ window.openEditChapter = async (storyId, chapterId) => {
 
 // ==================== READER (TRANG RIÊNG) ====================
 window.openReader = (storyId, chapterIndex) => {
-  window.location.href = `reader.html?id=${storyId}&chapter=${chapterIndex || 0}`;
+  const story = state.stories.find(s => s.id === storyId);
+  if (story) {
+    window.location.hash = `#/truyen/${story.slug}/chuong-${chapterIndex + 1}`;
+  } else {
+    window.location.href = `reader.html?id=${storyId}&chapter=${chapterIndex || 0}`;
+  }
 };
 
 // ==================== SCROLL BUTTONS ====================
@@ -1114,11 +1131,7 @@ async function uploadAvatar(file) {
 
 window.openProfile = () => {
   if (state.currentUser?.guest) {
-    document.getElementById("profileContent").innerHTML = `
-      <div style="text-align:center; padding:30px; color:white;">
-        🔒 Guest không thể đổi nickname
-      </div>
-    `;
+    document.getElementById("profileContent").innerHTML = `<div style="text-align:center; padding:30px; color:white;">🔒 Guest không thể đổi nickname</div>`;
     document.getElementById("profileModal").style.display = "flex";
     return;
   }
@@ -1152,10 +1165,7 @@ window.saveProfile = async () => {
 };
 
 window.createNewGroup = async () => {
-  if (state.currentUser?.role === "guest") {
-    showNotification("Vui lòng đăng nhập để tạo nhóm", true);
-    return;
-  }
+  if (state.currentUser?.role === "guest") { showNotification("Vui lòng đăng nhập để tạo nhóm", true); return; }
   const groupName = document.getElementById("groupNameInput").value;
   if (!groupName) { alert("Nhập tên nhóm"); return; }
   showLoading(true);
@@ -1178,11 +1188,9 @@ async function loadComponents() {
     const headerRes = await fetch('components/header.html');
     const headerHtml = await headerRes.text();
     document.getElementById('header-placeholder').innerHTML = headerHtml;
-    
     const footerRes = await fetch('components/footer.html');
     const footerHtml = await footerRes.text();
     document.getElementById('footer-placeholder').innerHTML = footerHtml;
-    
     document.getElementById('homeLogo')?.addEventListener('click', () => window.location.reload());
     document.getElementById('logoutBtn')?.addEventListener('click', logout);
     document.getElementById('profileBtn')?.addEventListener('click', window.openProfile);
@@ -1190,9 +1198,7 @@ async function loadComponents() {
     document.getElementById('confirmGroupBtn')?.addEventListener('click', window.createNewGroup);
     document.getElementById('adminLink')?.addEventListener('click', (e) => { e.preventDefault(); window.location.href = 'admin.html'; });
     document.getElementById('groupsLink')?.addEventListener('click', (e) => { e.preventDefault(); window.location.href = 'groups.html'; });
-  } catch (err) {
-    console.error("Error loading components:", err);
-  }
+  } catch (err) { console.error("Error loading components:", err); }
 }
 
 // ==================== INIT ====================
@@ -1217,23 +1223,14 @@ async function initApp() {
 // ==================== STARTUP ====================
 document.addEventListener("DOMContentLoaded", async () => {
   console.log("DOM ready - Starting app...");
-  
   document.getElementById("warningContinueBtn")?.addEventListener("click", handleWarningContinue);
   document.getElementById("guestBtn")?.addEventListener("click", handleGuestLogin);
   document.getElementById("checkEmailBtn")?.addEventListener("click", handleCheckEmail);
   document.getElementById("verifyOtpBtn")?.addEventListener("click", handleVerifyOTP);
   document.getElementById("passwordLoginBtn")?.addEventListener("click", handlePasswordLogin);
   document.getElementById("completeRegisterBtn")?.addEventListener("click", handleCompleteRegistration);
-  
-  document.getElementById("backToEmailBtn")?.addEventListener("click", () => { 
-    document.getElementById("otpGroup").style.display = "none"; 
-    document.getElementById("loginMsg").innerHTML = ""; 
-  });
-  document.getElementById("backToEmailBtn2")?.addEventListener("click", () => { 
-    document.getElementById("passwordGroup").style.display = "none"; 
-    document.getElementById("loginMsg").innerHTML = ""; 
-  });
-  
+  document.getElementById("backToEmailBtn")?.addEventListener("click", () => { document.getElementById("otpGroup").style.display = "none"; document.getElementById("loginMsg").innerHTML = ""; });
+  document.getElementById("backToEmailBtn2")?.addEventListener("click", () => { document.getElementById("passwordGroup").style.display = "none"; document.getElementById("loginMsg").innerHTML = ""; });
   if (isMainPasswordValid()) {
     if (await restoreSession()) {
       document.getElementById("warningOverlay").style.display = "none";
@@ -1257,9 +1254,6 @@ window.openEditChapter = window.openEditChapter;
 window.deleteChapter = window.deleteChapter;
 window.openReader = window.openReader;
 window.closeReaderModal = () => { window.location.href = 'index.html'; };
-window.changeChapter = () => {};
-window.changeChapterTo = () => {};
-window.scrollToTop = () => { window.scrollTo({ top: 0, behavior: "smooth" }); };
 window.closeModal = closeModal;
 window.saveEditStory = window.saveEditStory;
 window.saveAddChapter = window.saveAddChapter;
@@ -1277,3 +1271,12 @@ window.openProfile = window.openProfile;
 window.saveProfile = window.saveProfile;
 window.createNewGroup = window.createNewGroup;
 window.showNotification = showNotification;
+window.goToStory = window.goToStory;
+window.goToChapter = window.goToChapter;
+window.goToStoryInfo = (slug) => {
+  if (slug) {
+    window.location.hash = `#/truyen/${slug}`;
+  } else {
+    window.location.href = "index.html";
+  }
+};
