@@ -1111,4 +1111,110 @@ body {
   .reader-top-nav .chapter-title {
     font-size: 14px;
   }
+
+/* Bottom navigation bar cho mobile */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(0,0,0,0.9);
+  backdrop-filter: blur(10px);
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding: 10px 16px;
+  border-top: 1px solid rgba(255,105,180,0.3);
+  z-index: 1000;
+}
+.bottom-nav button {
+  flex: 1;
+  padding: 8px 0;
+  background: transparent;
+  border: none;
+  color: white;
+  font-size: 13px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+  border-radius: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.bottom-nav button:active {
+  transform: scale(0.95);
+}
+.bottom-nav button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.bottom-nav .active-nav {
+  color: #FF69B4;
+}
+
+/* Top nav cho reader */
+.reader-top-nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  background: rgba(0,0,0,0.85);
+  backdrop-filter: blur(10px);
+  padding: 8px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid rgba(255,105,180,0.3);
+}
+.reader-top-nav .nav-buttons {
+  display: flex;
+  gap: 8px;
+  flex: 1;
+}
+.reader-top-nav button {
+  flex: 1;
+  padding: 8px 12px;
+  background: linear-gradient(135deg, #FF69B4, #FF4FA3);
+  border: none;
+  border-radius: 40px;
+  color: white;
+  font-weight: bold;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.reader-top-nav button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.reader-top-nav .story-info-btn {
+  background: rgba(255,255,255,0.2);
+  padding: 8px 12px;
+  border-radius: 40px;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.reader-top-nav .story-info-btn:hover {
+  background: rgba(255,255,255,0.3);
+}
+
+/* Responsive cho reader nav */
+@media (max-width: 768px) {
+  .reader-container { padding: 70px 16px 80px 16px; }
+  .reader-top-nav .nav-buttons button { font-size: 11px; padding: 6px 8px; }
+  .reader-top-nav .story-info-btn { font-size: 11px; padding: 6px 10px; }
+  .bottom-nav button { font-size: 11px; }
+  .bottom-nav button span { display: none; }
+  .bottom-nav button:after { content: attr(data-icon); font-size: 20px; }
+}
+
 }
