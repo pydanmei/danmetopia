@@ -9,7 +9,7 @@
 </head>
 <body>
 
-<!-- WARNING OVERLAY - LUÔN HIỂN THỊ ĐẦU TIÊN -->
+<!-- WARNING OVERLAY -->
 <div id="warningOverlay" style="display: flex;">
   <div class="warning-box">
     <h2>⚠️ CẢNH BÁO 18+ ⚠️</h2>
@@ -43,7 +43,7 @@
   </div>
 </div>
 
-<!-- REGISTER OVERLAY (TẠO NICKNAME CHO EMAIL MỚI) -->
+<!-- REGISTER OVERLAY -->
 <div id="registerPage" style="display: none;">
   <div class="login-box">
     <h2>🎉 HOÀN TẤT ĐĂNG KÝ</h2>
@@ -96,10 +96,10 @@
 <div id="editChapterModal" class="modal"><div class="modal-content"><span class="close-modal" onclick="closeModal('editChapterModal')">&times;</span><h2>✏️ CHỈNH SỬA CHAPTER</h2><div id="editChapterContent"></div></div></div>
 <div id="profileModal" class="modal"><div class="modal-content"><span class="close-modal" onclick="closeModal('profileModal')">&times;</span><h2>👤 THÔNG TIN</h2><div id="profileContent"></div></div></div>
 
-<!-- READER MODAL -->
+<!-- READER MODAL (không dùng nữa) -->
 <div id="readerModal" class="modal">
   <div class="modal-content fullscreen-reader">
-    <button class="reader-close-btn close-modal" onclick="window.closeReaderModal()">✕</button>
+    <button class="reader-close-btn close-modal" onclick="closeReaderModal()">✕</button>
     <div id="readerContent"></div>
   </div>
 </div>
