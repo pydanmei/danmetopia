@@ -31,6 +31,7 @@
     .comment-item { background: #2a2a2a; padding: 12px; border-radius: 12px; margin-bottom: 10px; }
     .comment-name { font-weight: bold; color: #FF69B4; margin-bottom: 5px; display: flex; justify-content: space-between; flex-wrap: wrap; }
     .comment-time { font-size: 11px; color: #888; }
+    .story-actions { margin-top: 20px; display: flex; gap: 10px; flex-wrap: wrap; }
     @media (max-width: 768px) {
       .story-detail-grid { grid-template-columns: 1fr; }
       .story-detail-cover { max-width: 250px; margin: 0 auto; }
@@ -264,10 +265,10 @@
         <div class="story-detail-info">
           <h2>${escapeHtml(story.title)}</h2>
           <p><span class="story-detail-label">📖 Tên khác:</span> ${escapeHtml(story.otherName) || "Chưa có"}</p>
-          <p><span class="story-detail-label">✍️ Tác giả:</span> <span class="clickable-tag" onclick="filterByAuthor('${escapeHtml(story.author)}')">${escapeHtml(story.author) || "Chưa rõ"}</span></p>
-          <p><span class="story-detail-label">🏷️ Thể loại:</span> ${genreList.map(g => `<span class="clickable-tag" onclick="filterByGenre('${escapeHtml(g)}')">#${escapeHtml(g)}</span>`).join(' ') || "Chưa cập nhật"}</p>
-          <p><span class="story-detail-label">🔖 Tags:</span> ${tagList.map(t => `<span class="clickable-tag" onclick="filterByTag('${escapeHtml(t)}')">#${escapeHtml(t)}</span>`).join(' ') || "Chưa có"}</p>
-          <p><span class="story-detail-label">📚 Nhóm dịch:</span> <span class="clickable-tag" onclick="filterByGroup('${escapeHtml(story.groupName)}')">${escapeHtml(story.groupName) || "Cá nhân"}</span></p>
+          <p><span class="story-detail-label">✍️ Tác giả:</span> <span class="clickable-tag" onclick="window.location.href='index.html?search=${encodeURIComponent(story.author)}'">${escapeHtml(story.author) || "Chưa rõ"}</span></p>
+          <p><span class="story-detail-label">🏷️ Thể loại:</span> ${genreList.map(g => `<span class="clickable-tag" onclick="window.location.href='index.html?genre=${encodeURIComponent(g)}'">#${escapeHtml(g)}</span>`).join(' ') || "Chưa cập nhật"}</p>
+          <p><span class="story-detail-label">🔖 Tags:</span> ${tagList.map(t => `<span class="clickable-tag" onclick="window.location.href='index.html?search=${encodeURIComponent(t)}'">#${escapeHtml(t)}</span>`).join(' ') || "Chưa có"}</p>
+          <p><span class="story-detail-label">📚 Nhóm dịch:</span> <span class="clickable-tag" onclick="window.location.href='index.html?search=${encodeURIComponent(story.groupName)}'">${escapeHtml(story.groupName) || "Cá nhân"}</span></p>
           <p><span class="story-detail-label">📌 Tình trạng:</span> ${story.status === "Đã hoàn thành" ? "✅ Hoàn thành" : story.status === "Tạm ngưng" ? "⏸ Tạm ngưng" : "📖 Đang ra"}</p>
           <p><span class="story-detail-label">📖 Số chương:</span> ${chapters.length}</p>
           <p><span class="story-detail-label">📝 Mô tả:</span><br>${escapeHtml(story.desc) || "Chưa có mô tả"}</p>
@@ -356,23 +357,6 @@
     showNotification("✅ Đã gửi bình luận");
   }
 
-  window.filterByAuthor = (author) => {
-    if (author && author !== "Chưa rõ") {
-      window.location.href = `index.html?search=${encodeURIComponent(author)}`;
-    }
-  };
-  window.filterByGroup = (groupName) => {
-    if (groupName && groupName !== "Cá nhân") {
-      window.location.href = `index.html?search=${encodeURIComponent(groupName)}`;
-    }
-  };
-  window.filterByGenre = (genre) => {
-    window.location.href = `index.html?genre=${encodeURIComponent(genre)}`;
-  };
-  window.filterByTag = (tag) => {
-    window.location.href = `index.html?search=${encodeURIComponent(tag)}`;
-  };
-
   window.likeStory = likeStory;
   window.followStory = followStory;
   window.bookmarkStory = bookmarkStory;
@@ -380,6 +364,8 @@
   window.goToAddChapter = goToAddChapter;
   window.goToEditStory = goToEditStory;
   window.deleteChapter = deleteChapter;
+  window.approveStory = approveStory;
+  window.deleteStory = deleteStory;
 
   await restoreSession();
   const tempGuest = sessionStorage.getItem("tempGuestUser");
