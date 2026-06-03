@@ -7,7 +7,10 @@
   <link rel="stylesheet" href="style.css">
   <style>
     .story-container { max-width: 1000px; margin: 0 auto; padding: 20px; }
-    .back-home { display: inline-block; margin-bottom: 20px; padding: 8px 16px; background: #333; color: white; text-decoration: none; border-radius: 30px; font-size: 14px; }
+    .top-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
+    .logo-link { font-size: 22px; font-weight: bold; text-decoration: none; color: #FF69B4; cursor: pointer; }
+    .logo-link:hover { opacity: 0.8; }
+    .back-home { display: inline-block; padding: 8px 16px; background: #333; color: white; text-decoration: none; border-radius: 30px; font-size: 14px; }
     .back-home:hover { background: #FF69B4; color: black; }
     .story-detail-grid { display: grid; grid-template-columns: 250px 1fr; gap: 30px; margin-bottom: 30px; }
     .story-detail-cover { width: 100%; border-radius: 12px; }
@@ -40,7 +43,10 @@
 </head>
 <body>
 <div class="story-container">
-  <a href="index.html" class="back-home">← Về trang chủ</a>
+  <div class="top-nav">
+    <div class="logo-link" onclick="window.location.href='index.html'">🌸 DANMETOPIA 🌸</div>
+    <a href="index.html" class="back-home">← Về trang chủ</a>
+  </div>
   <div id="storyContent">
     <div class="loading-container"><div class="loading-spinner"></div><p>Đang tải thông tin truyện...</p></div>
   </div>
@@ -224,6 +230,12 @@
     window.location.href = `edit-story.html?id=${storyId}`;
   }
 
+  function filterBy(value, type) {
+    if (value && value !== "Chưa rõ" && value !== "Cá nhân") {
+      window.location.href = `index.html?${type}=${encodeURIComponent(value)}`;
+    }
+  }
+
   async function renderStory() {
     if (!story) return;
     const canEdit = currentUser && (isAdmin(currentUser) || story.ownerUid === currentUser?.uid || (currentUser.privileges?.groupId && story.groupId === currentUser.privileges?.groupId));
@@ -265,10 +277,10 @@
         <div class="story-detail-info">
           <h2>${escapeHtml(story.title)}</h2>
           <p><span class="story-detail-label">📖 Tên khác:</span> ${escapeHtml(story.otherName) || "Chưa có"}</p>
-          <p><span class="story-detail-label">✍️ Tác giả:</span> <span class="clickable-tag" onclick="window.location.href='index.html?search=${encodeURIComponent(story.author)}'">${escapeHtml(story.author) || "Chưa rõ"}</span></p>
-          <p><span class="story-detail-label">🏷️ Thể loại:</span> ${genreList.map(g => `<span class="clickable-tag" onclick="window.location.href='index.html?genre=${encodeURIComponent(g)}'">#${escapeHtml(g)}</span>`).join(' ') || "Chưa cập nhật"}</p>
-          <p><span class="story-detail-label">🔖 Tags:</span> ${tagList.map(t => `<span class="clickable-tag" onclick="window.location.href='index.html?search=${encodeURIComponent(t)}'">#${escapeHtml(t)}</span>`).join(' ') || "Chưa có"}</p>
-          <p><span class="story-detail-label">📚 Nhóm dịch:</span> <span class="clickable-tag" onclick="window.location.href='index.html?search=${encodeURIComponent(story.groupName)}'">${escapeHtml(story.groupName) || "Cá nhân"}</span></p>
+          <p><span class="story-detail-label">✍️ Tác giả:</span> <span class="clickable-tag" onclick="filterBy('${escapeHtml(story.author)}', 'search')">${escapeHtml(story.author) || "Chưa rõ"}</span></p>
+          <p><span class="story-detail-label">🏷️ Thể loại:</span> ${genreList.map(g => `<span class="clickable-tag" onclick="filterBy('${escapeHtml(g)}', 'genre')">#${escapeHtml(g)}</span>`).join(' ') || "Chưa cập nhật"}</p>
+          <p><span class="story-detail-label">🔖 Tags:</span> ${tagList.map(t => `<span class="clickable-tag" onclick="filterBy('${escapeHtml(t)}', 'search')">#${escapeHtml(t)}</span>`).join(' ') || "Chưa có"}</p>
+          <p><span class="story-detail-label">📚 Nhóm dịch:</span> <span class="clickable-tag" onclick="filterBy('${escapeHtml(story.groupName)}', 'search')">${escapeHtml(story.groupName) || "Cá nhân"}</span></p>
           <p><span class="story-detail-label">📌 Tình trạng:</span> ${story.status === "Đã hoàn thành" ? "✅ Hoàn thành" : story.status === "Tạm ngưng" ? "⏸ Tạm ngưng" : "📖 Đang ra"}</p>
           <p><span class="story-detail-label">📖 Số chương:</span> ${chapters.length}</p>
           <p><span class="story-detail-label">📝 Mô tả:</span><br>${escapeHtml(story.desc) || "Chưa có mô tả"}</p>
@@ -298,6 +310,8 @@
       newPostBtn.addEventListener("click", () => postComment(storyId));
     }
   }
+
+  window.filterBy = filterBy;
 
   async function approveStory() {
     await update(ref(db, `stories/${storyId}`), { approved: true });
