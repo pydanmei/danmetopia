@@ -26,10 +26,9 @@
       gap: 12px;
       border-bottom: 1px solid rgba(255,105,180,0.3);
     }
-    .reader-top-nav .nav-buttons { display: flex; gap: 8px; flex: 1; }
+    .reader-top-nav .nav-buttons { display: flex; gap: 8px; align-items: center; }
     .reader-top-nav button {
-      flex: 1;
-      padding: 8px 12px;
+      padding: 8px 16px;
       background: linear-gradient(135deg, #FF69B4, #FF4FA3);
       border: none;
       border-radius: 40px;
@@ -40,17 +39,6 @@
       white-space: nowrap;
     }
     .reader-top-nav button:disabled { opacity: 0.5; cursor: not-allowed; }
-    .reader-top-nav .story-info-btn {
-      background: rgba(255,255,255,0.2);
-      padding: 8px 12px;
-      border-radius: 40px;
-      font-size: 13px;
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      cursor: pointer;
-    }
-    .reader-top-nav .story-info-btn:hover { background: rgba(255,255,255,0.3); }
     .reader-top-nav .chapter-title {
       font-size: 14px;
       font-weight: bold;
@@ -58,7 +46,8 @@
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      max-width: 200px;
+      max-width: 300px;
+      margin: 0 10px;
     }
     
     /* Bottom navigation */
@@ -132,9 +121,8 @@
     
     @media (max-width: 768px) {
       .reader-container { padding: 70px 16px 80px 16px; }
-      .reader-top-nav .nav-buttons button { font-size: 11px; padding: 6px 8px; }
-      .reader-top-nav .story-info-btn { font-size: 11px; padding: 6px 10px; }
-      .reader-top-nav .chapter-title { font-size: 11px; max-width: 120px; }
+      .reader-top-nav .nav-buttons button { font-size: 11px; padding: 6px 10px; }
+      .reader-top-nav .chapter-title { font-size: 11px; max-width: 150px; margin: 0 5px; }
       .bottom-nav button { font-size: 11px; }
       .bottom-nav button span { display: none; }
       .bottom-nav button:after { content: attr(data-icon); font-size: 20px; }
@@ -259,6 +247,10 @@
     window.location.href = `story.html?id=${storyId}`;
   }
 
+  function goToHome() {
+    window.location.href = "index.html";
+  }
+
   function renderReader() {
     if (!currentChapters || currentChapters.length === 0) {
       document.getElementById("readerContent").innerHTML = '<div class="loading-container"><p>Không có chapter nào</p></div>';
@@ -280,9 +272,6 @@
           <div class="chapter-title">${escapeHtml(chapTitle)}</div>
           <button ${hasNext ? `onclick="window.changeChapter(1)"` : 'disabled'}>Chương sau ➡</button>
         </div>
-        <div class="story-info-btn" onclick="goToStoryInfo()">
-          📖 ${escapeHtml(currentStory?.title || 'Thông tin')}
-        </div>
       </div>
       <div id="chapterImages">
         ${chap.pages?.map(page => `<img class="reader-image" src="${escapeHtml(page)}" loading="lazy" onerror="this.src='https://placehold.co/800x1200?text=Error'">`).join("") || "<p>Không có ảnh</p>"}
@@ -292,6 +281,7 @@
         <button ${hasPrev ? `onclick="window.changeChapter(-1)" data-icon="◀"` : 'disabled'} data-icon="◀"><span>Chương trước</span></button>
         <button onclick="window.scrollToTop()" data-icon="▲"><span>Lên đầu</span></button>
         <button onclick="goToStoryInfo()" data-icon="📖"><span>Thông tin</span></button>
+        <button onclick="goToHome()" data-icon="🏠"><span>Trang chủ</span></button>
         <button ${hasNext ? `onclick="window.changeChapter(1)" data-icon="▶"` : 'disabled'} data-icon="▶"><span>Chương sau</span></button>
       </div>
       
@@ -337,7 +327,7 @@
     renderReader();
   };
   window.scrollToTop = () => { window.scrollTo({ top: 0, behavior: 'smooth' }); };
-  window.goToHome = () => { window.location.href = "index.html"; };
+  window.goToHome = goToHome;
   window.goToStoryInfo = goToStoryInfo;
 
   async function loadCommentsRealtime(storyId) {
