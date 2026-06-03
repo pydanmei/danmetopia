@@ -6,17 +6,145 @@
   <title>🌸 DANMETOPIA - Đọc truyện 🌸</title>
   <link rel="stylesheet" href="style.css">
   <style>
-    /* Đảm bảo các style cơ bản (có thể đã có trong style.css) */
-    .reader-container { max-width: 900px; margin: 0 auto; padding: 20px; }
-    .back-home { display: inline-block; margin-bottom: 20px; padding: 8px 16px; background: #333; color: white; text-decoration: none; border-radius: 30px; font-size: 14px; }
-    .back-home:hover { background: #FF69B4; color: black; }
-    .reader-image { width: 100%; margin: 8px 0; display: block; }
-    .chapter-list-section { background: #1c1c1c; border-radius: 16px; padding: 20px; margin-top: 40px; }
+    /* Reset & base */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; background: #0a0a0a; color: #e0e0e0; }
+    
+    /* Reader container */
+    .reader-container { max-width: 900px; margin: 0 auto; padding: 80px 20px 100px 20px; }
+    
+    /* Top navigation bar */
+    .reader-top-nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 1000;
+      background: rgba(0,0,0,0.85);
+      backdrop-filter: blur(10px);
+      padding: 8px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid rgba(255,105,180,0.3);
+    }
+    .reader-top-nav .nav-buttons {
+      display: flex;
+      gap: 8px;
+      flex: 1;
+    }
+    .reader-top-nav button {
+      flex: 1;
+      padding: 8px 12px;
+      background: linear-gradient(135deg, #FF69B4, #FF4FA3);
+      border: none;
+      border-radius: 40px;
+      color: white;
+      font-weight: bold;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .reader-top-nav button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .reader-top-nav .story-info-btn {
+      background: rgba(255,255,255,0.2);
+      padding: 8px 12px;
+      border-radius: 40px;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .reader-top-nav .story-info-btn:hover {
+      background: rgba(255,255,255,0.3);
+    }
+    
+    /* Bottom navigation bar (mobile friendly) */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(0,0,0,0.9);
+      backdrop-filter: blur(10px);
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      padding: 10px 16px;
+      border-top: 1px solid rgba(255,105,180,0.3);
+      z-index: 1000;
+    }
+    .bottom-nav button {
+      flex: 1;
+      padding: 8px 0;
+      background: transparent;
+      border: none;
+      color: white;
+      font-size: 13px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.2s;
+      border-radius: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .bottom-nav button:active {
+      transform: scale(0.95);
+    }
+    .bottom-nav button:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    .bottom-nav .active-nav {
+      color: #FF69B4;
+    }
+    
+    /* Chapter images */
+    .reader-image {
+      width: 100%;
+      margin: 8px 0;
+      display: block;
+    }
+    
+    /* Chapter list section */
+    .chapter-list-section {
+      background: #1c1c1c;
+      border-radius: 16px;
+      padding: 20px;
+      margin-top: 40px;
+    }
     .chapter-list-section h4 { color: #FF69B4; margin-bottom: 15px; }
     .chapter-list { max-height: 400px; overflow-y: auto; }
-    .chapter-item { background: #2a2a2a; padding: 10px 15px; margin-bottom: 8px; border-radius: 8px; cursor: pointer; transition: background 0.2s; }
+    .chapter-item {
+      background: #2a2a2a;
+      padding: 10px 15px;
+      margin-bottom: 8px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.2s;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+    }
     .chapter-item:hover { background: #FF69B4; color: black; }
-    .comment-section { margin-top: 40px; background: #1c1c1c; border-radius: 16px; padding: 20px; }
+    
+    /* Comments */
+    .comment-section {
+      margin-top: 40px;
+      background: #1c1c1c;
+      border-radius: 16px;
+      padding: 20px;
+    }
     .comment-section h4 { color: #FF69B4; margin-bottom: 15px; }
     .comment-input-area { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
     .comment-input-area textarea { flex: 1; padding: 10px; background: #2a2a2a; border: none; border-radius: 12px; color: white; resize: vertical; }
@@ -24,16 +152,38 @@
     .comment-item { background: #2a2a2a; padding: 12px; border-radius: 12px; margin-bottom: 10px; }
     .comment-name { font-weight: bold; color: #FF69B4; margin-bottom: 5px; display: flex; justify-content: space-between; flex-wrap: wrap; }
     .comment-time { font-size: 11px; color: #888; }
+    
+    /* Loading */
     .loading-container { text-align: center; padding: 50px; }
+    .loading-spinner {
+      display: inline-block;
+      width: 40px;
+      height: 40px;
+      border: 3px solid #333;
+      border-top-color: #FF69B4;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+      .reader-container { padding: 70px 16px 80px 16px; }
+      .reader-top-nav .nav-buttons button { font-size: 11px; padding: 6px 8px; }
+      .reader-top-nav .story-info-btn { font-size: 11px; padding: 6px 10px; }
+      .bottom-nav button { font-size: 11px; }
+      .bottom-nav button span { display: none; }
+      .bottom-nav button:after { content: attr(data-icon); font-size: 18px; }
+    }
   </style>
 </head>
 <body>
-<div class="reader-container">
-  <a href="index.html" class="back-home">← Về trang chủ</a>
+<div class="reader-container" id="readerContainer">
   <div id="readerContent">
     <div class="loading-container"><div class="loading-spinner"></div><p>Đang tải truyện...</p></div>
   </div>
 </div>
+
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -55,11 +205,12 @@
   const db = getDatabase(app);
   emailjs.init("fPq8fpw1OqzOtj-lk");
 
+  // Lấy params từ URL
   const urlParams = new URLSearchParams(window.location.search);
   const storyId = urlParams.get('id');
   let currentChapterIndex = parseInt(urlParams.get('chapter') || '0');
   let currentUser = null;
-  let allStories = [];
+  let currentStory = null;
   let currentChapters = [];
   let commentUnsubscribe = null;
 
@@ -78,7 +229,6 @@
     return str.replace(/[&<>]/g, m => m === "&" ? "&amp;" : m === "<" ? "&lt;" : "&gt;");
   }
 
-  // Tạo guest tạm thời nếu chưa có user
   function ensureGuestUser() {
     if (!currentUser) {
       const guestId = "guest_" + Date.now() + "_" + Math.random().toString(36).substr(2, 6);
@@ -100,15 +250,10 @@
       try {
         const session = JSON.parse(sessionStr);
         if (session.expireAt && Date.now() < session.expireAt) {
-          if (session.role === "guest") {
-            currentUser = session;
-            return true;
-          } else if (session.uid) {
+          if (session.role === "guest") { currentUser = session; return true; }
+          else if (session.uid) {
             const userSnap = await get(ref(db, `users/${session.uid}`));
-            if (userSnap.exists()) {
-              currentUser = { ...session, ...userSnap.val() };
-              return true;
-            }
+            if (userSnap.exists()) { currentUser = { ...session, ...userSnap.val() }; return true; }
           }
         }
       } catch(e) {}
@@ -117,10 +262,12 @@
     return true;
   }
 
-  async function loadStories() {
-    const storiesSnap = await get(ref(db, "stories"));
-    if (storiesSnap.exists()) {
-      allStories = Object.entries(storiesSnap.val()).map(([id, s]) => ({ id, ...s }));
+  async function loadStoryInfo() {
+    const storySnap = await get(ref(db, `stories/${storyId}`));
+    if (storySnap.exists()) {
+      currentStory = { id: storyId, ...storySnap.val() };
+      // Cập nhật title
+      document.title = `🌸 ${currentStory.title} - Đọc truyện 🌸`;
     }
   }
 
@@ -139,8 +286,7 @@
   }
 
   async function updateViewCount() {
-    const story = allStories.find(s => s.id === storyId);
-    if (story) {
+    if (currentStory) {
       const viewRef = ref(db, `stories/${storyId}/views`);
       const snapshot = await get(viewRef);
       await set(viewRef, (snapshot.val() || 0) + 1);
@@ -159,21 +305,30 @@
     const chap = currentChapters[currentChapterIndex];
     const hasPrev = currentChapterIndex > 0;
     const hasNext = currentChapterIndex < currentChapters.length - 1;
+    const storySlug = currentStory?.slug || "";
 
     const html = `
       <div class="reader-top-nav">
         <div class="nav-buttons">
-          <button id="prevChapterBtn" ${hasPrev ? '' : 'disabled'} onclick="window.changeChapter(-1)">⬅ Chapter trước</button>
-          <button id="nextChapterBtn" ${hasNext ? '' : 'disabled'} onclick="window.changeChapter(1)">Chapter sau ➡</button>
+          <button ${hasPrev ? `onclick="window.changeChapter(-1)"` : 'disabled'}>⬅ Chương trước</button>
+          <button ${hasNext ? `onclick="window.changeChapter(1)"` : 'disabled'}>Chương sau ➡</button>
         </div>
-        <div class="chapter-title">${escapeHtml(chap.title)}</div>
+        <div class="story-info-btn" onclick="window.goToStoryInfo()">
+          📖 ${escapeHtml(currentStory?.title || 'Thông tin')}
+        </div>
       </div>
       <div id="chapterImages">
         ${chap.pages?.map(page => `<img class="reader-image" src="${escapeHtml(page)}" loading="lazy" onerror="this.src='https://placehold.co/800x1200?text=Error'">`).join("") || "<p>Không có ảnh</p>"}
       </div>
-      <div style="margin:30px 0; display:flex; justify-content:center;">
-        <button onclick="window.scrollTo({top:0,behavior:'smooth'})" style="background:#FF69B4; border:none; border-radius:30px; padding:10px 20px; cursor:pointer;">⬆ Lên đầu trang</button>
+      
+      <!-- Bottom navigation bar -->
+      <div class="bottom-nav">
+        <button ${hasPrev ? `onclick="window.changeChapter(-1)" data-icon="◀"` : 'disabled'} data-icon="◀"><span>Chương trước</span></button>
+        <button onclick="window.scrollToTop()" data-icon="▲"><span>Lên đầu</span></button>
+        <button onclick="window.goToStoryInfo()" data-icon="📖"><span>Thông tin</span></button>
+        <button ${hasNext ? `onclick="window.changeChapter(1)" data-icon="▶"` : 'disabled'} data-icon="▶"><span>Chương sau</span></button>
       </div>
+      
       <div class="chapter-list-section">
         <h4>📑 MỤC LỤC CHAPTER</h4>
         <div class="chapter-list">
@@ -214,6 +369,14 @@
     const newUrl = `${window.location.pathname}?id=${storyId}&chapter=${currentChapterIndex}`;
     window.history.pushState({}, '', newUrl);
     renderReader();
+  };
+  window.scrollToTop = () => { window.scrollTo({ top: 0, behavior: 'smooth' }); };
+  window.goToStoryInfo = () => {
+    if (currentStory?.slug) {
+      window.location.href = `/#/truyen/${currentStory.slug}`;
+    } else {
+      window.location.href = 'index.html';
+    }
   };
 
   async function loadCommentsRealtime(storyId) {
@@ -259,28 +422,25 @@
     showNotification("✅ Đã gửi bình luận");
   }
 
-  // Khởi tạo
   await restoreSession();
   const tempGuest = sessionStorage.getItem("tempGuestUser");
-  if (tempGuest && !currentUser) {
-    currentUser = JSON.parse(tempGuest);
-  }
-  await loadStories();
+  if (tempGuest && !currentUser) { currentUser = JSON.parse(tempGuest); }
+  await loadStoryInfo();
   await loadChapters();
   await updateViewCount();
 
-  // Tạo nút floating lên đầu trang nếu chưa có
+  // Tạo nút floating lên đầu trang (backup)
   setTimeout(() => {
     if (!document.getElementById("floatingTopBtn")) {
       const btn = document.createElement("button");
       btn.id = "floatingTopBtn";
       btn.innerHTML = "↑";
       Object.assign(btn.style, {
-        position:"fixed", right:"18px", bottom:"20px", width:"48px", height:"48px",
+        position:"fixed", right:"18px", bottom:"80px", width:"48px", height:"48px",
         border:"none", borderRadius:"16px", background:"rgba(0,0,0,0.65)",
         backdropFilter:"blur(10px)", color:"white", fontSize:"22px", fontWeight:"bold",
-        display:"none", alignItems:"center", justifyContent:"center", zIndex:"99999",
-        cursor:"pointer", boxShadow:"0 4px 12px rgba(0,0,0,0.25)"
+        display:"none", alignItems:"center", justifyContent:"center", zIndex:"9999",
+        cursor:"pointer"
       });
       document.body.appendChild(btn);
       btn.onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
