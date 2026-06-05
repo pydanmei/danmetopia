@@ -19,6 +19,62 @@ const db = getDatabase(app);
 const IMGBB_API_KEY = "d16b5595d7f6044476d254c8f428cc28";
 
 emailjs.init("fPq8fpw1OqzOtj-lk");
+console.log("✅ Firebase initialized");
+
+// ==================== DARK MODE ====================
+function initDarkMode() {
+  const savedTheme = localStorage.getItem('theme');
+  if (savedTheme === 'light') {
+    document.body.classList.add('light-mode');
+  }
+  
+  // Thêm nút toggle nếu chưa có
+  if (!document.getElementById('themeToggle')) {
+    const themeBtn = document.createElement('button');
+    themeBtn.id = 'themeToggle';
+    themeBtn.innerHTML = savedTheme === 'light' ? '🌙' : '☀️';
+    themeBtn.style.cssText = `
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      width: 45px;
+      height: 45px;
+      border-radius: 50%;
+      background: #FF69B4;
+      border: none;
+      cursor: pointer;
+      font-size: 20px;
+      z-index: 9999;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    `;
+    themeBtn.onclick = toggleTheme;
+    document.body.appendChild(themeBtn);
+  }
+}
+
+function toggleTheme() {
+  const isLight = document.body.classList.toggle('light-mode');
+  localStorage.setItem('theme', isLight ? 'light' : 'dark');
+  const themeBtn = document.getElementById('themeToggle');
+  if (themeBtn) {
+    themeBtn.innerHTML = isLight ? '🌙' : '☀️';
+  }
+  showNotification(isLight ? '☀️ Chế độ sáng' : '🌙 Chế độ tối');
+}
+
+// CSS cho light mode
+const lightModeStyle = document.createElement('style');
+lightModeStyle.textContent = `
+  body.light-mode { background: #f5f5f5; color: #333; }
+  body.light-mode .topbar { background: #FF69B4; color: black; }
+  body.light-mode .manga-card { background: white; border: 1px solid #ddd; }
+  body.light-mode .chapter-item, body.light-mode .comment-item, body.light-mode .group-card { background: #f0f0f0; color: #333; }
+  body.light-mode .modal-content { background: white; color: #333; }
+  body.light-mode .login-box { background: white; color: #333; }
+  body.light-mode .warning-box { background: white; }
+  body.light-mode .footer-disclaimer { background: #e0e0e0; }
+`;
+document.head.appendChild(lightModeStyle);
 
 // ==================== GENRE LIST ====================
 const GENRE_LIST = [
@@ -223,7 +279,7 @@ async function handleGuestLogin() {
   showNotification(`👤 Chào mừng ${state.currentUser.displayName} (Khách)`);
   updateUserDisplay();
   initApp();
-  trackUserPresence(); // Thêm tracking online
+  trackUserPresence();
 }
 
 async function handleCheckEmail() {
@@ -283,7 +339,7 @@ async function handlePasswordLogin() {
     showNotification(`✅ Chào mừng ${state.currentUser.displayName}`);
     updateUserDisplay();
     initApp();
-    trackUserPresence(); // Thêm tracking online
+    trackUserPresence();
   } catch (err) {
     if (err.code === "auth/invalid-credential") showNotification("Sai mật khẩu", true);
     else showNotification("Lỗi: " + err.message, true);
@@ -312,7 +368,7 @@ async function handleCompleteRegistration() {
     showNotification(`🎉 Chào mừng ${nickname}!`);
     updateUserDisplay();
     initApp();
-    trackUserPresence(); // Thêm tracking online
+    trackUserPresence();
   } catch (err) { msg.innerText = "Lỗi: " + err.message; }
   finally { showLoading(false); }
 }
@@ -334,7 +390,6 @@ async function restoreSession() {
 }
 
 async function logout() {
-  // Xóa presence khi logout
   if (state.currentUser?.uid) {
     await remove(ref(db, `online/${state.currentUser.uid}`));
   }
@@ -346,17 +401,12 @@ async function logout() {
 // ==================== ONLINE TRACKING & STATS ====================
 async function trackUserPresence() {
   if (!state.currentUser) return;
-  
   const userId = state.currentUser.uid || `guest_${state.currentUser.displayName}`;
   const userStatusRef = ref(db, `online/${userId}`);
-  
-  // Set online
   await set(userStatusRef, {
     name: state.currentUser.displayName,
     timestamp: Date.now()
   });
-  
-  // Tự động xóa khi disconnect
   onDisconnect(userStatusRef).remove();
 }
 
@@ -368,11 +418,13 @@ async function updateVisitCount() {
     const newCount = (snapshot.val() || 0) + 1;
     await set(visitRef, newCount);
     sessionStorage.setItem("hasVisited", "true");
-    document.getElementById("visitCount").innerText = newCount;
+    const visitSpan = document.getElementById("visitCount");
+    if (visitSpan) visitSpan.innerText = newCount;
   } else {
     const visitRef = ref(db, 'stats/visitCount');
     const snapshot = await get(visitRef);
-    document.getElementById("visitCount").innerText = snapshot.val() || 0;
+    const visitSpan = document.getElementById("visitCount");
+    if (visitSpan) visitSpan.innerText = snapshot.val() || 0;
   }
 }
 
@@ -381,7 +433,8 @@ async function updateTotalLikes() {
   for (const story of state.stories) {
     total += story.likes || 0;
   }
-  document.getElementById("totalLikes").innerText = total;
+  const likesSpan = document.getElementById("totalLikes");
+  if (likesSpan) likesSpan.innerText = total;
 }
 
 function trackOnlineUsers() {
@@ -389,7 +442,81 @@ function trackOnlineUsers() {
   onValue(onlineRef, (snapshot) => {
     const data = snapshot.val();
     const count = data ? Object.keys(data).length : 0;
-    document.getElementById("onlineCount").innerText = count;
+    const onlineSpan = document.getElementById("onlineCount");
+    if (onlineSpan) onlineSpan.innerText = count;
+  });
+}
+
+// ==================== TOP TRUYỆN THEO TUẦN/THÁNG ====================
+function getStartOfWeek() {
+  const now = new Date();
+  const start = new Date(now);
+  start.setDate(now.getDate() - now.getDay());
+  start.setHours(0, 0, 0, 0);
+  return start.toISOString().split('T')[0];
+}
+
+function getStartOfMonth() {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
+}
+
+async function updateWeeklyMonthlyViews(storyId) {
+  const weekKey = `views_week_${getStartOfWeek()}`;
+  const monthKey = `views_month_${getStartOfMonth()}`;
+  const storyRef = ref(db, `stories/${storyId}`);
+  const snapshot = await get(storyRef);
+  const current = snapshot.val() || {};
+  await update(storyRef, {
+    [weekKey]: (current[weekKey] || 0) + 1,
+    [monthKey]: (current[monthKey] || 0) + 1
+  });
+}
+
+// ==================== CHIA SẺ TRUYỆN ====================
+window.shareStory = async (slug, title) => {
+  const url = `${window.location.origin}/story.html?slug=${slug}`;
+  try {
+    await navigator.clipboard.writeText(url);
+    showNotification("📋 Đã copy link truyện");
+  } catch (err) {
+    showNotification("❌ Không thể copy link", true);
+  }
+  if (navigator.share) {
+    try {
+      await navigator.share({ title, url });
+    } catch (e) {}
+  }
+};
+
+// ==================== THÔNG BÁO COMMENT MỚI ====================
+let lastCommentTimes = {};
+
+function loadLastCommentTimes() {
+  const saved = localStorage.getItem("lastCommentTimes");
+  if (saved) {
+    lastCommentTimes = JSON.parse(saved);
+  }
+}
+
+function saveLastCommentTimes() {
+  localStorage.setItem("lastCommentTimes", JSON.stringify(lastCommentTimes));
+}
+
+function watchNewComments(storyId) {
+  if (!storyId) return;
+  const commentsRef = ref(db, `comments/${storyId}`);
+  const lastTime = lastCommentTimes[storyId] || 0;
+  onValue(commentsRef, (snapshot) => {
+    const data = snapshot.val();
+    if (!data) return;
+    const comments = Object.values(data);
+    const latest = comments.sort((a, b) => b.createdAt - a.createdAt)[0];
+    if (latest && latest.createdAt > lastTime && latest.userId !== state.currentUser?.uid) {
+      showNotification(`💬 Bình luận mới từ ${latest.userName}: "${latest.text.substring(0, 50)}${latest.text.length > 50 ? '...' : ''}"`);
+      lastCommentTimes[storyId] = latest.createdAt;
+      saveLastCommentTimes();
+    }
   });
 }
 
@@ -651,7 +778,6 @@ function renderCurrentTab() {
     </div>
   `).join("");
   
-  // Gắn sự kiện click
   document.querySelectorAll('.manga-card').forEach(card => {
     card.addEventListener('click', (e) => {
       const storyId = card.dataset.id;
@@ -748,6 +874,9 @@ function renderUploadPanel() {
 
 // ==================== OPEN STORY DETAIL ====================
 window.openStoryDetail = async (storyId) => {
+  if (storyId) {
+    watchNewComments(storyId);
+  }
   window.location.href = `story.html?id=${storyId}`;
 };
 
@@ -899,6 +1028,7 @@ async function initApp() {
   appInitialized = true;
   
   console.log("🚀 Initializing app...");
+  initDarkMode();
   await loadComponents();
   updateUserDisplay();
   initScrollButtons();
@@ -910,6 +1040,7 @@ async function initApp() {
   loadHistory();
   loadStoriesRealtime();
   trackOnlineUsers();
+  loadLastCommentTimes();
   await updateVisitCount();
   
   document.querySelectorAll(".tab-btn").forEach(btn => {
@@ -939,7 +1070,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       document.getElementById("loginPage").style.display = "none";
       document.getElementById("mainContainer").style.display = "block";
       await initApp();
-      trackUserPresence(); // Track sau khi init
+      trackUserPresence();
     } else {
       document.getElementById("warningOverlay").style.display = "none";
       document.getElementById("loginPage").style.display = "flex";
@@ -949,48 +1080,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 });
 
-// ==================== THÔNG BÁO COMMENT MỚI ====================
-let lastCommentTimes = {};
-
-function loadLastCommentTimes() {
-  const saved = localStorage.getItem("lastCommentTimes");
-  if (saved) {
-    lastCommentTimes = JSON.parse(saved);
-  }
-}
-
-function saveLastCommentTimes() {
-  localStorage.setItem("lastCommentTimes", JSON.stringify(lastCommentTimes));
-}
-
-function watchNewComments(storyId) {
-  if (!storyId) return;
-  
-  const commentsRef = ref(db, `comments/${storyId}`);
-  const lastTime = lastCommentTimes[storyId] || 0;
-  
-  onValue(commentsRef, (snapshot) => {
-    const data = snapshot.val();
-    if (!data) return;
-    
-    const comments = Object.values(data);
-    const latest = comments.sort((a, b) => b.createdAt - a.createdAt)[0];
-    
-    if (latest && latest.createdAt > lastTime) {
-      // Chỉ thông báo nếu không phải comment của chính user hiện tại
-      if (latest.userId !== state.currentUser?.uid) {
-        showNotification(`💬 Bình luận mới từ ${latest.userName}: "${latest.text.substring(0, 50)}${latest.text.length > 50 ? '...' : ''}"`);
-      }
-      lastCommentTimes[storyId] = latest.createdAt;
-      saveLastCommentTimes();
-    }
-  });
-}
-
-// Gọi watchNewComments khi mở story detail
-// Thêm vào đầu hàm openStoryDetail:
-// if (storyId) watchNewComments(storyId);
-
 // Make functions global
 window.openStoryDetail = window.openStoryDetail;
 window.deleteChapter = window.deleteChapter;
@@ -998,3 +1087,4 @@ window.closeModal = closeModal;
 window.saveProfile = window.saveProfile;
 window.createNewGroup = window.createNewGroup;
 window.showNotification = showNotification;
+window.shareStory = window.shareStory;
