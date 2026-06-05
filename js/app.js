@@ -28,7 +28,6 @@ function initDarkMode() {
     document.body.classList.add('light-mode');
   }
   
-  // Thêm nút toggle nếu chưa có
   if (!document.getElementById('themeToggle')) {
     const themeBtn = document.createElement('button');
     themeBtn.id = 'themeToggle';
@@ -62,7 +61,6 @@ function toggleTheme() {
   showNotification(isLight ? '☀️ Chế độ sáng' : '🌙 Chế độ tối');
 }
 
-// CSS cho light mode
 const lightModeStyle = document.createElement('style');
 lightModeStyle.textContent = `
   body.light-mode { background: #f5f5f5; color: #333; }
@@ -1007,9 +1005,11 @@ async function loadComponents() {
     const headerRes = await fetch('components/header.html');
     const headerHtml = await headerRes.text();
     document.getElementById('header-placeholder').innerHTML = headerHtml;
+    
     const footerRes = await fetch('components/footer.html');
     const footerHtml = await footerRes.text();
     document.getElementById('footer-placeholder').innerHTML = footerHtml;
+    
     document.getElementById('homeLogo')?.addEventListener('click', () => window.location.reload());
     document.getElementById('logoutBtn')?.addEventListener('click', logout);
     document.getElementById('profileBtn')?.addEventListener('click', window.openProfile);
@@ -1017,7 +1017,9 @@ async function loadComponents() {
     document.getElementById('confirmGroupBtn')?.addEventListener('click', window.createNewGroup);
     document.getElementById('adminLink')?.addEventListener('click', (e) => { e.preventDefault(); window.location.href = 'admin.html'; });
     document.getElementById('groupsLink')?.addEventListener('click', (e) => { e.preventDefault(); window.location.href = 'groups.html'; });
-  } catch (err) { console.error("Error loading components:", err); }
+  } catch (err) {
+    console.error("Error loading components:", err);
+  }
 }
 
 // ==================== INIT ====================
