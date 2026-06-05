@@ -71,6 +71,8 @@ lightModeStyle.textContent = `
   body.light-mode .login-box { background: white; color: #333; }
   body.light-mode .warning-box { background: white; }
   body.light-mode .footer-disclaimer { background: #e0e0e0; }
+  body.light-mode .filter-row select, body.light-mode .genre-select { background: #e0e0e0; color: #333; }
+  body.light-mode .search-bar input { background: #e0e0e0; color: #333; }
 `;
 document.head.appendChild(lightModeStyle);
 
@@ -128,7 +130,10 @@ const state = {
   currentTab: "all",
   selectedGenre: "",
   searchKeyword: "",
-  sortBy: "likes"
+  sortBy: "likes",
+  filterAuthor: "",
+  filterGroup: "",
+  filterStatus: "all"
 };
 
 // ==================== HELPER FUNCTIONS ====================
@@ -445,31 +450,124 @@ function trackOnlineUsers() {
   });
 }
 
-// ==================== TOP TRUYỆN THEO TUẦN/THÁNG ====================
-function getStartOfWeek() {
-  const now = new Date();
-  const start = new Date(now);
-  start.setDate(now.getDate() - now.getDay());
-  start.setHours(0, 0, 0, 0);
-  return start.toISOString().split('T')[0];
+// ==================== TOP TRUYỆN THEO NGÀY/TUẦN/THÁNG ====================
+function getDateKey(date, period) {
+  if (period === 'day') {
+    return date.toISOString().split('T')[0];
+  } else if (period === 'week') {
+    const start = new Date(date);
+    start.setDate(date.getDate() - date.getDay());
+    start.setHours(0, 0, 0, 0);
+    return start.toISOString().split('T')[0];
+  } else {
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+  }
 }
 
-function getStartOfMonth() {
+async function updatePeriodViews(storyId) {
   const now = new Date();
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
-}
-
-async function updateWeeklyMonthlyViews(storyId) {
-  const weekKey = `views_week_${getStartOfWeek()}`;
-  const monthKey = `views_month_${getStartOfMonth()}`;
+  const dayKey = `views_${getDateKey(now, 'day')}`;
+  const weekKey = `views_${getDateKey(now, 'week')}`;
+  const monthKey = `views_${getDateKey(now, 'month')}`;
   const storyRef = ref(db, `stories/${storyId}`);
   const snapshot = await get(storyRef);
   const current = snapshot.val() || {};
   await update(storyRef, {
+    [dayKey]: (current[dayKey] || 0) + 1,
     [weekKey]: (current[weekKey] || 0) + 1,
     [monthKey]: (current[monthKey] || 0) + 1
   });
 }
+
+// ==================== EXPORT/IMPORT CHO ADMIN ====================
+window.exportAllData = async () => {
+  if (!isAdmin(state.currentUser)) {
+    showNotification("⚠️ Chỉ Admin mới có quyền export dữ liệu!", true);
+    return;
+  }
+  showLoading(true);
+  try {
+    const stories = await get(ref(db, 'stories'));
+    const chapters = await get(ref(db, 'chapters'));
+    const users = await get(ref(db, 'users'));
+    const groups = await get(ref(db, 'groups'));
+    const comments = await get(ref(db, 'comments'));
+    
+    const allData = {
+      exportDate: new Date().toISOString(),
+      stories: stories.val(),
+      chapters: chapters.val(),
+      users: users.val(),
+      groups: groups.val(),
+      comments: comments.val()
+    };
+    
+    const blob = new Blob([JSON.stringify(allData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `danmetopia_backup_${Date.now()}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showNotification("✅ Đã xuất dữ liệu thành công!");
+  } catch (err) {
+    showNotification("Lỗi: " + err.message, true);
+  }
+  showLoading(false);
+};
+
+window.importAllData = async () => {
+  if (!isAdmin(state.currentUser)) {
+    showNotification("⚠️ Chỉ Admin mới có quyền import dữ liệu!", true);
+    return;
+  }
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'application/json';
+  input.onchange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async (ev) => {
+      showLoading(true);
+      try {
+        const data = JSON.parse(ev.target.result);
+        if (data.stories) {
+          for (const [id, story] of Object.entries(data.stories)) {
+            await set(ref(db, `stories/${id}`), story);
+          }
+        }
+        if (data.chapters) {
+          for (const [id, chapter] of Object.entries(data.chapters)) {
+            await set(ref(db, `chapters/${id}`), chapter);
+          }
+        }
+        if (data.users) {
+          for (const [id, user] of Object.entries(data.users)) {
+            await set(ref(db, `users/${id}`), user);
+          }
+        }
+        if (data.groups) {
+          for (const [id, group] of Object.entries(data.groups)) {
+            await set(ref(db, `groups/${id}`), group);
+          }
+        }
+        if (data.comments) {
+          for (const [id, comment] of Object.entries(data.comments)) {
+            await set(ref(db, `comments/${id}`), comment);
+          }
+        }
+        showNotification("✅ Import dữ liệu thành công!");
+        setTimeout(() => window.location.reload(), 1500);
+      } catch (err) {
+        showNotification("Lỗi: " + err.message, true);
+      }
+      showLoading(false);
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+};
 
 // ==================== CHIA SẺ TRUYỆN ====================
 window.shareStory = async (slug, title) => {
@@ -670,6 +768,7 @@ async function createStory(data, coverFile, chapterImages) {
     await addChapter(newStoryRef.key, "Chapter 1", chapterImages, 1);
   }
   showNotification(isAdminUser ? "✅ Đã đăng truyện (Admin)" : "📤 Đã gửi truyện, chờ duyệt");
+  await updatePeriodViews(newStoryRef.key);
 }
 
 async function updateStoryData(storyId, data) { await update(ref(db, `stories/${storyId}`), data); }
@@ -746,16 +845,59 @@ function renderGenreFilter() {
   });
 }
 
-// ==================== RENDER MAIN ====================
+// ==================== RENDER MAIN VỚI LỌC NÂNG CAO ====================
 function renderCurrentTab() {
   const grid = document.getElementById("mangaGrid");
   if (!grid) return;
   
   let filtered = state.stories.filter(s => s.approved === true);
-  if (state.selectedGenre) filtered = filtered.filter(s => s.genres && s.genres.includes(state.selectedGenre));
-  if (state.searchKeyword) filtered = filtered.filter(s => s.title?.toLowerCase().includes(state.searchKeyword) || s.otherName?.toLowerCase().includes(state.searchKeyword) || s.tags?.toLowerCase().includes(state.searchKeyword));
+  
+  // Lọc theo thể loại
+  if (state.selectedGenre) {
+    filtered = filtered.filter(s => s.genres && s.genres.includes(state.selectedGenre));
+  }
+  
+  // Lọc theo từ khóa tìm kiếm
+  if (state.searchKeyword) {
+    const keyword = state.searchKeyword.toLowerCase();
+    filtered = filtered.filter(s => 
+      s.title?.toLowerCase().includes(keyword) || 
+      s.otherName?.toLowerCase().includes(keyword) || 
+      s.tags?.toLowerCase().includes(keyword) ||
+      s.author?.toLowerCase().includes(keyword)
+    );
+  }
+  
+  // Lọc theo tác giả
+  if (state.filterAuthor) {
+    filtered = filtered.filter(s => s.author?.toLowerCase().includes(state.filterAuthor.toLowerCase()));
+  }
+  
+  // Lọc theo nhóm dịch
+  if (state.filterGroup) {
+    filtered = filtered.filter(s => s.groupName?.toLowerCase().includes(state.filterGroup.toLowerCase()));
+  }
+  
+  // Lọc theo trạng thái
+  if (state.filterStatus !== "all") {
+    filtered = filtered.filter(s => s.status === state.filterStatus);
+  }
+  
+  // Sắp xếp
   if (state.sortBy === "likes") filtered.sort((a,b) => (b.likes||0) - (a.likes||0));
   else if (state.sortBy === "views") filtered.sort((a,b) => (b.views||0) - (a.views||0));
+  else if (state.sortBy === "views_today") {
+    const today = new Date().toISOString().split('T')[0];
+    filtered.sort((a,b) => (b[`views_${today}`]||0) - (a[`views_${today}`]||0));
+  }
+  else if (state.sortBy === "views_week") {
+    const weekKey = getDateKey(new Date(), 'week');
+    filtered.sort((a,b) => (b[`views_${weekKey}`]||0) - (a[`views_${weekKey}`]||0));
+  }
+  else if (state.sortBy === "views_month") {
+    const monthKey = getDateKey(new Date(), 'month');
+    filtered.sort((a,b) => (b[`views_${monthKey}`]||0) - (a[`views_${monthKey}`]||0));
+  }
   else filtered.sort((a,b) => (b.createdAt||0) - (a.createdAt||0));
   
   if (filtered.length === 0) { 
@@ -769,9 +911,11 @@ function renderCurrentTab() {
       <div class="manga-info">
         <div class="manga-title">${escapeHtml(story.title)}</div>
         <div class="manga-meta">📚 ${escapeHtml(story.groupName) || "Cá nhân"}</div>
+        <div class="manga-meta">✍️ ${escapeHtml(story.author) || "???"}</div>
         <div class="manga-meta">❤️ ${story.likes || 0} | 👁 ${story.views || 0}</div>
         <div class="manga-meta">🏷️ ${escapeHtml(story.genres) || "Chưa có thể loại"}</div>
         ${story.approved === false ? '<div class="manga-meta" style="color:#FFCC00;">⏳ Chờ duyệt</div>' : ''}
+        ${story.status === "Đã hoàn thành" ? '<div class="manga-meta" style="color:#4CAF50;">✅ Hoàn thành</div>' : story.status === "Tạm ngưng" ? '<div class="manga-meta" style="color:#FF9800;">⏸ Tạm ngưng</div>' : '<div class="manga-meta" style="color:#2196F3;">📖 Đang ra</div>'}
       </div>
     </div>
   `).join("");
@@ -784,6 +928,14 @@ function renderCurrentTab() {
       }
     });
   });
+}
+
+// Hàm cập nhật filter
+function updateFilters() {
+  state.filterAuthor = document.getElementById("filterAuthor")?.value || "";
+  state.filterGroup = document.getElementById("filterGroup")?.value || "";
+  state.filterStatus = document.getElementById("filterStatus")?.value || "all";
+  renderCurrentTab();
 }
 
 // ==================== RENDER UPLOAD PANEL ====================
@@ -1045,11 +1197,30 @@ async function initApp() {
   loadLastCommentTimes();
   await updateVisitCount();
   
+  // Thêm event listeners cho bộ lọc nâng cao
+  const filterAuthor = document.getElementById("filterAuthor");
+  const filterGroup = document.getElementById("filterGroup");
+  const filterStatus = document.getElementById("filterStatus");
+  if (filterAuthor) filterAuthor.addEventListener("input", updateFilters);
+  if (filterGroup) filterGroup.addEventListener("input", updateFilters);
+  if (filterStatus) filterStatus.addEventListener("change", updateFilters);
+  
   document.querySelectorAll(".tab-btn").forEach(btn => {
-    btn.addEventListener("click", () => { document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active")); btn.classList.add("active"); state.currentTab = btn.dataset.tab; renderCurrentTab(); });
+    btn.addEventListener("click", () => { 
+      document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active")); 
+      btn.classList.add("active"); 
+      state.currentTab = btn.dataset.tab; 
+      renderCurrentTab(); 
+    });
   });
-  document.getElementById("searchInput")?.addEventListener("input", (e) => { state.searchKeyword = e.target.value.toLowerCase(); renderCurrentTab(); });
-  document.getElementById("sortFilter")?.addEventListener("change", (e) => { state.sortBy = e.target.value; renderCurrentTab(); });
+  document.getElementById("searchInput")?.addEventListener("input", (e) => { 
+    state.searchKeyword = e.target.value.toLowerCase(); 
+    renderCurrentTab(); 
+  });
+  document.getElementById("sortFilter")?.addEventListener("change", (e) => { 
+    state.sortBy = e.target.value; 
+    renderCurrentTab(); 
+  });
   console.log("✅ App initialized");
 }
 
@@ -1090,3 +1261,5 @@ window.saveProfile = window.saveProfile;
 window.createNewGroup = window.createNewGroup;
 window.showNotification = showNotification;
 window.shareStory = window.shareStory;
+window.exportAllData = window.exportAllData;
+window.importAllData = window.importAllData;
