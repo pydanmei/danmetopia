@@ -9,8 +9,8 @@
 </head>
 <body>
 
-<!-- WARNING OVERLAY -->
-<div id="warningOverlay" style="display: flex;">
+<!-- WARNING OVERLAY - MẶC ĐỊNH ẨN, CHỈ HIỆN KHI CẦN -->
+<div id="warningOverlay" style="display: none;">
   <div class="warning-box">
     <h2>⚠️ CẢNH BÁO 18+ ⚠️</h2>
     <p>Trang web này có thể chứa nội dung dành cho người trưởng thành (18+).<br><br>
@@ -107,6 +107,15 @@
 <!-- SCROLL BUTTONS -->
 <button class="scroll-top-btn" id="scrollTopBtn">⬆️</button>
 <button class="floating-top-btn" id="floatingTopBtn">↑</button>
+
+<!-- Stats Footer -->
+<div id="statsFooter" style="background: #1a1a1a; padding: 10px 20px; text-align: center; border-top: 1px solid #333; font-size: 12px; color: #888;">
+  <span>👥 Đang online: <span id="onlineCount">0</span></span>
+  <span style="margin: 0 15px;">|</span>
+  <span>📊 Tổng lượt truy cập: <span id="visitCount">0</span></span>
+  <span style="margin: 0 15px;">|</span>
+  <span>❤️ Tổng lượt thích: <span id="totalLikes">0</span></span>
+</div>
 
 <datalist id="genreDropdown">
   <option>3D</option><option>Action</option><option>Comedy</option><option>Drama</option>
