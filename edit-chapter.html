@@ -159,4 +159,137 @@
   }
 
   function renderEditForm() {
-    const canEdit = currentUser && (isAdmin(currentUser) || story.ownerUid === currentUser?.uid || (current
+    const canEdit = currentUser && (isAdmin(currentUser) || story.ownerUid === currentUser?.uid || (currentUser.privileges?.groupId && story.groupId === currentUser.privileges?.groupId));
+    if (!canEdit) {
+      document.getElementById("editContent").innerHTML = '<div class="loading-container"><p>⚠️ Bạn không có quyền chỉnh sửa chapter này!</p><a href="story.html?id=${storyId}" class="back-link">← Quay lại</a></div>';
+      return;
+    }
+
+    const html = `
+      <div class="edit-panel">
+        <h2>✏️ CHỈNH SỬA CHAPTER: ${escapeHtml(chapter.title)}</h2>
+        <input id="editChapterTitle" value="${escapeHtml(chapter.title)}" placeholder="Tên chapter *">
+        <input id="editChapterNumber" value="${chapter.chapterNumber || 0}" type="number" placeholder="Số chapter">
+        
+        <label style="color:#FF69B4; margin-top:10px; display:block;">📷 Ảnh hiện tại (kéo thả để sắp xếp)</label>
+        <div id="existingImagesPreview" class="images-preview" style="min-height:120px;"></div>
+        
+        <label style="color:#FF69B4; margin-top:15px; display:block;">➕ Thêm ảnh mới</label>
+        <input type="file" id="editNewChapterImages" accept="image/*" multiple>
+        <div id="editNewChapterPreview" class="images-preview"></div>
+        
+        <label style="color:#FF69B4; margin-top:15px; display:block;">🔗 Hoặc nhập link ảnh (mỗi dòng 1 link)</label>
+        <textarea id="editChapterPages" rows="8">${existingPages.join('\n')}</textarea>
+        
+        <button class="btn-pink" id="saveChapterEditBtn">💾 LƯU THAY ĐỔI</button>
+      </div>
+    `;
+    document.getElementById("editContent").innerHTML = html;
+
+    const existingPreviewDiv = document.getElementById("existingImagesPreview");
+    existingPreviewDiv.innerHTML = "";
+    for (let i = 0; i < existingPages.length; i++) {
+      const imgDiv = document.createElement("div");
+      imgDiv.className = "img-preview-item";
+      imgDiv.innerHTML = `
+        <img src="${escapeHtml(existingPages[i])}" style="width:100%; height:100%; object-fit:cover; border-radius:8px;">
+        <button class="remove-existing-img" data-index="${i}" style="position:absolute; top:-8px; right:-8px; width:20px; height:20px; border-radius:50%; background:#ff4444; color:white; border:none; cursor:pointer; font-size:12px;">✕</button>
+      `;
+      existingPreviewDiv.appendChild(imgDiv);
+    }
+
+    document.querySelectorAll('.remove-existing-img').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const idx = parseInt(btn.dataset.index);
+        existingPages.splice(idx, 1);
+        btn.parentElement.remove();
+        document.querySelectorAll('.remove-existing-img').forEach((b, newIdx) => { b.dataset.index = newIdx; });
+        showNotification("Đã xóa ảnh khỏi danh sách");
+      });
+    });
+
+    if (existingPreviewDiv.children.length > 0) {
+      sortableInstance = new Sortable(existingPreviewDiv, {
+        animation: 150,
+        handle: '.img-preview-item',
+        onEnd: () => {
+          const newOrder = [];
+          for (let i = 0; i < existingPreviewDiv.children.length; i++) {
+            const img = existingPreviewDiv.children[i].querySelector('img');
+            if (img) newOrder.push(img.src);
+          }
+          existingPages = newOrder;
+        }
+      });
+    }
+
+    document.getElementById("editNewChapterImages")?.addEventListener("change", (e) => {
+      newImageFiles = Array.from(e.target.files);
+      const previewDiv = document.getElementById("editNewChapterPreview");
+      previewDiv.innerHTML = "";
+      for (const file of newImageFiles) {
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          const imgDiv = document.createElement("div");
+          imgDiv.className = "img-preview-item";
+          imgDiv.innerHTML = `<img src="${ev.target.result}" style="width:100%; height:100%; object-fit:cover; border-radius:8px;"><button onclick="this.parentElement.remove()" style="position:absolute; top:-8px; right:-8px; width:20px; height:20px; border-radius:50%; background:#ff4444; color:white; border:none; cursor:pointer; font-size:12px;">✕</button>`;
+          previewDiv.appendChild(imgDiv);
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    document.getElementById("saveChapterEditBtn")?.addEventListener("click", saveEditChapter);
+  }
+
+  async function saveEditChapter() {
+    const newTitle = document.getElementById("editChapterTitle").value.trim();
+    const newNumber = parseInt(document.getElementById("editChapterNumber").value) || 0;
+    let newPages = [...existingPages];
+
+    const pagesText = document.getElementById("editChapterPages").value;
+    if (pagesText.trim()) {
+      const linkPages = pagesText.split('\n').filter(p => p.trim());
+      newPages = [...newPages, ...linkPages];
+    }
+
+    if (!newTitle) { showNotification("Nhập tên chapter", true); return; }
+
+    if (newImageFiles.length > 0) {
+      showLoading(true);
+      showNotification(`📤 Đang upload ${newImageFiles.length} ảnh mới...`, false);
+      const newImageUrls = await uploadMultipleImages(newImageFiles);
+      if (newImageUrls.length > 0) {
+        newPages = [...newPages, ...newImageUrls];
+      }
+      showLoading(false);
+    }
+
+    if (newPages.length === 0) { showNotification("Chapter phải có ít nhất 1 ảnh", true); return; }
+
+    showLoading(true);
+    try {
+      await update(ref(db, `chapters/${storyId}/${chapterId}`), {
+        title: newTitle,
+        chapterNumber: newNumber,
+        pages: newPages
+      });
+      showNotification("✅ Đã cập nhật chapter!");
+      setTimeout(() => { window.location.href = `story.html?id=${storyId}`; }, 1000);
+    } catch (err) {
+      showNotification("Lỗi: " + err.message, true);
+    } finally {
+      showLoading(false);
+    }
+  }
+
+  const restored = await restoreSession();
+  if (!restored) {
+    window.location.href = 'index.html';
+  } else {
+    await loadStoryAndChapter();
+  }
+</script>
+</body>
+</html>
