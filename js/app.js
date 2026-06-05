@@ -949,6 +949,48 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 });
 
+// ==================== THÔNG BÁO COMMENT MỚI ====================
+let lastCommentTimes = {};
+
+function loadLastCommentTimes() {
+  const saved = localStorage.getItem("lastCommentTimes");
+  if (saved) {
+    lastCommentTimes = JSON.parse(saved);
+  }
+}
+
+function saveLastCommentTimes() {
+  localStorage.setItem("lastCommentTimes", JSON.stringify(lastCommentTimes));
+}
+
+function watchNewComments(storyId) {
+  if (!storyId) return;
+  
+  const commentsRef = ref(db, `comments/${storyId}`);
+  const lastTime = lastCommentTimes[storyId] || 0;
+  
+  onValue(commentsRef, (snapshot) => {
+    const data = snapshot.val();
+    if (!data) return;
+    
+    const comments = Object.values(data);
+    const latest = comments.sort((a, b) => b.createdAt - a.createdAt)[0];
+    
+    if (latest && latest.createdAt > lastTime) {
+      // Chỉ thông báo nếu không phải comment của chính user hiện tại
+      if (latest.userId !== state.currentUser?.uid) {
+        showNotification(`💬 Bình luận mới từ ${latest.userName}: "${latest.text.substring(0, 50)}${latest.text.length > 50 ? '...' : ''}"`);
+      }
+      lastCommentTimes[storyId] = latest.createdAt;
+      saveLastCommentTimes();
+    }
+  });
+}
+
+// Gọi watchNewComments khi mở story detail
+// Thêm vào đầu hàm openStoryDetail:
+// if (storyId) watchNewComments(storyId);
+
 // Make functions global
 window.openStoryDetail = window.openStoryDetail;
 window.deleteChapter = window.deleteChapter;
