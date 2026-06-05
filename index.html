@@ -127,5 +127,134 @@
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
 <script type="module" src="js/app.js"></script>
 
+<style>
+  .mobile-menu-btn {
+    background: rgba(0,0,0,0.2);
+    border: none;
+    padding: 8px 12px;
+    border-radius: 30px;
+    cursor: pointer;
+    font-size: 20px;
+    font-weight: bold;
+    color: black;
+    display: none;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .mobile-menu {
+    position: fixed;
+    top: 60px;
+    right: 10px;
+    background: #1c1c1c;
+    border: 1px solid #FF69B4;
+    border-radius: 16px;
+    padding: 10px;
+    min-width: 180px;
+    z-index: 10000;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    display: none;
+  }
+  
+  .mobile-user-info {
+    padding: 10px;
+    border-bottom: 1px solid #333;
+    margin-bottom: 8px;
+    font-weight: bold;
+    color: #FF69B4;
+  }
+  
+  .mobile-nav-link, .mobile-nav-btn {
+    display: block;
+    width: 100%;
+    padding: 10px;
+    background: transparent;
+    border: none;
+    color: white;
+    text-decoration: none;
+    text-align: left;
+    cursor: pointer;
+    border-radius: 8px;
+    font-size: 14px;
+  }
+  
+  .mobile-nav-link:hover, .mobile-nav-btn:hover {
+    background: #FF69B4;
+    color: black;
+  }
+  
+  @media (max-width: 768px) {
+    .desktop-menu { display: none; }
+    .mobile-menu-btn { display: flex !important; }
+  }
+  
+  @media (min-width: 769px) {
+    .mobile-menu-btn { display: none !important; }
+    .mobile-menu { display: none !important; }
+  }
+</style>
+
+<script>
+  (function() {
+    function initMobileMenu() {
+      const menuBtn = document.getElementById('mobileMenuBtn');
+      const menu = document.getElementById('mobileMenu');
+      if (menuBtn && menu) {
+        menuBtn.addEventListener('click', function(e) {
+          e.stopPropagation();
+          menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+        });
+        document.addEventListener('click', function(e) {
+          if (!menuBtn.contains(e.target) && !menu.contains(e.target)) {
+            menu.style.display = 'none';
+          }
+        });
+      }
+    }
+    
+    function syncMobileDisplay() {
+      const desktopDisplay = document.getElementById('userDisplay');
+      const mobileDisplay = document.getElementById('mobileUserDisplay');
+      if (desktopDisplay && mobileDisplay) {
+        mobileDisplay.innerHTML = desktopDisplay.innerHTML;
+      }
+      // Sync buttons visibility
+      const profileBtn = document.getElementById('profileBtn');
+      const mobileProfileBtn = document.getElementById('mobileProfileBtn');
+      const logoutBtn = document.getElementById('logoutBtn');
+      const mobileLogoutBtn = document.getElementById('mobileLogoutBtn');
+      const adminLink = document.getElementById('adminLink');
+      const mobileAdminLink = document.getElementById('mobileAdminLink');
+      const createGroupBtn = document.getElementById('createGroupBtn');
+      const mobileCreateGroupBtn = document.getElementById('mobileCreateGroupBtn');
+      
+      if (profileBtn && mobileProfileBtn) {
+        mobileProfileBtn.style.display = profileBtn.style.display;
+      }
+      if (logoutBtn && mobileLogoutBtn) {
+        mobileLogoutBtn.style.display = logoutBtn.style.display;
+      }
+      if (adminLink && mobileAdminLink) {
+        mobileAdminLink.style.display = adminLink.style.display;
+      }
+      if (createGroupBtn && mobileCreateGroupBtn) {
+        mobileCreateGroupBtn.style.display = createGroupBtn.style.display;
+      }
+    }
+    
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initMobileMenu);
+      document.addEventListener('DOMContentLoaded', syncMobileDisplay);
+    } else {
+      initMobileMenu();
+      syncMobileDisplay();
+    }
+    
+    const observer = new MutationObserver(syncMobileDisplay);
+    const userDisplay = document.getElementById('userDisplay');
+    if (userDisplay) observer.observe(userDisplay, { childList: true, subtree: true });
+  })();
+</script>
+  
 </body>
 </html>
