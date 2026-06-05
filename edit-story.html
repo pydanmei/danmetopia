@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>🌸 DANMETOPIA - Chỉnh sửa truyện 🌸</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .edit-container { max-width: 800px; margin: 0 auto; padding: 20px; }
+    .back-link { display: inline-block; margin-bottom: 20px; padding: 8px 16px; background: #333; color: white; text-decoration: none; border-radius: 30px; font-size: 14px; }
+    .back-link:hover { background: #FF69B4; color: black; }
+    .edit-panel { background: #1c1c1c; border-radius: 16px; padding: 25px; border: 1px solid #FF69B4; }
+    .edit-panel h2 { color: #FF69B4; margin-bottom: 20px; }
+    .edit-panel input, .edit-panel textarea, .edit-panel select { width: 100%; padding: 12px; margin-bottom: 15px; background: #2a2a2a; border: none; border-radius: 12px; color: white; font-size: 14px; }
+    .edit-panel textarea { height: 120px; resize: vertical; }
+    .cover-preview { width: 150px; height: 225px; object-fit: cover; border-radius: 8px; margin-top: 10px; border: 2px solid #FF69B4; }
+    .loading-container { text-align: center; padding: 50px; }
+    .note { font-size: 12px; color: #888; margin-bottom: 15px; }
+  </style>
+</head>
+<body>
+<div class="edit-container">
+  <a href="javascript:history.back()" class="back-link">← Quay lại</a>
+  <div id="editContent">
+    <div class="loading-container"><div class="loading-spinner"></div><p>Đang tải thông tin truyện...</p></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+  import { getAuth } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+  import { getDatabase, ref, get, update, push, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCDQk9DlMNKwn_508fDMI_3IB_dgpgHujA",
+    authDomain: "danmetopia.firebaseapp.com",
+    projectId: "danmetopia",
+    databaseURL: "https://danmetopia-default-rtdb.asia-southeast1.firebasedatabase.app/",
+    storageBucket: "danmetopia.appspot.com",
+    messagingSenderId: "178240377870",
+    appId: "1:178240377870:web:d094b222ebabadccc5585f"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getDatabase(app);
+  const IMGBB_API_KEY = "d16b5595d7f6044476d254c8f428cc28";
+  emailjs.init("fPq8fpw1OqzOtj-lk");
+
+  const urlParams = new URLSearchParams(window.location.search);
+  const storyId = urlParams.get('id');
+  let currentUser = null;
+  let story = null;
+  let allGroups = [];
+
+  function showNotification(msg, isError = false) {
+    const notif = document.createElement("div");
+    notif.className = "notification";
+    notif.style.background = isError ? "#ff4444" : "#FF69B4";
+    notif.style.color = "black";
+    notif.innerText = msg;
+    document.body.appendChild(notif);
+    setTimeout(() => notif.remove(), 3000);
+  }
+
+  function showLoading(show) {
+    let spinner = document.getElementById("globalSpinner");
+    if (show) {
+      if (!spinner) {
+        spinner = document.createElement("div");
+        spinner.id = "globalSpinner";
+        spinner.className = "spinner-overlay";
+        spinner.innerHTML = '<div class="loading-spinner"></div>';
+        document.body.appendChild(spinner);
+      }
+      spinner.style.display = "flex";
+    } else {
+      if (spinner) spinner.style.display = "none";
+    }
+  }
+
+  function escapeHtml(str) {
+    if (!str) return "";
+    return str.replace(/[&<>]/g, m => m === "&" ? "&amp;" : m === "<" ? "&lt;" : "&gt;");
+  }
+
+  function isAdmin(userData) { return userData?.role === "admin"; }
+
+  async function uploadImage(file) {
+    if (!file) return null;
+    if (file.size > 10 * 1024 * 1024) { showNotification(`Ảnh ${file.name} quá lớn (tối đa 10MB)`, true); return null; }
+    const formData = new FormData();
+    formData.append("image", file);
+    formData.append("key", IMGBB_API_KEY);
+    try {
+      const response = await fetch("https://api.imgbb.com/1/upload", { method: "POST", body: formData });
+      const result = await response.json();
+      return result.success ? result.data.url : null;
+    } catch (err) { showNotification("Lỗi upload: " + err.message, true); return null; }
+  }
+
+  async function restoreSession() {
+    const sessionStr = localStorage.getItem("userSession");
+    if (!sessionStr) return false;
+    try {
+      const session = JSON.parse(sessionStr);
+      if (!session.expireAt || Date.now() > session.expireAt) {
+        localStorage.removeItem("userSession");
+        return false;
+      }
+      if (session.role === "guest") {
+        currentUser = session;
+        return true;
+      } else if (session.uid) {
+        const userSnap = await get(ref(db, `users/${session.uid}`));
+        if (userSnap.exists()) {
+          currentUser = { ...session, ...userSnap.val() };
+          return true;
+        }
+      }
+      return false;
+    } catch { return false; }
+  }
+
+  async function loadAllGroups() {
+    const groupsSnap = await get(ref(db, "groups"));
+    allGroups = groupsSnap.exists() ? Object.entries(groupsSnap.val()).map(([id, g]) => ({ id, ...g })) : [];
+  }
+
+  async function getUserGroups(uid) {
+    if (!uid) return [];
+    return allGroups.filter(group => group.members?.includes(uid));
+  }
+
+  async function loadStory() {
+    const storySnap = await get(ref(db, `stories/${storyId}`));
+    if (storySnap.exists()) {
+      story = { id: storyId, ...storySnap.val() };
+      await loadAllGroups();
+      const userGroups = await getUserGroups(currentUser?.uid);
+      renderEditForm(userGroups);
+    } else {
+      document.getElementById("editContent").innerHTML = '<div class="loading-container"><p>Không tìm thấy truyện</p></div>';
+    }
+  }
+
+  function renderEditForm(userGroups) {
+    let groupOptions = '<option value="">-- Không có nhóm --</option>';
+    for (const group of userGroups) {
+      groupOptions += `<option value="${group.id}" ${story.groupId === group.id ? 'selected' : ''}>${escapeHtml(group.groupName)}</option>`;
+    }
+
+    const genreTagsValue = (story.genres ? story.genres + ", " : "") + (story.tags || "");
+
+    const html = `
+      <div class="edit-panel">
+        <h2>✏️ CHỈNH SỬA TRUYỆN</h2>
+        <input id="editTitle" value="${escapeHtml(story.title)}" placeholder="Tên truyện *">
+        <input id="editOtherName" value="${escapeHtml(story.otherName || '')}" placeholder="Tên khác">
+        <input id="editAuthor" value="${escapeHtml(story.author || '')}" placeholder="Tác giả">
+        <input id="editGenreTags" value="${escapeHtml(genreTagsValue)}" placeholder="Thể loại và Tags (cách nhau bằng dấu phẩy)">
+        <div class="note">💡 Hệ thống sẽ tự động phân biệt thể loại (33 thể loại có sẵn) và tags</div>
+        <select id="editStatus">
+          <option value="Đang tiến hành" ${story.status === "Đang tiến hành" ? "selected" : ""}>📖 Đang tiến hành</option>
+          <option value="Đã hoàn thành" ${story.status === "Đã hoàn thành" ? "selected" : ""}>✅ Đã hoàn thành</option>
+          <option value="Tạm ngưng" ${story.status === "Tạm ngưng" ? "selected" : ""}>⏸ Tạm ngưng</option>
+        </select>
+        <select id="editGroupId">${groupOptions}</select>
+        <input type="file" id="editCoverFile" accept="image/*">
+        <input id="editCover" value="${escapeHtml(story.cover || '')}" placeholder="Link ảnh bìa">
+        <div id="editCoverPreview">${story.cover ? `<img class="cover-preview" src="${escapeHtml(story.cover)}">` : ''}</div>
+        <textarea id="editDesc" placeholder="Mô tả truyện">${escapeHtml(story.desc || '')}</textarea>
+        <button class="btn-pink" id="saveBtn">💾 LƯU THAY ĐỔI</button>
+      </div>
+    `;
+    document.getElementById("editContent").innerHTML = html;
+
+    document.getElementById("editCoverFile")?.addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          document.getElementById("editCoverPreview").innerHTML = `<img class="cover-preview" src="${ev.target.result}">`;
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    document.getElementById("saveBtn")?.addEventListener("click", saveEditStory);
+  }
+
+  async function saveEditStory() {
+    const newTitle = document.getElementById("editTitle").value.trim();
+    if (!newTitle) { showNotification("Tên truyện không được trống", true); return; }
+
+    showLoading(true);
+    try {
+      const coverFile = document.getElementById("editCoverFile").files[0];
+      let coverUrl = document.getElementById("editCover").value;
+      if (coverFile) coverUrl = await uploadImage(coverFile);
+
+      const newGroupId = document.getElementById("editGroupId").value;
+      let groupName = "";
+      if (newGroupId) {
+        const groupSnap = await get(ref(db, `groups/${newGroupId}`));
+        if (groupSnap.exists()) groupName = groupSnap.val().groupName;
+      }
+
+      const genreTagsInput = document.getElementById("editGenreTags").value;
+      const GENRE_LIST = [
+        "3D", "Action", "Bara/Muscle", "Biography", "Cakeverse", "Comedy",
+        "Crime", "Documentary", "Dom/Sub verse", "Drama", "Family", "Fantasy",
+        "Furry", "HET/Hentai", "Historical", "Horror", "Music", "Mystery",
+        "Omegaverse", "Psychological", "Romance", "School Life", "Sci-fi",
+        "Shounen Ai", "Slice of Life", "Sports", "Supernatural", "Thriller",
+        "Tragedy", "War", "Wuxia", "Yaoi", "Yuri"
+      ];
+      const GENRE_SET = new Set(GENRE_LIST);
+      let keywords = genreTagsInput.includes(",") ? genreTagsInput.split(",").map(k => k.trim()).filter(k => k) : genreTagsInput.split(" ").map(k => k.trim()).filter(k => k);
+      const genres = [];
+      const tags = [];
+      for (const kw of keywords) {
+        if (GENRE_SET.has(kw)) genres.push(kw);
+        else tags.push(kw);
+      }
+
+      await update(ref(db, `stories/${storyId}`), {
+        title: newTitle,
+        otherName: document.getElementById("editOtherName").value,
+        author: document.getElementById("editAuthor").value,
+        genres: genres.join(", "),
+        tags: tags.join(", "),
+        status: document.getElementById("editStatus").value,
+        groupId: newGroupId || null,
+        groupName: groupName,
+        cover: coverUrl,
+        desc: document.getElementById("editDesc").value
+      });
+
+      showNotification("✅ Đã cập nhật truyện!");
+      setTimeout(() => { window.location.href = `story.html?id=${storyId}`; }, 1000);
+    } catch (err) {
+      showNotification("Lỗi: " + err.message, true);
+    } finally {
+      showLoading(false);
+    }
+  }
+
+  const restored = await restoreSession();
+  if (!restored) {
+    window.location.href = 'index.html';
+  } else {
+    await loadStory();
+  }
+</script>
+</body>
+</html>
