@@ -10,7 +10,6 @@
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; background: #0a0a0a; color: #e0e0e0; }
     .reader-container { max-width: 900px; margin: 0 auto; padding: 80px 20px 100px 20px; }
     
-    /* Top navigation */
     .reader-top-nav {
       position: fixed;
       top: 0;
@@ -50,7 +49,6 @@
       margin: 0 10px;
     }
     
-    /* Bottom navigation */
     .bottom-nav {
       position: fixed;
       bottom: 0;
@@ -165,6 +163,40 @@
   let currentChapters = [];
   let commentUnsubscribe = null;
 
+  // ==================== LƯU TIẾN ĐỘ ĐỌC ====================
+  function saveReadingProgress() {
+    if (!storyId) return;
+    const progressKey = `reading_progress_${storyId}`;
+    localStorage.setItem(progressKey, currentChapterIndex);
+    console.log(`💾 Saved progress: chapter ${currentChapterIndex}`);
+  }
+
+  function loadReadingProgress() {
+    if (!storyId) return null;
+    const progressKey = `reading_progress_${storyId}`;
+    const saved = localStorage.getItem(progressKey);
+    if (saved !== null) {
+      console.log(`📖 Loaded progress: chapter ${saved}`);
+      return parseInt(saved);
+    }
+    return null;
+  }
+
+  // ==================== PRELOAD CHAPTER KẾ TIẾP ====================
+  function preloadNextChapter() {
+    const nextIndex = currentChapterIndex + 1;
+    if (nextIndex < currentChapters.length) {
+      const nextChapter = currentChapters[nextIndex];
+      if (nextChapter?.pages) {
+        console.log(`🔄 Preloading chapter ${nextIndex + 1}...`);
+        nextChapter.pages.forEach(pageUrl => {
+          const img = new Image();
+          img.src = pageUrl;
+        });
+      }
+    }
+  }
+
   function showNotification(msg, isError = false) {
     const notif = document.createElement("div");
     notif.className = "notification";
@@ -228,6 +260,14 @@
       if (data) {
         currentChapters = Object.entries(data).map(([id, value]) => ({ id, ...value }));
         currentChapters.sort((a, b) => (a.chapterNumber || 0) - (b.chapterNumber || 0));
+        
+        // Load saved progress sau khi có chapters
+        const savedProgress = loadReadingProgress();
+        if (savedProgress !== null && savedProgress < currentChapters.length) {
+          currentChapterIndex = savedProgress;
+          const newUrl = `${window.location.pathname}?id=${storyId}&chapter=${currentChapterIndex}`;
+          window.history.pushState({}, '', newUrl);
+        }
         renderReader();
       } else {
         renderReader();
@@ -244,10 +284,12 @@
   }
 
   function goToStoryInfo() {
+    saveReadingProgress();
     window.location.href = `story.html?id=${storyId}`;
   }
 
   function goToHome() {
+    saveReadingProgress();
     window.location.href = "index.html";
   }
 
@@ -309,23 +351,28 @@
       newPostBtn.addEventListener("click", () => postComment(storyId));
     }
     window.scrollTo({ top: 0, behavior: 'smooth' });
+    preloadNextChapter(); // Preload chapter tiếp theo
   }
 
   window.changeChapter = async (delta) => {
     const newIdx = currentChapterIndex + delta;
     if (newIdx >= 0 && newIdx < currentChapters.length) {
       currentChapterIndex = newIdx;
+      saveReadingProgress();
       const newUrl = `${window.location.pathname}?id=${storyId}&chapter=${currentChapterIndex}`;
       window.history.pushState({}, '', newUrl);
       renderReader();
     }
   };
+  
   window.changeChapterTo = async (index) => {
     currentChapterIndex = index;
+    saveReadingProgress();
     const newUrl = `${window.location.pathname}?id=${storyId}&chapter=${currentChapterIndex}`;
     window.history.pushState({}, '', newUrl);
     renderReader();
   };
+  
   window.scrollToTop = () => { window.scrollTo({ top: 0, behavior: 'smooth' }); };
   window.goToHome = goToHome;
   window.goToStoryInfo = goToStoryInfo;
@@ -372,6 +419,10 @@
     document.getElementById("commentText").value = "";
     showNotification("✅ Đã gửi bình luận");
   }
+
+  window.addEventListener('beforeunload', () => {
+    saveReadingProgress();
+  });
 
   await restoreSession();
   const tempGuest = sessionStorage.getItem("tempGuestUser");
