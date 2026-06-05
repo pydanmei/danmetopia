@@ -12,10 +12,10 @@
   </div>
   
   <!-- Mobile menu button -->
-  <div class="mobile-menu-btn" id="mobileMenuBtn" style="display:none">☰</div>
+  <div class="mobile-menu-btn" id="mobileMenuBtn">☰</div>
   
   <!-- Mobile menu dropdown -->
-  <div id="mobileMenu" class="mobile-menu" style="display:none">
+  <div id="mobileMenu" class="mobile-menu">
     <div class="mobile-user-info" id="mobileUserDisplay">👤 Đang tải...</div>
     <a href="groups.html" id="mobileGroupsLink" class="mobile-nav-link">📚 Nhóm</a>
     <button id="mobileProfileBtn" class="mobile-nav-btn">👤 Thông tin</button>
@@ -35,7 +35,7 @@
     font-size: 20px;
     font-weight: bold;
     color: black;
-    display: flex;
+    display: none;
     align-items: center;
     justify-content: center;
   }
@@ -51,6 +51,7 @@
     min-width: 180px;
     z-index: 10000;
     box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    display: none;
   }
   
   .mobile-user-info {
@@ -90,69 +91,3 @@
     .mobile-menu { display: none !important; }
   }
 </style>
-
-<script>
-  (function() {
-    // Hàm toggle menu
-    window.toggleMobileMenu = function() {
-      const menu = document.getElementById('mobileMenu');
-      if (menu) {
-        if (menu.style.display === 'none' || !menu.style.display || getComputedStyle(menu).display === 'none') {
-          menu.style.display = 'block';
-        } else {
-          menu.style.display = 'none';
-        }
-      }
-    };
-    
-    // Gắn sự kiện sau khi DOM load
-    function initMobileMenu() {
-      const menuBtn = document.getElementById('mobileMenuBtn');
-      if (menuBtn) {
-        // Xóa event cũ nếu có
-        const newBtn = menuBtn.cloneNode(true);
-        menuBtn.parentNode.replaceChild(newBtn, menuBtn);
-        newBtn.addEventListener('click', function(e) {
-          e.stopPropagation();
-          window.toggleMobileMenu();
-        });
-      }
-      
-      // Đóng menu khi click ra ngoài
-      document.addEventListener('click', function(event) {
-        const menu = document.getElementById('mobileMenu');
-        const btn = document.getElementById('mobileMenuBtn');
-        if (menu && btn && !btn.contains(event.target) && !menu.contains(event.target)) {
-          menu.style.display = 'none';
-        }
-      });
-    }
-    
-    // Sync mobile user display
-    function syncMobileUserDisplay() {
-      const desktopDisplay = document.getElementById('userDisplay');
-      const mobileDisplay = document.getElementById('mobileUserDisplay');
-      if (desktopDisplay && mobileDisplay) {
-        mobileDisplay.innerHTML = desktopDisplay.innerHTML;
-      }
-    }
-    
-    // Lắng nghe sự thay đổi của userDisplay
-    const observer = new MutationObserver(syncMobileUserDisplay);
-    const userDisplay = document.getElementById('userDisplay');
-    if (userDisplay) {
-      observer.observe(userDisplay, { childList: true, subtree: true, characterData: true });
-    }
-    
-    // Chạy khi DOM ready
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', function() {
-        initMobileMenu();
-        syncMobileUserDisplay();
-      });
-    } else {
-      initMobileMenu();
-      syncMobileUserDisplay();
-    }
-  })();
-</script>
