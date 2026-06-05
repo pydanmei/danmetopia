@@ -104,4 +104,21 @@
       menu.style.display = 'none';
     }
   });
+  
+  // Sync mobile user display with desktop
+  function syncMobileUserDisplay() {
+    const desktopDisplay = document.getElementById('userDisplay');
+    const mobileDisplay = document.getElementById('mobileUserDisplay');
+    if (desktopDisplay && mobileDisplay) {
+      mobileDisplay.innerHTML = desktopDisplay.innerHTML;
+    }
+  }
+  
+  // Observe changes to userDisplay
+  const observer = new MutationObserver(syncMobileUserDisplay);
+  const userDisplay = document.getElementById('userDisplay');
+  if (userDisplay) {
+    observer.observe(userDisplay, { childList: true, subtree: true, characterData: true });
+  }
+  syncMobileUserDisplay();
 </script>
