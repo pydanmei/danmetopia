@@ -1,7 +1,7 @@
 // ==================== FIREBASE CONFIG ====================
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-import { getDatabase, ref, set, get, child, push, update, remove, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+import { getDatabase, ref, set, get, child, push, update, remove, onValue, onDisconnect } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCDQk9DlMNKwn_508fDMI_3IB_dgpgHujA",
@@ -223,6 +223,7 @@ async function handleGuestLogin() {
   showNotification(`👤 Chào mừng ${state.currentUser.displayName} (Khách)`);
   updateUserDisplay();
   initApp();
+  trackUserPresence(); // Thêm tracking online
 }
 
 async function handleCheckEmail() {
@@ -282,6 +283,7 @@ async function handlePasswordLogin() {
     showNotification(`✅ Chào mừng ${state.currentUser.displayName}`);
     updateUserDisplay();
     initApp();
+    trackUserPresence(); // Thêm tracking online
   } catch (err) {
     if (err.code === "auth/invalid-credential") showNotification("Sai mật khẩu", true);
     else showNotification("Lỗi: " + err.message, true);
@@ -310,6 +312,7 @@ async function handleCompleteRegistration() {
     showNotification(`🎉 Chào mừng ${nickname}!`);
     updateUserDisplay();
     initApp();
+    trackUserPresence(); // Thêm tracking online
   } catch (err) { msg.innerText = "Lỗi: " + err.message; }
   finally { showLoading(false); }
 }
@@ -331,9 +334,63 @@ async function restoreSession() {
 }
 
 async function logout() {
+  // Xóa presence khi logout
+  if (state.currentUser?.uid) {
+    await remove(ref(db, `online/${state.currentUser.uid}`));
+  }
   try { await signOut(auth); } catch(e) {}
   localStorage.removeItem("userSession");
   window.location.reload();
+}
+
+// ==================== ONLINE TRACKING & STATS ====================
+async function trackUserPresence() {
+  if (!state.currentUser) return;
+  
+  const userId = state.currentUser.uid || `guest_${state.currentUser.displayName}`;
+  const userStatusRef = ref(db, `online/${userId}`);
+  
+  // Set online
+  await set(userStatusRef, {
+    name: state.currentUser.displayName,
+    timestamp: Date.now()
+  });
+  
+  // Tự động xóa khi disconnect
+  onDisconnect(userStatusRef).remove();
+}
+
+async function updateVisitCount() {
+  const hasVisited = sessionStorage.getItem("hasVisited");
+  if (!hasVisited) {
+    const visitRef = ref(db, 'stats/visitCount');
+    const snapshot = await get(visitRef);
+    const newCount = (snapshot.val() || 0) + 1;
+    await set(visitRef, newCount);
+    sessionStorage.setItem("hasVisited", "true");
+    document.getElementById("visitCount").innerText = newCount;
+  } else {
+    const visitRef = ref(db, 'stats/visitCount');
+    const snapshot = await get(visitRef);
+    document.getElementById("visitCount").innerText = snapshot.val() || 0;
+  }
+}
+
+async function updateTotalLikes() {
+  let total = 0;
+  for (const story of state.stories) {
+    total += story.likes || 0;
+  }
+  document.getElementById("totalLikes").innerText = total;
+}
+
+function trackOnlineUsers() {
+  const onlineRef = ref(db, 'online');
+  onValue(onlineRef, (snapshot) => {
+    const data = snapshot.val();
+    const count = data ? Object.keys(data).length : 0;
+    document.getElementById("onlineCount").innerText = count;
+  });
 }
 
 // ==================== UPDATE UI ====================
@@ -429,10 +486,12 @@ function saveHistory() { localStorage.setItem("danmetopia_history", JSON.stringi
 
 // ==================== STORIES CRUD ====================
 async function loadStoriesRealtime() {
+  console.log("🔄 Loading stories from Firebase...");
   const storiesRef = ref(db, 'stories');
   onValue(storiesRef, async (snapshot) => {
     const data = snapshot.val();
     state.stories = data ? Object.entries(data).map(([id, value]) => ({ id, ...value })) : [];
+    console.log(`✅ Loaded ${state.stories.length} stories`);
     for (const story of state.stories) {
       if (!story.slug && story.title) {
         const newSlug = generateSlug(story.title);
@@ -441,6 +500,7 @@ async function loadStoriesRealtime() {
       }
     }
     renderCurrentTab();
+    updateTotalLikes();
   });
 }
 
@@ -489,7 +549,12 @@ async function createStory(data, coverFile, chapterImages) {
 
 async function updateStoryData(storyId, data) { await update(ref(db, `stories/${storyId}`), data); }
 async function deleteStory(storyId) { await remove(ref(db, `stories/${storyId}`)); }
-async function likeStory(storyId) { const refStory = ref(db, `stories/${storyId}/likes`); const snapshot = await get(refStory); await set(refStory, (snapshot.val() || 0) + 1); }
+async function likeStory(storyId) { 
+  const refStory = ref(db, `stories/${storyId}/likes`); 
+  const snapshot = await get(refStory); 
+  await set(refStory, (snapshot.val() || 0) + 1);
+  await updateTotalLikes();
+}
 async function approveStory(storyId) { await update(ref(db, `stories/${storyId}`), { approved: true }); showNotification("Đã duyệt truyện"); }
 async function rejectStory(storyId) { await update(ref(db, `stories/${storyId}`), { approved: false }); showNotification("Đã từ chối truyện"); }
 
@@ -560,13 +625,19 @@ function renderGenreFilter() {
 function renderCurrentTab() {
   const grid = document.getElementById("mangaGrid");
   if (!grid) return;
+  
   let filtered = state.stories.filter(s => s.approved === true);
   if (state.selectedGenre) filtered = filtered.filter(s => s.genres && s.genres.includes(state.selectedGenre));
   if (state.searchKeyword) filtered = filtered.filter(s => s.title?.toLowerCase().includes(state.searchKeyword) || s.otherName?.toLowerCase().includes(state.searchKeyword) || s.tags?.toLowerCase().includes(state.searchKeyword));
   if (state.sortBy === "likes") filtered.sort((a,b) => (b.likes||0) - (a.likes||0));
   else if (state.sortBy === "views") filtered.sort((a,b) => (b.views||0) - (a.views||0));
   else filtered.sort((a,b) => (b.createdAt||0) - (a.createdAt||0));
-  if (filtered.length === 0) { grid.innerHTML = "<div style='text-align:center; padding:50px;'>📭 Không có truyện nào</div>"; return; }
+  
+  if (filtered.length === 0) { 
+    grid.innerHTML = "<div style='text-align:center; padding:50px;'>📭 Không có truyện nào</div>"; 
+    return; 
+  }
+  
   grid.innerHTML = filtered.map(story => `
     <div class="manga-card" data-id="${story.id}" data-slug="${story.slug}">
       <img class="manga-cover" src="${escapeHtml(story.cover) || 'https://placehold.co/300x450?text=No+Cover'}" onerror="this.src='https://placehold.co/300x450?text=ERROR'">
@@ -580,7 +651,7 @@ function renderCurrentTab() {
     </div>
   `).join("");
   
-  // Gắn sự kiện click sau khi render (tránh lỗi inline onclick)
+  // Gắn sự kiện click
   document.querySelectorAll('.manga-card').forEach(card => {
     card.addEventListener('click', (e) => {
       const storyId = card.dataset.id;
@@ -821,7 +892,13 @@ async function loadComponents() {
 }
 
 // ==================== INIT ====================
+let appInitialized = false;
+
 async function initApp() {
+  if (appInitialized) return;
+  appInitialized = true;
+  
+  console.log("🚀 Initializing app...");
   await loadComponents();
   updateUserDisplay();
   initScrollButtons();
@@ -832,16 +909,21 @@ async function initApp() {
   loadBookmarks();
   loadHistory();
   loadStoriesRealtime();
+  trackOnlineUsers();
+  await updateVisitCount();
+  
   document.querySelectorAll(".tab-btn").forEach(btn => {
     btn.addEventListener("click", () => { document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active")); btn.classList.add("active"); state.currentTab = btn.dataset.tab; renderCurrentTab(); });
   });
   document.getElementById("searchInput")?.addEventListener("input", (e) => { state.searchKeyword = e.target.value.toLowerCase(); renderCurrentTab(); });
   document.getElementById("sortFilter")?.addEventListener("change", (e) => { state.sortBy = e.target.value; renderCurrentTab(); });
+  console.log("✅ App initialized");
 }
 
 // ==================== STARTUP ====================
 document.addEventListener("DOMContentLoaded", async () => {
-  console.log("DOM ready - Starting app...");
+  console.log("📄 DOM ready");
+  
   document.getElementById("warningContinueBtn")?.addEventListener("click", handleWarningContinue);
   document.getElementById("guestBtn")?.addEventListener("click", handleGuestLogin);
   document.getElementById("checkEmailBtn")?.addEventListener("click", handleCheckEmail);
@@ -850,12 +932,14 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("completeRegisterBtn")?.addEventListener("click", handleCompleteRegistration);
   document.getElementById("backToEmailBtn")?.addEventListener("click", () => { document.getElementById("otpGroup").style.display = "none"; document.getElementById("loginMsg").innerHTML = ""; });
   document.getElementById("backToEmailBtn2")?.addEventListener("click", () => { document.getElementById("passwordGroup").style.display = "none"; document.getElementById("loginMsg").innerHTML = ""; });
+  
   if (isMainPasswordValid()) {
     if (await restoreSession()) {
       document.getElementById("warningOverlay").style.display = "none";
       document.getElementById("loginPage").style.display = "none";
       document.getElementById("mainContainer").style.display = "block";
       await initApp();
+      trackUserPresence(); // Track sau khi init
     } else {
       document.getElementById("warningOverlay").style.display = "none";
       document.getElementById("loginPage").style.display = "flex";
