@@ -66,6 +66,16 @@
     </div>
   </div>
   
+  <!-- PHẦN EXPORT/IMPORT DỮ LIỆU - THÊM MỚI -->
+  <div class="admin-section">
+    <h3>💾 SAO LƯU & PHỤC HỒI DỮ LIỆU</h3>
+    <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+      <button class="btn-pink" onclick="window.exportAllData()">📤 EXPORT JSON</button>
+      <button class="btn-pink" onclick="window.importAllData()">📥 IMPORT JSON</button>
+    </div>
+    <p style="font-size: 12px; color: #888; margin-top: 10px;">⚠️ Import sẽ ghi đè dữ liệu hiện tại! Chỉ nên dùng khi khôi phục backup.</p>
+  </div>
+  
   <div class="admin-section">
     <h3>👥 QUẢN LÝ NGƯỜI DÙNG</h3>
     <div id="usersList"></div>
