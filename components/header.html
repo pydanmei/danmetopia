@@ -1,8 +1,6 @@
 <div class="topbar">
   <div class="logo" id="homeLogo">🌸 DANMETOPIA 🌸</div>
-  
-  <!-- Desktop menu -->
-  <div class="user-area desktop-menu">
+  <div class="user-area">
     <span id="userDisplay">👤 Đang tải...</span>
     <a href="groups.html" id="groupsLink" class="nav-link" style="display:none">📚 Nhóm</a>
     <button id="profileBtn" style="display:none">👤 Thông tin</button>
@@ -10,84 +8,4 @@
     <button id="logoutBtn" style="display:none">🚪 Đăng xuất</button>
     <button id="createGroupBtn" style="display:none" class="nav-btn">➕ Tạo nhóm</button>
   </div>
-  
-  <!-- Mobile menu button -->
-  <div class="mobile-menu-btn" id="mobileMenuBtn">☰</div>
-  
-  <!-- Mobile menu dropdown -->
-  <div id="mobileMenu" class="mobile-menu">
-    <div class="mobile-user-info" id="mobileUserDisplay">👤 Đang tải...</div>
-    <a href="groups.html" id="mobileGroupsLink" class="mobile-nav-link">📚 Nhóm</a>
-    <button id="mobileProfileBtn" class="mobile-nav-btn">👤 Thông tin</button>
-    <a href="admin.html" id="mobileAdminLink" class="mobile-nav-link admin-link">👑 Admin</a>
-    <button id="mobileLogoutBtn" class="mobile-nav-btn">🚪 Đăng xuất</button>
-    <button id="mobileCreateGroupBtn" class="mobile-nav-btn">➕ Tạo nhóm</button>
-  </div>
 </div>
-
-<style>
-  .mobile-menu-btn {
-    background: rgba(0,0,0,0.2);
-    border: none;
-    padding: 8px 12px;
-    border-radius: 30px;
-    cursor: pointer;
-    font-size: 20px;
-    font-weight: bold;
-    color: black;
-    display: none;
-    align-items: center;
-    justify-content: center;
-  }
-  
-  .mobile-menu {
-    position: fixed;
-    top: 60px;
-    right: 10px;
-    background: #1c1c1c;
-    border: 1px solid #FF69B4;
-    border-radius: 16px;
-    padding: 10px;
-    min-width: 180px;
-    z-index: 10000;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-    display: none;
-  }
-  
-  .mobile-user-info {
-    padding: 10px;
-    border-bottom: 1px solid #333;
-    margin-bottom: 8px;
-    font-weight: bold;
-    color: #FF69B4;
-  }
-  
-  .mobile-nav-link, .mobile-nav-btn {
-    display: block;
-    width: 100%;
-    padding: 10px;
-    background: transparent;
-    border: none;
-    color: white;
-    text-decoration: none;
-    text-align: left;
-    cursor: pointer;
-    border-radius: 8px;
-    font-size: 14px;
-  }
-  
-  .mobile-nav-link:hover, .mobile-nav-btn:hover {
-    background: #FF69B4;
-    color: black;
-  }
-  
-  @media (max-width: 768px) {
-    .desktop-menu { display: none; }
-    .mobile-menu-btn { display: flex !important; }
-  }
-  
-  @media (min-width: 769px) {
-    .mobile-menu-btn { display: none !important; }
-    .mobile-menu { display: none !important; }
-  }
-</style>
