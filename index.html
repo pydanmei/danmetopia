@@ -6,10 +6,77 @@
   <title>🌸 DANMETOPIA - Đọc truyện tranh online 🌸</title>
   <meta name="theme-color" content="#FF69B4">
   <link rel="stylesheet" href="style.css">
+  <style>
+    /* Mobile menu styles */
+    .mobile-menu-btn {
+      background: rgba(0,0,0,0.2);
+      border: none;
+      padding: 8px 12px;
+      border-radius: 30px;
+      cursor: pointer;
+      font-size: 20px;
+      font-weight: bold;
+      color: black;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .mobile-menu {
+      position: fixed;
+      top: 60px;
+      right: 10px;
+      background: #1c1c1c;
+      border: 1px solid #FF69B4;
+      border-radius: 16px;
+      padding: 10px;
+      min-width: 180px;
+      z-index: 10000;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+      display: none;
+    }
+    
+    .mobile-user-info {
+      padding: 10px;
+      border-bottom: 1px solid #333;
+      margin-bottom: 8px;
+      font-weight: bold;
+      color: #FF69B4;
+    }
+    
+    .mobile-nav-link, .mobile-nav-btn {
+      display: block;
+      width: 100%;
+      padding: 10px;
+      background: transparent;
+      border: none;
+      color: white;
+      text-decoration: none;
+      text-align: left;
+      cursor: pointer;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+    
+    .mobile-nav-link:hover, .mobile-nav-btn:hover {
+      background: #FF69B4;
+      color: black;
+    }
+    
+    @media (max-width: 768px) {
+      .desktop-menu { display: none; }
+      .mobile-menu-btn { display: flex !important; }
+    }
+    
+    @media (min-width: 769px) {
+      .mobile-menu-btn { display: none !important; }
+      .mobile-menu { display: none !important; }
+    }
+  </style>
 </head>
 <body>
 
-<!-- WARNING OVERLAY - MẶC ĐỊNH ẨN, CHỈ HIỆN KHI CẦN -->
+<!-- WARNING OVERLAY -->
 <div id="warningOverlay" style="display: none;">
   <div class="warning-box">
     <h2>⚠️ CẢNH BÁO 18+ ⚠️</h2>
@@ -58,7 +125,33 @@
 
 <!-- MAIN APP CONTAINER -->
 <div id="mainContainer" style="display: none;">
-  <div id="header-placeholder"></div>
+  <!-- Header inline (không fetch component) -->
+  <div class="topbar">
+    <div class="logo" id="homeLogo">🌸 DANMETOPIA 🌸</div>
+    
+    <!-- Desktop menu -->
+    <div class="user-area desktop-menu">
+      <span id="userDisplay">👤 Đang tải...</span>
+      <a href="groups.html" id="groupsLink" class="nav-link" style="display:none">📚 Nhóm</a>
+      <button id="profileBtn" style="display:none">👤 Thông tin</button>
+      <a href="admin.html" id="adminLink" style="display:none" class="nav-link admin-link">👑 Admin</a>
+      <button id="logoutBtn" style="display:none">🚪 Đăng xuất</button>
+      <button id="createGroupBtn" style="display:none" class="nav-btn">➕ Tạo nhóm</button>
+    </div>
+    
+    <!-- Mobile menu button -->
+    <div class="mobile-menu-btn" id="mobileMenuBtn">☰</div>
+    
+    <!-- Mobile menu dropdown -->
+    <div id="mobileMenu" class="mobile-menu">
+      <div class="mobile-user-info" id="mobileUserDisplay">👤 Đang tải...</div>
+      <a href="groups.html" id="mobileGroupsLink" class="mobile-nav-link">📚 Nhóm</a>
+      <button id="mobileProfileBtn" class="mobile-nav-btn">👤 Thông tin</button>
+      <a href="admin.html" id="mobileAdminLink" class="mobile-nav-link admin-link">👑 Admin</a>
+      <button id="mobileLogoutBtn" class="mobile-nav-btn">🚪 Đăng xuất</button>
+      <button id="mobileCreateGroupBtn" class="mobile-nav-btn">➕ Tạo nhóm</button>
+    </div>
+  </div>
   
   <div class="search-bar">
     <input type="text" id="searchInput" placeholder="🔍 Tìm kiếm truyện...">
@@ -85,7 +178,15 @@
     <div class="loading-container"><div class="loading-spinner"></div><p>Đang tải truyện...</p></div>
   </div>
   
-  <div id="footer-placeholder"></div>
+  <!-- Footer Disclaimer -->
+  <div class="footer-disclaimer">
+    <div class="disclaimer-content">
+      <p>🌸 <strong>DANMETOPIA</strong> là nền tảng phi lợi nhuận, hoạt động với mục đích <strong>tổng hợp và chia sẻ</strong> các bộ truyện tranh từ nhiều nguồn khác nhau.</p>
+      <p style="margin:10px 0;">📌 <strong>Miễn trừ trách nhiệm:</strong> Chúng tôi không sở hữu bản quyền đối với bất kỳ nội dung nào được đăng tải. Toàn bộ bản quyền thuộc về tác giả và nhà xuất bản gốc. Nếu có bất kỳ vi phạm nào, vui lòng liên hệ để được gỡ bỏ.</p>
+      <p>📧 Liên hệ: <a href="mailto:pydanmeii@gmail.com">pydanmeii@gmail.com</a></p>
+      <p style="margin-top:10px;">© 2025 DANMETOPIA - Đọc truyện tranh online miễn phí</p>
+    </div>
+  </div>
 </div>
 
 <!-- MODALS -->
@@ -125,87 +226,31 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
-<script type="module" src="js/app.js"></script>
-
-<style>
-  .mobile-menu-btn {
-    background: rgba(0,0,0,0.2);
-    border: none;
-    padding: 8px 12px;
-    border-radius: 30px;
-    cursor: pointer;
-    font-size: 20px;
-    font-weight: bold;
-    color: black;
-    display: none;
-    align-items: center;
-    justify-content: center;
-  }
-  
-  .mobile-menu {
-    position: fixed;
-    top: 60px;
-    right: 10px;
-    background: #1c1c1c;
-    border: 1px solid #FF69B4;
-    border-radius: 16px;
-    padding: 10px;
-    min-width: 180px;
-    z-index: 10000;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-    display: none;
-  }
-  
-  .mobile-user-info {
-    padding: 10px;
-    border-bottom: 1px solid #333;
-    margin-bottom: 8px;
-    font-weight: bold;
-    color: #FF69B4;
-  }
-  
-  .mobile-nav-link, .mobile-nav-btn {
-    display: block;
-    width: 100%;
-    padding: 10px;
-    background: transparent;
-    border: none;
-    color: white;
-    text-decoration: none;
-    text-align: left;
-    cursor: pointer;
-    border-radius: 8px;
-    font-size: 14px;
-  }
-  
-  .mobile-nav-link:hover, .mobile-nav-btn:hover {
-    background: #FF69B4;
-    color: black;
-  }
-  
-  @media (max-width: 768px) {
-    .desktop-menu { display: none; }
-    .mobile-menu-btn { display: flex !important; }
-  }
-  
-  @media (min-width: 769px) {
-    .mobile-menu-btn { display: none !important; }
-    .mobile-menu { display: none !important; }
-  }
-</style>
 
 <script>
+  // ==================== MOBILE MENU SCRIPT ====================
   (function() {
     function initMobileMenu() {
       const menuBtn = document.getElementById('mobileMenuBtn');
       const menu = document.getElementById('mobileMenu');
+      
       if (menuBtn && menu) {
-        menuBtn.addEventListener('click', function(e) {
+        // Xóa event cũ và gán mới
+        const newBtn = menuBtn.cloneNode(true);
+        menuBtn.parentNode.replaceChild(newBtn, menuBtn);
+        
+        newBtn.addEventListener('click', function(e) {
           e.stopPropagation();
-          menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+          if (menu.style.display === 'block') {
+            menu.style.display = 'none';
+          } else {
+            menu.style.display = 'block';
+          }
         });
+        
+        // Đóng menu khi click ra ngoài
         document.addEventListener('click', function(e) {
-          if (!menuBtn.contains(e.target) && !menu.contains(e.target)) {
+          if (!newBtn.contains(e.target) && !menu.contains(e.target)) {
             menu.style.display = 'none';
           }
         });
@@ -218,6 +263,7 @@
       if (desktopDisplay && mobileDisplay) {
         mobileDisplay.innerHTML = desktopDisplay.innerHTML;
       }
+      
       // Sync buttons visibility
       const profileBtn = document.getElementById('profileBtn');
       const mobileProfileBtn = document.getElementById('mobileProfileBtn');
@@ -243,18 +289,25 @@
     }
     
     if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', initMobileMenu);
-      document.addEventListener('DOMContentLoaded', syncMobileDisplay);
+      document.addEventListener('DOMContentLoaded', function() {
+        initMobileMenu();
+        syncMobileDisplay();
+      });
     } else {
       initMobileMenu();
       syncMobileDisplay();
     }
     
+    // Observe userDisplay changes
     const observer = new MutationObserver(syncMobileDisplay);
     const userDisplay = document.getElementById('userDisplay');
-    if (userDisplay) observer.observe(userDisplay, { childList: true, subtree: true });
+    if (userDisplay) {
+      observer.observe(userDisplay, { childList: true, subtree: true, characterData: true });
+    }
   })();
 </script>
-  
+
+<script type="module" src="js/app.js"></script>
+
 </body>
 </html>
