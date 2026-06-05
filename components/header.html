@@ -1,3 +1,30 @@
+<div class="topbar">
+  <div class="logo" id="homeLogo">🌸 DANMETOPIA 🌸</div>
+  
+  <!-- Desktop menu -->
+  <div class="user-area desktop-menu">
+    <span id="userDisplay">👤 Đang tải...</span>
+    <a href="groups.html" id="groupsLink" class="nav-link" style="display:none">📚 Nhóm</a>
+    <button id="profileBtn" style="display:none">👤 Thông tin</button>
+    <a href="admin.html" id="adminLink" style="display:none" class="nav-link admin-link">👑 Admin</a>
+    <button id="logoutBtn" style="display:none">🚪 Đăng xuất</button>
+    <button id="createGroupBtn" style="display:none" class="nav-btn">➕ Tạo nhóm</button>
+  </div>
+  
+  <!-- Mobile menu button -->
+  <div class="mobile-menu-btn" id="mobileMenuBtn" style="display:none">☰</div>
+  
+  <!-- Mobile menu dropdown -->
+  <div id="mobileMenu" class="mobile-menu" style="display:none">
+    <div class="mobile-user-info" id="mobileUserDisplay">👤 Đang tải...</div>
+    <a href="groups.html" id="mobileGroupsLink" class="mobile-nav-link">📚 Nhóm</a>
+    <button id="mobileProfileBtn" class="mobile-nav-btn">👤 Thông tin</button>
+    <a href="admin.html" id="mobileAdminLink" class="mobile-nav-link admin-link">👑 Admin</a>
+    <button id="mobileLogoutBtn" class="mobile-nav-btn">🚪 Đăng xuất</button>
+    <button id="mobileCreateGroupBtn" class="mobile-nav-btn">➕ Tạo nhóm</button>
+  </div>
+</div>
+
 <style>
   .mobile-menu-btn {
     background: rgba(0,0,0,0.2);
@@ -8,7 +35,7 @@
     font-size: 20px;
     font-weight: bold;
     color: black;
-    display: none;
+    display: flex;
     align-items: center;
     justify-content: center;
   }
@@ -24,7 +51,6 @@
     min-width: 180px;
     z-index: 10000;
     box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-    display: none;
   }
   
   .mobile-user-info {
@@ -67,62 +93,66 @@
 
 <script>
   (function() {
+    // Hàm toggle menu
+    window.toggleMobileMenu = function() {
+      const menu = document.getElementById('mobileMenu');
+      if (menu) {
+        if (menu.style.display === 'none' || !menu.style.display || getComputedStyle(menu).display === 'none') {
+          menu.style.display = 'block';
+        } else {
+          menu.style.display = 'none';
+        }
+      }
+    };
+    
+    // Gắn sự kiện sau khi DOM load
     function initMobileMenu() {
       const menuBtn = document.getElementById('mobileMenuBtn');
-      const menu = document.getElementById('mobileMenu');
-      if (menuBtn && menu) {
-        menuBtn.addEventListener('click', function(e) {
+      if (menuBtn) {
+        // Xóa event cũ nếu có
+        const newBtn = menuBtn.cloneNode(true);
+        menuBtn.parentNode.replaceChild(newBtn, menuBtn);
+        newBtn.addEventListener('click', function(e) {
           e.stopPropagation();
-          menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
-        });
-        document.addEventListener('click', function(e) {
-          if (!menuBtn.contains(e.target) && !menu.contains(e.target)) {
-            menu.style.display = 'none';
-          }
+          window.toggleMobileMenu();
         });
       }
+      
+      // Đóng menu khi click ra ngoài
+      document.addEventListener('click', function(event) {
+        const menu = document.getElementById('mobileMenu');
+        const btn = document.getElementById('mobileMenuBtn');
+        if (menu && btn && !btn.contains(event.target) && !menu.contains(event.target)) {
+          menu.style.display = 'none';
+        }
+      });
     }
     
-    function syncMobileDisplay() {
+    // Sync mobile user display
+    function syncMobileUserDisplay() {
       const desktopDisplay = document.getElementById('userDisplay');
       const mobileDisplay = document.getElementById('mobileUserDisplay');
       if (desktopDisplay && mobileDisplay) {
         mobileDisplay.innerHTML = desktopDisplay.innerHTML;
       }
-      // Sync buttons visibility
-      const profileBtn = document.getElementById('profileBtn');
-      const mobileProfileBtn = document.getElementById('mobileProfileBtn');
-      const logoutBtn = document.getElementById('logoutBtn');
-      const mobileLogoutBtn = document.getElementById('mobileLogoutBtn');
-      const adminLink = document.getElementById('adminLink');
-      const mobileAdminLink = document.getElementById('mobileAdminLink');
-      const createGroupBtn = document.getElementById('createGroupBtn');
-      const mobileCreateGroupBtn = document.getElementById('mobileCreateGroupBtn');
-      
-      if (profileBtn && mobileProfileBtn) {
-        mobileProfileBtn.style.display = profileBtn.style.display;
-      }
-      if (logoutBtn && mobileLogoutBtn) {
-        mobileLogoutBtn.style.display = logoutBtn.style.display;
-      }
-      if (adminLink && mobileAdminLink) {
-        mobileAdminLink.style.display = adminLink.style.display;
-      }
-      if (createGroupBtn && mobileCreateGroupBtn) {
-        mobileCreateGroupBtn.style.display = createGroupBtn.style.display;
-      }
     }
     
+    // Lắng nghe sự thay đổi của userDisplay
+    const observer = new MutationObserver(syncMobileUserDisplay);
+    const userDisplay = document.getElementById('userDisplay');
+    if (userDisplay) {
+      observer.observe(userDisplay, { childList: true, subtree: true, characterData: true });
+    }
+    
+    // Chạy khi DOM ready
     if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', initMobileMenu);
-      document.addEventListener('DOMContentLoaded', syncMobileDisplay);
+      document.addEventListener('DOMContentLoaded', function() {
+        initMobileMenu();
+        syncMobileUserDisplay();
+      });
     } else {
       initMobileMenu();
-      syncMobileDisplay();
+      syncMobileUserDisplay();
     }
-    
-    const observer = new MutationObserver(syncMobileDisplay);
-    const userDisplay = document.getElementById('userDisplay');
-    if (userDisplay) observer.observe(userDisplay, { childList: true, subtree: true });
   })();
 </script>
