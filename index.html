@@ -64,12 +64,26 @@
     <input type="text" id="searchInput" placeholder="🔍 Tìm kiếm truyện...">
   </div>
   
+  <!-- FILTER ROW - ĐÃ CẬP NHẬT -->
   <div class="filter-row">
-    <select id="sortFilter">
-      <option value="likes">🔥 Hot nhất</option>
-      <option value="newest">📅 Mới nhất</option>
-      <option value="views">👁 Xem nhiều nhất</option>
-    </select>
+    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+      <select id="sortFilter">
+        <option value="likes">🔥 Hot nhất (tổng)</option>
+        <option value="views">👁 Xem nhiều nhất (tổng)</option>
+        <option value="views_today">📅 Thịnh hành hôm nay</option>
+        <option value="views_week">📅 Thịnh hành tuần này</option>
+        <option value="views_month">📅 Thịnh hành tháng này</option>
+        <option value="newest">🆕 Mới nhất</option>
+      </select>
+      <select id="filterStatus">
+        <option value="all">📌 Tất cả trạng thái</option>
+        <option value="Đang tiến hành">📖 Đang tiến hành</option>
+        <option value="Đã hoàn thành">✅ Đã hoàn thành</option>
+        <option value="Tạm ngưng">⏸ Tạm ngưng</option>
+      </select>
+      <input type="text" id="filterAuthor" placeholder="✍️ Lọc theo tác giả..." style="padding: 8px 15px; background: #1c1c1c; border: 1px solid #333; border-radius: 30px; color: white; width: 180px;">
+      <input type="text" id="filterGroup" placeholder="📚 Lọc theo nhóm dịch..." style="padding: 8px 15px; background: #1c1c1c; border: 1px solid #333; border-radius: 30px; color: white; width: 180px;">
+    </div>
     <div class="filter-genres" id="genreFilterContainer"></div>
   </div>
   
