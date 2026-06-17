@@ -19,7 +19,7 @@
   <!-- Mobile menu dropdown -->
   <div id="mobileMenu" class="mobile-menu" style="display:none">
     <div class="mobile-user-info" id="mobileUserDisplay">👤 Đang tải...</div>
-    <a href="index.html" class="mobile-nav-link">🏠 Trang chủ</a>
+    <a href="/" class="mobile-nav-link">🏠 Trang chủ</a>
     <a href="groups.html" id="mobileGroupsLink" class="mobile-nav-link">📚 Nhóm</a>
     <button id="mobileProfileBtn" class="mobile-nav-btn">👤 Thông tin</button>
     <a href="admin.html" id="mobileAdminLink" class="mobile-nav-link admin-link">👑 Admin</a>
@@ -113,23 +113,3 @@
     color: black;
   }
 </style>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const menuBtn = document.getElementById('mobileMenuBtn');
-    const mobileMenu = document.getElementById('mobileMenu');
-    
-    if (menuBtn && mobileMenu) {
-        menuBtn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            mobileMenu.style.display = mobileMenu.style.display === 'block' ? 'none' : 'block';
-        });
-        
-        document.addEventListener('click', function(event) {
-            if (!menuBtn.contains(event.target) && !mobileMenu.contains(event.target)) {
-                mobileMenu.style.display = 'none';
-            }
-        });
-    }
-});
-</script>
