@@ -27,7 +27,6 @@ function initDarkMode() {
   if (savedTheme === 'light') {
     document.body.classList.add('light-mode');
   }
-  
   if (!document.getElementById('themeToggle')) {
     const themeBtn = document.createElement('button');
     themeBtn.id = 'themeToggle';
@@ -74,8 +73,6 @@ lightModeStyle.textContent = `
   body.light-mode .filter-row select, body.light-mode .genre-select { background: #e0e0e0; color: #333; }
   body.light-mode .search-bar input { background: #e0e0e0; color: #333; }
   body.light-mode .filter-row input { background: #e0e0e0; color: #333; }
-  body.light-mode .mobile-menu { background: #f0f0f0; }
-  body.light-mode .mobile-nav-link, body.light-mode .mobile-nav-btn { color: #333; }
 `;
 document.head.appendChild(lightModeStyle);
 
@@ -453,7 +450,7 @@ function trackOnlineUsers() {
   });
 }
 
-// ==================== TOP TRUYỆN THEO NGÀY/TUẦN/THÁNG ====================
+// ==================== DATE KEY ====================
 function getDateKey(date, period) {
   if (period === 'day') {
     return date.toISOString().split('T')[0];
@@ -482,7 +479,7 @@ async function updatePeriodViews(storyId) {
   });
 }
 
-// ==================== EXPORT/IMPORT CHO ADMIN ====================
+// ==================== EXPORT/IMPORT ====================
 window.exportAllData = async () => {
   if (!isAdmin(state.currentUser)) {
     showNotification("⚠️ Chỉ Admin mới có quyền export dữ liệu!", true);
@@ -572,9 +569,9 @@ window.importAllData = async () => {
   input.click();
 };
 
-// ==================== CHIA SẺ TRUYỆN ====================
-window.shareStory = async (slug, title) => {
-  const url = `${window.location.origin}/truyen/${slug}`;
+// ==================== SHARE ====================
+window.shareStory = async (storyId, title) => {
+  const url = `${window.location.origin}/story.html?id=${storyId}`;
   try {
     await navigator.clipboard.writeText(url);
     showNotification("📋 Đã copy link truyện");
@@ -588,7 +585,7 @@ window.shareStory = async (slug, title) => {
   }
 };
 
-// ==================== THÔNG BÁO COMMENT MỚI ====================
+// ==================== COMMENT NOTIFICATION ====================
 let lastCommentTimes = {};
 
 function loadLastCommentTimes() {
@@ -671,66 +668,6 @@ function initMobileMenu() {
     });
   });
 }
-
-// ==================== URL ROUTER (THÂN THIỆN) ====================
-function handleStoryRoute() {
-  const path = window.location.pathname;
-  console.log("📍 Path:", path);
-  
-  const storyMatch = path.match(/^\/truyen\/([^\/]+)(?:\/chuong-(\d+))?$/);
-  if (storyMatch) {
-    const slug = storyMatch[1];
-    const chapterNum = storyMatch[2] ? parseInt(storyMatch[2]) : null;
-    
-    console.log(`🔍 Looking for story with slug: ${slug}`);
-    const story = state.stories.find(s => s.slug === slug);
-    
-    if (story) {
-      console.log(`✅ Found story: ${story.title}`);
-      if (chapterNum !== null) {
-        const chapterIndex = chapterNum - 1;
-        window.location.href = `reader.html?id=${story.id}&chapter=${chapterIndex}`;
-      } else {
-        window.location.href = `story.html?id=${story.id}`;
-      }
-      return true;
-    } else {
-      console.log("⏳ Story not found yet, waiting...");
-      setTimeout(() => handleStoryRoute(), 500);
-      return false;
-    }
-  }
-  return false;
-}
-
-let routerInitialized = false;
-
-function initRouter() {
-  if (routerInitialized) return;
-  routerInitialized = true;
-  console.log("🔄 Initializing router...");
-  setTimeout(() => handleStoryRoute(), 100);
-}
-
-window.addEventListener('popstate', () => handleStoryRoute());
-
-window.goToStory = (slug) => {
-  if (!slug) {
-    console.error("goToStory: slug is empty");
-    return;
-  }
-  console.log(`🔗 Navigating to /truyen/${slug}`);
-  window.location.href = `/truyen/${slug}`;
-};
-
-window.goToChapter = (slug, chapterNum) => {
-  if (!slug) {
-    console.error("goToChapter: slug is empty");
-    return;
-  }
-  console.log(`🔗 Navigating to /truyen/${slug}/chuong-${chapterNum}`);
-  window.location.href = `/truyen/${slug}/chuong-${chapterNum}`;
-};
 
 // ==================== UPDATE UI ====================
 function updateUserDisplay() {
@@ -865,8 +802,6 @@ async function loadStoriesRealtime() {
     }
     renderCurrentTab();
     updateTotalLikes();
-    // Khởi tạo router sau khi stories load
-    initRouter();
   });
 }
 
@@ -988,7 +923,7 @@ function renderGenreFilter() {
   });
 }
 
-// ==================== RENDER MAIN VỚI LỌC NÂNG CAO ====================
+// ==================== RENDER MAIN ====================
 function renderCurrentTab() {
   const grid = document.getElementById("mangaGrid");
   if (!grid) return;
@@ -1080,9 +1015,9 @@ function renderCurrentTab() {
   
   document.querySelectorAll('.manga-card').forEach(card => {
     card.addEventListener('click', (e) => {
-      const slug = card.dataset.slug;
-      if (slug) {
-        window.goToStory(slug);
+      const storyId = card.dataset.id;
+      if (storyId) {
+        window.location.href = `story.html?id=${storyId}`;
       }
     });
   });
@@ -1095,29 +1030,6 @@ function updateFilters() {
   state.filterStatus = document.getElementById("filterStatus")?.value || "all";
   renderCurrentTab();
 }
-
-// ==================== OPEN STORY DETAIL ====================
-window.openStoryDetail = async (storyId) => {
-  const story = state.stories.find(s => s.id === storyId);
-  if (story && story.slug) {
-    if (storyId) watchNewComments(storyId);
-    window.goToStory(story.slug);
-  } else {
-    if (storyId) watchNewComments(storyId);
-    window.location.href = `story.html?id=${storyId}`;
-  }
-};
-
-// ==================== OPEN READER ====================
-window.openReader = (storyId, chapterIndex) => {
-  const story = state.stories.find(s => s.id === storyId);
-  if (story && story.slug) {
-    const chapterNum = (chapterIndex || 0) + 1;
-    window.goToChapter(story.slug, chapterNum);
-  } else {
-    window.location.href = `reader.html?id=${storyId}&chapter=${chapterIndex || 0}`;
-  }
-};
 
 // ==================== RENDER UPLOAD PANEL ====================
 function renderUploadPanel() {
@@ -1202,6 +1114,19 @@ function renderUploadPanel() {
     finally { showLoading(false); }
   });
 }
+
+// ==================== OPEN STORY DETAIL ====================
+window.openStoryDetail = async (storyId) => {
+  if (storyId) {
+    watchNewComments(storyId);
+  }
+  window.location.href = `story.html?id=${storyId}`;
+};
+
+// ==================== OPEN READER ====================
+window.openReader = (storyId, chapterIndex) => {
+  window.location.href = `reader.html?id=${storyId}&chapter=${chapterIndex || 0}`;
+};
 
 // ==================== SCROLL BUTTONS ====================
 function initScrollButtons() {
@@ -1370,10 +1295,8 @@ async function initApp() {
   loadLastCommentTimes();
   await updateVisitCount();
   
-  // Mobile menu
   initMobileMenu();
   
-  // Thêm event listeners cho bộ lọc nâng cao
   const filterAuthor = document.getElementById("filterAuthor");
   const filterGroup = document.getElementById("filterGroup");
   const filterStatus = document.getElementById("filterStatus");
@@ -1432,8 +1355,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 // Make functions global
 window.openStoryDetail = window.openStoryDetail;
 window.openReader = window.openReader;
-window.goToStory = window.goToStory;
-window.goToChapter = window.goToChapter;
 window.deleteChapter = window.deleteChapter;
 window.closeModal = closeModal;
 window.saveProfile = window.saveProfile;
