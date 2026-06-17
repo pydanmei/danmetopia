@@ -73,6 +73,9 @@ lightModeStyle.textContent = `
   body.light-mode .footer-disclaimer { background: #e0e0e0; }
   body.light-mode .filter-row select, body.light-mode .genre-select { background: #e0e0e0; color: #333; }
   body.light-mode .search-bar input { background: #e0e0e0; color: #333; }
+  body.light-mode .filter-row input { background: #e0e0e0; color: #333; }
+  body.light-mode .mobile-menu { background: #f0f0f0; }
+  body.light-mode .mobile-nav-link, body.light-mode .mobile-nav-btn { color: #333; }
 `;
 document.head.appendChild(lightModeStyle);
 
@@ -609,11 +612,30 @@ function watchNewComments(storyId) {
     const comments = Object.values(data);
     const latest = comments.sort((a, b) => b.createdAt - a.createdAt)[0];
     if (latest && latest.createdAt > lastTime && latest.userId !== state.currentUser?.uid) {
-      showNotification(`💬 Bình luận mới từ ${latest.userName}: "${latest.text.substring(0, 50)}${latest.text.length > 50 ? '...' : ''}"`);
+      const timeAgo = getTimeAgo(latest.createdAt);
+      showNotification(`💬 Bình luận mới từ ${latest.userName}: "${latest.text.substring(0, 50)}${latest.text.length > 50 ? '...' : ''}" (${timeAgo})`);
       lastCommentTimes[storyId] = latest.createdAt;
       saveLastCommentTimes();
     }
   });
+}
+
+// ==================== TIME AGO ====================
+function getTimeAgo(timestamp) {
+  const now = Date.now();
+  const diff = now - timestamp;
+  const seconds = Math.floor(diff / 1000);
+  const minutes = Math.floor(seconds / 60);
+  const hours = Math.floor(minutes / 60);
+  const days = Math.floor(hours / 24);
+  
+  if (seconds < 60) return 'vài giây trước';
+  if (minutes < 60) return `${minutes} phút trước`;
+  if (hours < 24) return `${hours} giờ trước`;
+  if (days < 7) return `${days} ngày trước`;
+  if (days < 30) return `${Math.floor(days / 7)} tuần trước`;
+  if (days < 365) return `${Math.floor(days / 30)} tháng trước`;
+  return `${Math.floor(days / 365)} năm trước`;
 }
 
 // ==================== UPDATE UI ====================
@@ -643,6 +665,32 @@ function updateUserDisplay() {
     if (adminLink) adminLink.style.display = isAdmin(state.currentUser) ? "inline-block" : "none";
     if (groupsLink) groupsLink.style.display = "inline-block";
     if (createGroupBtn) createGroupBtn.style.display = !hasGroup(state.currentUser) ? "inline-block" : "none";
+  }
+  // Sync mobile menu
+  syncMobileElements();
+}
+
+function syncMobileElements() {
+  const profileBtn = document.getElementById('profileBtn');
+  const mobileProfileBtn = document.getElementById('mobileProfileBtn');
+  const logoutBtn = document.getElementById('logoutBtn');
+  const mobileLogoutBtn = document.getElementById('mobileLogoutBtn');
+  const adminLink = document.getElementById('adminLink');
+  const mobileAdminLink = document.getElementById('mobileAdminLink');
+  const createGroupBtn = document.getElementById('createGroupBtn');
+  const mobileCreateGroupBtn = document.getElementById('mobileCreateGroupBtn');
+  
+  if (profileBtn && mobileProfileBtn) {
+    mobileProfileBtn.style.display = profileBtn.style.display || 'inline-block';
+  }
+  if (logoutBtn && mobileLogoutBtn) {
+    mobileLogoutBtn.style.display = logoutBtn.style.display || 'inline-block';
+  }
+  if (adminLink && mobileAdminLink) {
+    mobileAdminLink.style.display = adminLink.style.display || 'none';
+  }
+  if (createGroupBtn && mobileCreateGroupBtn) {
+    mobileCreateGroupBtn.style.display = createGroupBtn.style.display || 'none';
   }
 }
 
@@ -852,6 +900,20 @@ function renderCurrentTab() {
   
   let filtered = state.stories.filter(s => s.approved === true);
   
+  // Lọc theo tab
+  if (state.currentTab === "trending") {
+    const today = new Date().toISOString().split('T')[0];
+    filtered = filtered.sort((a, b) => (b[`views_${today}`]||0) - (a[`views_${today}`]||0)).slice(0, 20);
+  } else if (state.currentTab === "completed") {
+    filtered = filtered.filter(s => s.status === "Đã hoàn thành");
+  } else if (state.currentTab === "follows") {
+    const followIds = Object.keys(state.userFollows);
+    filtered = filtered.filter(s => followIds.includes(s.id));
+  } else if (state.currentTab === "recommend") {
+    // Gợi ý dựa trên thể loại yêu thích (đơn giản: random 10 truyện có like cao)
+    filtered = filtered.sort((a, b) => (b.likes||0) - (a.likes||0)).slice(0, 12);
+  }
+  
   // Lọc theo thể loại
   if (state.selectedGenre) {
     filtered = filtered.filter(s => s.genres && s.genres.includes(state.selectedGenre));
@@ -910,12 +972,14 @@ function renderCurrentTab() {
       <img class="manga-cover" src="${escapeHtml(story.cover) || 'https://placehold.co/300x450?text=No+Cover'}" onerror="this.src='https://placehold.co/300x450?text=ERROR'">
       <div class="manga-info">
         <div class="manga-title">${escapeHtml(story.title)}</div>
-        <div class="manga-meta">📚 ${escapeHtml(story.groupName) || "Cá nhân"}</div>
         <div class="manga-meta">✍️ ${escapeHtml(story.author) || "???"}</div>
+        <div class="manga-meta">📚 ${escapeHtml(story.groupName) || "Cá nhân"}</div>
         <div class="manga-meta">❤️ ${story.likes || 0} | 👁 ${story.views || 0}</div>
         <div class="manga-meta">🏷️ ${escapeHtml(story.genres) || "Chưa có thể loại"}</div>
-        ${story.approved === false ? '<div class="manga-meta" style="color:#FFCC00;">⏳ Chờ duyệt</div>' : ''}
-        ${story.status === "Đã hoàn thành" ? '<div class="manga-meta" style="color:#4CAF50;">✅ Hoàn thành</div>' : story.status === "Tạm ngưng" ? '<div class="manga-meta" style="color:#FF9800;">⏸ Tạm ngưng</div>' : '<div class="manga-meta" style="color:#2196F3;">📖 Đang ra</div>'}
+        <div class="manga-status">
+          ${story.approved === false ? '<span class="status-badge pending">⏳ Chờ duyệt</span>' : ''}
+          ${story.status === "Đã hoàn thành" ? '<span class="status-badge completed">✅ Hoàn thành</span>' : story.status === "Tạm ngưng" ? '<span class="status-badge paused">⏸ Tạm ngưng</span>' : '<span class="status-badge ongoing">📖 Đang ra</span>'}
+        </div>
       </div>
     </div>
   `).join("");
@@ -1263,3 +1327,4 @@ window.showNotification = showNotification;
 window.shareStory = window.shareStory;
 window.exportAllData = window.exportAllData;
 window.importAllData = window.importAllData;
+window.getTimeAgo = getTimeAgo;
