@@ -708,4 +708,16 @@
         position:"fixed", right:"18px", bottom:"120px", width:"48px", height:"48px",
         border:"none", borderRadius:"16px", background:"rgba(0,0,0,0.65)",
         backdropFilter:"blur(10px)", color:"white", fontSize:"22px", fontWeight:"bold",
-        display:"
+        display:"none", alignItems:"center", justifyContent:"center", zIndex:"9999",
+        cursor:"pointer"
+      });
+      document.body.appendChild(btn);
+      btn.onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
+      window.addEventListener("scroll", () => {
+        btn.style.display = window.scrollY > 250 ? "flex" : "none";
+      });
+    }
+  }, 100);
+</script>
+</body>
+</html>
