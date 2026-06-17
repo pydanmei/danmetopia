@@ -44,8 +44,9 @@
 <body>
 <div class="story-container">
   <div class="top-nav">
-    <div class="logo-link" onclick="window.location.href='index.html'">🌸 DANMETOPIA 🌸</div>
-    <a href="index.html" class="back-home">← Về trang chủ</a>
+    <!-- Thay thế các link về trang chủ -->
+<a href="/" class="back-home">← Về trang chủ</a>
+<div class="logo-link" onclick="window.location.href='/'">🌸 DANMETOPIA 🌸</div>
   </div>
   <div id="storyContent">
     <div class="loading-container"><div class="loading-spinner"></div><p>Đang tải thông tin truyện...</p></div>
@@ -248,7 +249,7 @@
     let chaptersHtml = `<h3>📖 DANH SÁCH CHAPTER</h3><div class="chapter-list">`;
     chapters.forEach((chap, idx) => {
       chaptersHtml += `
-        <div class="chapter-item" onclick="window.location.href='reader.html?id=${storyId}&chapter=${idx}'">
+        <div class="chapter-item" onclick="window.goToChapter('${story.slug}', ${idx + 1})">
           <span>${escapeHtml(chap.title)}</span>
           <span style="font-size:12px;">📅 ${new Date(chap.createdAt).toLocaleDateString()}</span>
           <div class="chapter-actions">
