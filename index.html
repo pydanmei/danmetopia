@@ -64,9 +64,9 @@
     <input type="text" id="searchInput" placeholder="🔍 Tìm kiếm truyện...">
   </div>
   
-  <!-- FILTER ROW - ĐÃ CẬP NHẬT -->
+  <!-- FILTER ROW NÂNG CAO -->
   <div class="filter-row">
-    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+    <div class="filter-row-top">
       <select id="sortFilter">
         <option value="likes">🔥 Hot nhất (tổng)</option>
         <option value="views">👁 Xem nhiều nhất (tổng)</option>
@@ -81,16 +81,19 @@
         <option value="Đã hoàn thành">✅ Đã hoàn thành</option>
         <option value="Tạm ngưng">⏸ Tạm ngưng</option>
       </select>
-      <input type="text" id="filterAuthor" placeholder="✍️ Lọc theo tác giả..." style="padding: 8px 15px; background: #1c1c1c; border: 1px solid #333; border-radius: 30px; color: white; width: 180px;">
-      <input type="text" id="filterGroup" placeholder="📚 Lọc theo nhóm dịch..." style="padding: 8px 15px; background: #1c1c1c; border: 1px solid #333; border-radius: 30px; color: white; width: 180px;">
+      <input type="text" id="filterAuthor" placeholder="✍️ Lọc theo tác giả..." style="padding: 8px 15px; background: #1c1c1c; border: 1px solid #333; border-radius: 30px; color: white; width: 160px;">
+      <input type="text" id="filterGroup" placeholder="📚 Lọc theo nhóm dịch..." style="padding: 8px 15px; background: #1c1c1c; border: 1px solid #333; border-radius: 30px; color: white; width: 160px;">
     </div>
     <div class="filter-genres" id="genreFilterContainer"></div>
   </div>
   
+  <!-- TABS -->
   <div class="tabs">
     <button class="tab-btn active" data-tab="all">📚 Tất cả truyện</button>
+    <button class="tab-btn" data-tab="trending">🔥 Thịnh hành</button>
     <button class="tab-btn" data-tab="recommend">🎯 Gợi ý cho bạn</button>
     <button class="tab-btn" data-tab="follows">⭐ Truyện theo dõi</button>
+    <button class="tab-btn" data-tab="completed">✅ Đã hoàn thành</button>
   </div>
   
   <div id="uploadPanel"></div>
@@ -110,7 +113,7 @@
 <div id="editChapterModal" class="modal"><div class="modal-content"><span class="close-modal" onclick="closeModal('editChapterModal')">&times;</span><h2>✏️ CHỈNH SỬA CHAPTER</h2><div id="editChapterContent"></div></div></div>
 <div id="profileModal" class="modal"><div class="modal-content"><span class="close-modal" onclick="closeModal('profileModal')">&times;</span><h2>👤 THÔNG TIN</h2><div id="profileContent"></div></div></div>
 
-<!-- READER MODAL (không dùng nữa) -->
+<!-- READER MODAL -->
 <div id="readerModal" class="modal">
   <div class="modal-content fullscreen-reader">
     <button class="reader-close-btn close-modal" onclick="closeReaderModal()">✕</button>
