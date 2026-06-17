@@ -524,8 +524,10 @@
       <div class="bottom-nav">
         <button ${hasPrev ? `onclick="window.changeChapter(-1)" data-icon="◀"` : 'disabled'} data-icon="◀"><span>Chương trước</span></button>
         <button onclick="window.scrollToTop()" data-icon="▲"><span>Lên đầu</span></button>
-        <button onclick="goToStoryInfo()" data-icon="📖"><span>Thông tin</span></button>
-        <button onclick="goToHome()" data-icon="🏠"><span>Trang chủ</span></button>
+       <!-- Các nút về trang chủ -->
+<button onclick="window.goToHome()" data-icon="🏠"><span>Trang chủ</span></button>
+<button onclick="window.goToStoryInfo()" data-icon="📖"><span>Thông tin</span></button>
+
         <button ${hasNext ? `onclick="window.changeChapter(1)" data-icon="▶"` : 'disabled'} data-icon="▶"><span>Chương sau</span></button>
       </div>
       
@@ -586,8 +588,19 @@
   };
   
   window.scrollToTop = () => { window.scrollTo({ top: 0, behavior: 'smooth' }); };
-  window.goToHome = goToHome;
-  window.goToStoryInfo = goToStoryInfo;
+  // Hàm goToHome sử dụng URL thân thiện
+window.goToHome = () => {
+  window.location.href = '/';
+};
+
+// Hàm goToStoryInfo sử dụng URL thân thiện
+window.goToStoryInfo = () => {
+  if (currentStory && currentStory.slug) {
+    window.location.href = `/truyen/${currentStory.slug}`;
+  } else {
+    window.location.href = `story.html?id=${storyId}`;
+  }
+};
 
   async function loadCommentsRealtime(storyId) {
     if (commentUnsubscribe) commentUnsubscribe();
