@@ -1,6 +1,48 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
+  // Thêm vào trong loadStory()
+function updateMetaTags(story) {
+  // Update title
+  document.title = `${story.title} - DANMETOPIA`;
+  
+  // Update Open Graph
+  let ogTitle = document.querySelector('meta[property="og:title"]');
+  if (!ogTitle) {
+    ogTitle = document.createElement('meta');
+    ogTitle.setAttribute('property', 'og:title');
+    document.head.appendChild(ogTitle);
+  }
+  ogTitle.content = `${story.title} - DANMETOPIA`;
+  
+  let ogDescription = document.querySelector('meta[property="og:description"]');
+  if (!ogDescription) {
+    ogDescription = document.createElement('meta');
+    ogDescription.setAttribute('property', 'og:description');
+    document.head.appendChild(ogDescription);
+  }
+  ogDescription.content = story.desc || `Đọc truyện ${story.title} tại DANMETOPIA`;
+  
+  let ogImage = document.querySelector('meta[property="og:image"]');
+  if (!ogImage) {
+    ogImage = document.createElement('meta');
+    ogImage.setAttribute('property', 'og:image');
+    document.head.appendChild(ogImage);
+  }
+  ogImage.content = story.cover || 'https://danmetopiaa.onrender.com/assets/og-image.png';
+  
+  let ogUrl = document.querySelector('meta[property="og:url"]');
+  if (!ogUrl) {
+    ogUrl = document.createElement('meta');
+    ogUrl.setAttribute('property', 'og:url');
+    document.head.appendChild(ogUrl);
+  }
+  ogUrl.content = `${window.location.origin}/truyen/${story.slug}`;
+}
+
+// Gọi trong loadStory()
+await loadStory();
+if (story) updateMetaTags(story);
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>🌸 DANMETOPIA - Thông tin truyện 🌸</title>
