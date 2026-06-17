@@ -1,0 +1,16 @@
+{
+  "routes": [
+    {
+      "src": "/truyen/*",
+      "dest": "/index.html"
+    },
+    {
+      "src": "/truyen/*/chuong-*",
+      "dest": "/index.html"
+    },
+    {
+      "src": "/",
+      "dest": "/index.html"
+    }
+  ]
+}
